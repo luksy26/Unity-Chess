@@ -4,18 +4,22 @@ public class PiecePlacer : MonoBehaviour
 {
     private char file;
     private int rank;
+    private float global_x, global_y;
+    private static readonly float xOffset = 4.375f;
+    private static readonly float yOffset = 4.352f;
+
     public void SetGlobalCoords()
     {
-        float x = file - 'a';
-        float y = rank - 1;
+        global_x = file - 'a';
+        global_y = rank - 1;
 
-        x *= 2 * 4.375f / 7;
-        y *= 2 * 4.352f / 7;
+        global_x *= 2 * xOffset / 7;
+        global_y *= 2 * yOffset / 7;
 
-        x += -4.375f;
-        y += -4.352f;
+        global_x -= xOffset;
+        global_y -= yOffset;
 
-        transform.position = new Vector3(x, y, -0.01f);
+        transform.position = new Vector3(global_x, global_y, -0.01f);
     }
 
     public int GetFile()
