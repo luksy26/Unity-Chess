@@ -737,6 +737,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1480655574}
   - component: {fileID: 1480655575}
+  - component: {fileID: 1480655576}
   m_Layer: 0
   m_Name: GameController
   m_TagString: GameController
@@ -773,6 +774,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chessPiecePrefab: {fileID: 1349441230006070361, guid: 592ccfb394f1e5740b5e64aae3a0927c, type: 3}
   currentPlayer: white
+--- !u!114 &1480655576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1480655573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f91c6a5c0c587c8488925f1143d5b48d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1585163929
 GameObject:
   m_ObjectHideFlags: 0

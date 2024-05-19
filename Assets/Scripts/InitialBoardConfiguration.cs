@@ -35,7 +35,7 @@ public class InitialBoardConfiguration : MonoBehaviour
 
         boardConfiguration = new char[rows, cols];
 
-        StringBuilder inputFEN_sb = new StringBuilder(inputFEN);
+        StringBuilder inputFEN_sb = new(inputFEN);
         int index = 0;
         for (int i = 0; i < rows; i++)
         {

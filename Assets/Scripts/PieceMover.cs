@@ -1,10 +1,13 @@
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.GameCenter;
 
 public class PieceMover : MonoBehaviour
 {
     private bool isDragging = false;
     private Vector3 initialPosition;
+    private GameObject gameController;
+    private Game currentGame;
+    private MoveValidator validator;
     private static readonly float xMax = 4;
     private static readonly float yMax = 4;
     private static readonly float xMin = -4;
@@ -15,6 +18,9 @@ public class PieceMover : MonoBehaviour
         // Ensure BoxCollider2D matches the size of the SpriteRenderer
         BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+        gameController = GameObject.FindGameObjectWithTag("GameController");
+        currentGame = gameController.GetComponent<Game>();
+        validator = gameController.GetComponent<MoveValidator>();
 
         if (boxCollider != null && spriteRenderer != null)
         {
@@ -39,10 +45,12 @@ public class PieceMover : MonoBehaviour
             float newX = mousePosition.x;
             float newY = mousePosition.y;
 
-            if (newX > xMax || newX < xMin) {
+            if (newX > xMax || newX < xMin)
+            {
                 newX = transform.position.x;
             }
-            if (newY > yMax || newY < yMin) {
+            if (newY > yMax || newY < yMin)
+            {
                 newY = transform.position.y;
             }
             transform.position = new Vector3(newX, newY, -0.02f);
@@ -56,22 +64,36 @@ public class PieceMover : MonoBehaviour
             Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
             isDragging = false;
+            bool backToStart = true;
+
             if (IsInBounds(mousePosition))
-            {   
-                char new_file = GetFile(mousePosition.x);
-                int new_rank = GetRank(mousePosition.y);
-
-                Debug.Log("new file is " + new_file + " new rank is "  + new_rank);
-
-                PiecePlacer placer = GetComponent<PiecePlacer>();
-                placer.SetFile(new_file);
-                placer.SetRank(new_rank);
-                placer.SetGlobalCoords();
-
+            {
+                string piece_owner = getPieceOwner(name);
+                if (currentGame.currentPlayer.Equals(piece_owner))
+                {
+                    PiecePlacer placer = GetComponent<PiecePlacer>();
+                    char old_file = placer.GetFile();
+                    int old_rank = placer.GetRank();
+                    char new_file = GetFile(mousePosition.x);
+                    int new_rank = GetRank(mousePosition.y);
+                    if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank))
+                    {
+                        backToStart = false;
+                        Debug.Log("new file is " + new_file + " new rank is " + new_rank);
+                        currentGame.MovePiece(old_file, old_rank, new_file, new_rank);
+                        placer.SetFile(new_file);
+                        placer.SetRank(new_rank);
+                        placer.SetGlobalCoords();
+                    }
+                }
             }
-            else
+            if (backToStart)
             {
                 transform.position = initialPosition;
+            }
+            else {
+                currentGame.SwapPlayer();
+
             }
             Debug.Log(name + " dropped at position: " + transform.position);
         }
@@ -84,10 +106,20 @@ public class PieceMover : MonoBehaviour
         }
         return true;
     }
-    private char GetFile(float x) {
+    private char GetFile(float x)
+    {
         return (char)('a' + (int)(x + 4));
     }
-    private int GetRank(float y) {
+    private int GetRank(float y)
+    {
         return (int)(y + 4) + 1;
+    }
+    private string getPieceOwner(string piece_name)
+    {
+        if (piece_name.ToLower().Contains("white"))
+        {
+            return "white";
+        }
+        return "black";
     }
 }
