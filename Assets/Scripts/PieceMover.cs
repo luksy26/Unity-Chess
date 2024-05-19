@@ -3,7 +3,6 @@ using UnityEngine;
 public class PieceMover : MonoBehaviour
 {
     private bool isDragging = false;
-    private Vector3 offset;
     
     void Start()
     {
@@ -20,10 +19,9 @@ public class PieceMover : MonoBehaviour
     void OnMouseDown()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        offset = transform.position - mousePosition;
-        offset.z = 0;  // Ensure z component remains unchanged
         isDragging = true;
         Debug.Log("Object clicked, initial position is" + transform.position);
+        transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
     }
 
     void OnMouseDrag()
@@ -31,8 +29,7 @@ public class PieceMover : MonoBehaviour
         if (isDragging)
         {
             Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            transform.position = mousePosition + offset;
-            transform.position = new Vector3(transform.position.x, transform.position.y, -0.01f);
+            transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
         }
     }
 
@@ -41,6 +38,7 @@ public class PieceMover : MonoBehaviour
         if (isDragging)
         {
             isDragging = false;
+            transform.position = new Vector3(transform.position.x, transform.position.y, -0.01f);
             Debug.Log("Object dropped at position: " + transform.position);
         }
     }
