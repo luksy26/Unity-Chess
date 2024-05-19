@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Game : MonoBehaviour {
@@ -11,7 +12,7 @@ public class Game : MonoBehaviour {
 
     public void Start() {
         currentPlayer = "white";
-        playerPerspective = "black";
+        playerPerspective = "white";
         currentPieces = new GameObject[8, 8];
         blackPieces = new();
         whitePieces = new();
@@ -36,7 +37,7 @@ public class Game : MonoBehaviour {
                 string pieceName = GetPieceName(potentialPiece);
                 if (pieceName != "") {
                     currentPieces[i, j] = CreatePieceSprite(pieceName, file, rank);
-                    if(char.IsUpper(potentialPiece)) {
+                    if (char.IsUpper(potentialPiece)) {
                         whitePieces.Add(currentPieces[i, j]);
                     } else {
                         blackPieces.Add(currentPieces[i, j]);
@@ -49,14 +50,14 @@ public class Game : MonoBehaviour {
     public GameObject CreatePieceSprite(string name, char file, int rank) {
 
         GameObject obj = Instantiate(chessPiecePrefab, new Vector3(0, 0, -0.01f), Quaternion.identity);
+
+        obj.name = name;
         obj.GetComponent<SpriteRenderer>().sprite = obj.GetComponent<SpriteFactory>().GetSprite(name);
 
         PiecePlacer placer = obj.GetComponent<PiecePlacer>();
         placer.SetFile(file);
         placer.SetRank(rank);
         placer.SetGlobalCoords(playerPerspective);
-        placer.name = name;
-        obj.GetComponent<PieceMover>().name = name;
         return obj;
     }
     public void DestroyPieces() {
@@ -76,7 +77,8 @@ public class Game : MonoBehaviour {
         int new_i = 8 - new_rank;
         int new_j = new_file - 'a';
         if (currentPieces[new_i, new_j] != null) {
-            if (blackPieces.Contains(currentPieces[new_i, new_j])) {
+            Debug.Log("destroying " + currentPieces[new_i, new_j].name);
+            if (currentPieces[new_i, new_j].name.Contains("black")) {
                 blackPieces.Remove(currentPieces[new_i, new_j]);
             } else {
                 whitePieces.Remove(currentPieces[new_i, new_j]);

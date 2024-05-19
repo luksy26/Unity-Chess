@@ -77,7 +77,6 @@ public class PieceMover : MonoBehaviour {
                 transform.position = initialPosition;
             } else {
                 currentGame.SwapPlayer();
-
             }
         }
     }
@@ -102,7 +101,7 @@ public class PieceMover : MonoBehaviour {
         return rank;
     }
     private string GetPieceOwner(string piece_name) {
-        if (piece_name.ToLower().Contains("white")) {
+        if (piece_name.Contains("white")) {
             return "white";
         }
         return "black";
