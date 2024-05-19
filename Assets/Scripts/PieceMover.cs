@@ -89,7 +89,7 @@ public class PieceMover : MonoBehaviour {
     private char GetFile(float x, string playerPerspective) {
         char file = (char)('a' + (int)(x + 4));
         if (playerPerspective.Equals("black")) {
-            file = (char)('a'+ ('h' - file));
+            file = (char)('a' + ('h' - file));
         }
         return file;
     }
