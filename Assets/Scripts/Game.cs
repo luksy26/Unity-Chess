@@ -6,13 +6,9 @@ public class Game : MonoBehaviour
     public static Game Instance { get; private set; }
     public GameObject[,] current_pieces;
     public GameObject chessPiecePrefab;
-
-    private GameObject gameController;
-
     public string currentPlayer;
 
     public void Start() {
-        gameController = GameObject.FindGameObjectWithTag("GameController");
         currentPlayer = "white";
         current_pieces = new GameObject[8, 8];
     }
@@ -47,10 +43,9 @@ public class Game : MonoBehaviour
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
-        Sprite piece_sprite = gameController.GetComponent<SpriteFactory>().GetSprite(name);
     
         GameObject obj = Instantiate(chessPiecePrefab, new Vector3(0, 0, -0.01f), Quaternion.identity);
-        obj.GetComponent<SpriteRenderer>().sprite = piece_sprite;
+        obj.GetComponent<SpriteRenderer>().sprite = obj.GetComponent<SpriteFactory>().GetSprite(name);
     
         PiecePlacer placer = obj.GetComponent<PiecePlacer>();
         placer.SetFile(file);

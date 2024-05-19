@@ -20,7 +20,7 @@ public class PieceMover : MonoBehaviour
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         isDragging = true;
-        Debug.Log("Object clicked, initial position is" + transform.position);
+        Debug.Log(name + " clicked, initial position is" + transform.position);
         transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
     }
 
@@ -39,7 +39,7 @@ public class PieceMover : MonoBehaviour
         {
             isDragging = false;
             transform.position = new Vector3(transform.position.x, transform.position.y, -0.01f);
-            Debug.Log("Object dropped at position: " + transform.position);
+            Debug.Log(name + " dropped at position: " + transform.position);
         }
     }
 }
