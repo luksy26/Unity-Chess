@@ -131,7 +131,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 293976309}
-  - component: {fileID: 293976308}
+  - component: {fileID: 293976310}
   m_Layer: 0
   m_Name: BoardConfigurationManager
   m_TagString: Untagged
@@ -139,21 +139,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &293976308
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 293976307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d51854d7f14bc5d48825d396196f857d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  rows: 8
-  cols: 8
-  defaultFEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
 --- !u!4 &293976309
 Transform:
   m_ObjectHideFlags: 0
@@ -169,6 +154,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &293976310
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 293976307}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d51854d7f14bc5d48825d396196f857d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  rows: 8
+  cols: 8
+  defaultFEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
 --- !u!1 &369212471
 GameObject:
   m_ObjectHideFlags: 0
@@ -412,7 +412,7 @@ MonoBehaviour:
     m_Alignment: 0
     m_AlignByGeometry: 0
     m_RichText: 0
-    m_HorizontalOverflow: 1
+    m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 
@@ -772,8 +772,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37c73163068040f41af88113c9517496, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  blackPieces: []
+  whitePieces: []
   chessPiecePrefab: {fileID: 1349441230006070361, guid: 592ccfb394f1e5740b5e64aae3a0927c, type: 3}
   currentPlayer: white
+  playerPerspective: 
 --- !u!114 &1480655576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1068,7 +1071,7 @@ MonoBehaviour:
   m_InputType: 0
   m_AsteriskChar: 42
   m_KeyboardType: 0
-  m_LineType: 0
+  m_LineType: 2
   m_HideMobileInput: 0
   m_CharacterValidation: 0
   m_CharacterLimit: 0
