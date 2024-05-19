@@ -5,19 +5,18 @@ public class PiecePlacer : MonoBehaviour
     private char file;
     private int rank;
     private float global_x, global_y;
-    private static readonly float xOffset = 4.375f;
-    private static readonly float yOffset = 4.352f;
-
+    private static readonly float offset = 3.5f; // -8 / 2 + 1 / 2
+    private static readonly float multiplier = 1; // 8 / 8
     public void SetGlobalCoords()
     {
         global_x = file - 'a';
         global_y = rank - 1;
 
-        global_x *= 2 * xOffset / 7;
-        global_y *= 2 * yOffset / 7;
+        global_x *= multiplier;
+        global_y *= multiplier;
 
-        global_x -= xOffset;
-        global_y -= yOffset;
+        global_x -= offset;
+        global_y -= offset;
 
         transform.position = new Vector3(global_x, global_y, -0.01f);
     }
