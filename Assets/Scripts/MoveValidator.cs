@@ -1,7 +1,6 @@
 using UnityEngine;
 
-public class MoveValidator : MonoBehaviour
-{   
+public class MoveValidator : MonoBehaviour {
     private char[,] boardConfiguration;
     // Start is called before the first frame update
 
@@ -9,12 +8,9 @@ public class MoveValidator : MonoBehaviour
         boardConfiguration = InitialBoardConfiguration.Instance.boardConfiguration;
 
         return true;
-
     }
-    private string GetPieceType(char x)
-    {
-        return x switch
-        {
+    private string GetPieceType(char x) {
+        return x switch {
             'r' or 'R' => "rook",
             'n' or 'N' => "knight",
             'b' or 'B' => "bishop",
