@@ -1,10 +1,16 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PieceMover : MonoBehaviour
 {
     private bool isDragging = false;
-    
-    void Start()
+    private Vector3 initialPosition;
+    private static readonly float xMax = 4;
+    private static readonly float yMax = 4;
+    private static readonly float xMin = -4;
+    private static readonly float yMin = -4;
+
+    public void Start()
     {
         // Ensure BoxCollider2D matches the size of the SpriteRenderer
         BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
@@ -16,30 +22,72 @@ public class PieceMover : MonoBehaviour
         }
     }
 
-    void OnMouseDown()
+    public void OnMouseDown()
     {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         isDragging = true;
-        Debug.Log(name + " clicked, initial position is" + transform.position);
+        initialPosition = transform.position;
+        Debug.Log(name + " clicked, initial position is" + initialPosition);
         transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
     }
 
-    void OnMouseDrag()
+    public void OnMouseDrag()
     {
         if (isDragging)
         {
             Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
+            float newX = mousePosition.x;
+            float newY = mousePosition.y;
+
+            if (newX > xMax || newX < xMin) {
+                newX = transform.position.x;
+            }
+            if (newY > yMax || newY < yMin) {
+                newY = transform.position.y;
+            }
+            transform.position = new Vector3(newX, newY, -0.02f);
         }
     }
 
-    void OnMouseUp()
+    public void OnMouseUp()
     {
         if (isDragging)
         {
+            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+
             isDragging = false;
-            transform.position = new Vector3(transform.position.x, transform.position.y, -0.01f);
+            if (IsInBounds(mousePosition))
+            {   
+                char new_file = GetFile(mousePosition.x);
+                int new_rank = GetRank(mousePosition.y);
+
+                Debug.Log("new file is " + new_file + " new rank is "  + new_rank);
+
+                PiecePlacer placer = GetComponent<PiecePlacer>();
+                placer.SetFile(new_file);
+                placer.SetRank(new_rank);
+                placer.SetGlobalCoords();
+
+            }
+            else
+            {
+                transform.position = initialPosition;
+            }
             Debug.Log(name + " dropped at position: " + transform.position);
         }
+    }
+    public bool IsInBounds(Vector3 pos)
+    {
+        if (pos.x < xMin || pos.x > xMax || pos.y < yMin || pos.y > yMax)
+        {
+            return false;
+        }
+        return true;
+    }
+    private char GetFile(float x) {
+        return (char)('a' + (int)(x + 4));
+    }
+    private int GetRank(float y) {
+        return (int)(y + 4) + 1;
     }
 }
