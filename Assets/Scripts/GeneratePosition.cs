@@ -11,7 +11,7 @@ public class GeneratePosition : MonoBehaviour {
 
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
-        InitialBoardConfiguration.Instance.GenerateboardConfiguration(inputFEN);
+        BoardConfiguration.Instance.GenerateboardConfiguration(inputFEN);
         Game.Instance.DestroyPieces();
         Game.Instance.GeneratePieces();
     }

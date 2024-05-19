@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Text;
 
-public class InitialBoardConfiguration : MonoBehaviour {
-    public static InitialBoardConfiguration Instance { get; private set; }
+public class BoardConfiguration : MonoBehaviour {
+    public static BoardConfiguration Instance { get; private set; }
 
     // very important structure, will be used across multiple game components
     public char[,] boardConfiguration;
@@ -60,5 +60,10 @@ public class InitialBoardConfiguration : MonoBehaviour {
             }
             Debug.Log(row);
         }
+    }
+
+    public void MovePiece(int old_i, int old_j, int new_i, int new_j) {
+        boardConfiguration[new_i, new_j] = boardConfiguration[old_i, old_j];
+        boardConfiguration[old_i, old_j] = '-';
     }
 }

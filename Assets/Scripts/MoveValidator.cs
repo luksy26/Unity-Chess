@@ -5,7 +5,7 @@ public class MoveValidator : MonoBehaviour {
     // Start is called before the first frame update
 
     public bool IsLegalMove(char old_file, int old_rank, char new_file, int new_rank) {
-        boardConfiguration = InitialBoardConfiguration.Instance.boardConfiguration;
+        boardConfiguration = BoardConfiguration.Instance.boardConfiguration;
         if (old_file == new_file && old_rank == new_rank) {
             return false;
         }

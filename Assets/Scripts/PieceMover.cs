@@ -29,7 +29,6 @@ public class PieceMover : MonoBehaviour {
         Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         isDragging = true;
         initialPosition = transform.position;
-        Debug.Log(name + " clicked, initial position is" + initialPosition);
         transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
     }
 
@@ -80,7 +79,6 @@ public class PieceMover : MonoBehaviour {
                 currentGame.SwapPlayer();
 
             }
-            Debug.Log(name + " dropped at position: " + transform.position);
         }
     }
     public bool IsInBounds(Vector3 pos) {

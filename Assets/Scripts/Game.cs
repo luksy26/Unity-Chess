@@ -1,16 +1,20 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
-    public GameObject[,] current_pieces;
+    public GameObject[,] currentPieces;
+    public List<GameObject> blackPieces, whitePieces;
     public GameObject chessPiecePrefab;
     public string currentPlayer;
     public string playerPerspective;
 
     public void Start() {
         currentPlayer = "white";
-        playerPerspective = "white";
-        current_pieces = new GameObject[8, 8];
+        playerPerspective = "black";
+        currentPieces = new GameObject[8, 8];
+        blackPieces = new();
+        whitePieces = new();
     }
     private void Awake() {
         if (Instance == null) {
@@ -22,7 +26,7 @@ public class Game : MonoBehaviour {
     }
 
     public void GeneratePieces() {
-        char[,] boardConfiguration = InitialBoardConfiguration.Instance.boardConfiguration;
+        char[,] boardConfiguration = BoardConfiguration.Instance.boardConfiguration;
 
         for (int i = 0; i < boardConfiguration.GetLength(0); ++i) {
             for (int j = 0; j < boardConfiguration.GetLength(1); ++j) {
@@ -31,7 +35,12 @@ public class Game : MonoBehaviour {
                 int rank = 8 - i;
                 string pieceName = GetPieceName(potentialPiece);
                 if (pieceName != "") {
-                    current_pieces[i, j] = CreatePieceSprite(pieceName, file, rank);
+                    currentPieces[i, j] = CreatePieceSprite(pieceName, file, rank);
+                    if(char.IsUpper(potentialPiece)) {
+                        whitePieces.Add(currentPieces[i, j]);
+                    } else {
+                        blackPieces.Add(currentPieces[i, j]);
+                    }
                 }
             }
         }
@@ -50,7 +59,50 @@ public class Game : MonoBehaviour {
         obj.GetComponent<PieceMover>().name = name;
         return obj;
     }
+    public void DestroyPieces() {
+        for (int i = 0; i < currentPieces.GetLength(0); ++i) {
+            for (int j = 0; j < currentPieces.GetLength(1); ++j) {
+                if (currentPieces[i, j] != null) {
+                    blackPieces.Remove(currentPieces[i, j]);
+                    whitePieces.Remove(currentPieces[i, j]);
+                    Destroy(currentPieces[i, j]);
+                }
+            }
+        }
+    }
+    public void MovePiece(char old_file, int old_rank, char new_file, int new_rank) {
+        int old_i = 8 - old_rank;
+        int old_j = old_file - 'a';
+        int new_i = 8 - new_rank;
+        int new_j = new_file - 'a';
+        if (currentPieces[new_i, new_j] != null) {
+            if (blackPieces.Contains(currentPieces[new_i, new_j])) {
+                blackPieces.Remove(currentPieces[new_i, new_j]);
+            } else {
+                whitePieces.Remove(currentPieces[new_i, new_j]);
+            }
+            Destroy(currentPieces[new_i, new_j]);
+        }
+        currentPieces[new_i, new_j] = currentPieces[old_i, old_j];
+        currentPieces[old_i, old_j] = null;
+        BoardConfiguration.Instance.MovePiece(old_i, old_j, new_i, new_j);
 
+        Debug.Log("Board Configuration Changed:");
+        for (int i = 0; i < 8; i++) {
+            string row = "";
+            for (int j = 0; j < 8; j++) {
+                row += BoardConfiguration.Instance.boardConfiguration[i, j];
+            }
+            Debug.Log(row);
+        }
+    }
+    public void SwapPlayer() {
+        if (currentPlayer.Equals("white")) {
+            currentPlayer = "black";
+        } else {
+            currentPlayer = "white";
+        }
+    }
     private string GetPieceName(char x) {
         return x switch {
             'r' => "black_rook",
@@ -67,32 +119,5 @@ public class Game : MonoBehaviour {
             'P' => "white_pawn",
             _ => "",
         };
-    }
-    public void DestroyPieces() {
-        for (int i = 0; i < current_pieces.GetLength(0); ++i) {
-            for (int j = 0; j < current_pieces.GetLength(1); ++j) {
-                if (current_pieces[i, j] != null) {
-                    Destroy(current_pieces[i, j]);
-                }
-            }
-        }
-    }
-    public void MovePiece(char old_file, int old_rank, char new_file, int new_rank) {
-        int old_i = 8 - old_rank;
-        int old_j = old_file - 'a';
-        int new_i = 8 - new_rank;
-        int new_j = new_file - 'a';
-        if (current_pieces[new_i, new_j] != null) {
-            Destroy(current_pieces[new_i, new_j]);
-        }
-        current_pieces[new_i, new_j] = current_pieces[old_i, old_j];
-        current_pieces[old_i, old_j] = null;
-    }
-    public void SwapPlayer() {
-        if (currentPlayer.Equals("white")) {
-            currentPlayer = "black";
-        } else {
-            currentPlayer = "white";
-        }
     }
 }
