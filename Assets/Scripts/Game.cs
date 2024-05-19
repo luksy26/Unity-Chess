@@ -5,9 +5,11 @@ public class Game : MonoBehaviour {
     public GameObject[,] current_pieces;
     public GameObject chessPiecePrefab;
     public string currentPlayer;
+    public string playerPerspective;
 
     public void Start() {
         currentPlayer = "white";
+        playerPerspective = "white";
         current_pieces = new GameObject[8, 8];
     }
     private void Awake() {
@@ -43,7 +45,7 @@ public class Game : MonoBehaviour {
         PiecePlacer placer = obj.GetComponent<PiecePlacer>();
         placer.SetFile(file);
         placer.SetRank(rank);
-        placer.SetGlobalCoords();
+        placer.SetGlobalCoords(playerPerspective);
         placer.name = name;
         obj.GetComponent<PieceMover>().name = name;
         return obj;

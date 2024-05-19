@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEngine;
 
 public class PieceMover : MonoBehaviour {
@@ -61,15 +62,15 @@ public class PieceMover : MonoBehaviour {
                     PiecePlacer placer = GetComponent<PiecePlacer>();
                     char old_file = placer.GetFile();
                     int old_rank = placer.GetRank();
-                    char new_file = GetFile(mousePosition.x);
-                    int new_rank = GetRank(mousePosition.y);
+                    char new_file = GetFile(mousePosition.x, currentGame.playerPerspective);
+                    int new_rank = GetRank(mousePosition.y, currentGame.playerPerspective);
                     if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank)) {
                         backToStart = false;
                         Debug.Log("new file is " + new_file + " new rank is " + new_rank);
                         currentGame.MovePiece(old_file, old_rank, new_file, new_rank);
                         placer.SetFile(new_file);
                         placer.SetRank(new_rank);
-                        placer.SetGlobalCoords();
+                        placer.SetGlobalCoords(currentGame.playerPerspective);
                     }
                 }
             }
@@ -88,11 +89,19 @@ public class PieceMover : MonoBehaviour {
         }
         return true;
     }
-    private char GetFile(float x) {
-        return (char)('a' + (int)(x + 4));
+    private char GetFile(float x, string playerPerspective) {
+        char file = (char)('a' + (int)(x + 4));
+        if (playerPerspective.Equals("black")) {
+            file = (char)('a'+ ('h' - file));
+        }
+        return file;
     }
-    private int GetRank(float y) {
-        return (int)(y + 4) + 1;
+    private int GetRank(float y, string playerPerspective) {
+        int rank = (int)(y + 4) + 1;
+        if (playerPerspective.Equals("black")) {
+            rank = 9 - rank;
+        }
+        return rank;
     }
     private string GetPieceOwner(string piece_name) {
         if (piece_name.ToLower().Contains("white")) {

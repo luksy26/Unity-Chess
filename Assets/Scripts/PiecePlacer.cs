@@ -7,9 +7,14 @@ public class PiecePlacer : MonoBehaviour {
     private static readonly float offset = 3.5f; // -8 / 2 + 1 / 2
     private static readonly float multiplier = 1; // 8 / 8
 
-    public void SetGlobalCoords() {
+    public void SetGlobalCoords(string playerPerspective) {
         global_x = file - 'a';
         global_y = rank - 1;
+
+        if (playerPerspective.Equals("black")) {
+            global_x = 7 - global_x;
+            global_y = 7 - (rank - 1);
+        }
 
         global_x *= multiplier;
         global_y *= multiplier;

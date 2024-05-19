@@ -6,7 +6,9 @@ public class MoveValidator : MonoBehaviour {
 
     public bool IsLegalMove(char old_file, int old_rank, char new_file, int new_rank) {
         boardConfiguration = InitialBoardConfiguration.Instance.boardConfiguration;
-
+        if (old_file == new_file && old_rank == new_rank) {
+            return false;
+        }
         return true;
     }
     private string GetPieceType(char x) {
