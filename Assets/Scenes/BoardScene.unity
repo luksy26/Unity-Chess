@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 293976309}
   - component: {fileID: 293976310}
   m_Layer: 0
-  m_Name: BoardConfigurationManager
+  m_Name: GameStateController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -166,9 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d51854d7f14bc5d48825d396196f857d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rows: 8
-  cols: 8
-  defaultFEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
+  defaultFEN: 
 --- !u!1 &369212471
 GameObject:
   m_ObjectHideFlags: 0
@@ -775,8 +773,8 @@ MonoBehaviour:
   blackPieces: []
   whitePieces: []
   chessPiecePrefab: {fileID: 1349441230006070361, guid: 592ccfb394f1e5740b5e64aae3a0927c, type: 3}
-  currentPlayer: white
-  playerPerspective: 
+  currentPlayer: 49
+  playerPerspective: white
 --- !u!114 &1480655576
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -949,7 +947,7 @@ GameObject:
   - component: {fileID: 2009996625}
   - component: {fileID: 2009996624}
   m_Layer: 0
-  m_Name: GeneratePositionController
+  m_Name: PositionGeneratorController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

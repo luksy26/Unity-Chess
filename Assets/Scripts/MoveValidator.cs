@@ -1,11 +1,11 @@
 using UnityEngine;
 
 public class MoveValidator : MonoBehaviour {
-    private char[,] boardConfiguration;
+    private GameState gameState;
     // Start is called before the first frame update
 
     public bool IsLegalMove(char old_file, int old_rank, char new_file, int new_rank) {
-        boardConfiguration = BoardConfiguration.Instance.boardConfiguration;
+        gameState = GameStateManager.Instance.gameState;
         if (old_file == new_file && old_rank == new_rank) {
             return false;
         }

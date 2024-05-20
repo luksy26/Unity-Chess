@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GeneratePosition : MonoBehaviour {
+public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
     public Button generateButton;
 
@@ -11,7 +11,7 @@ public class GeneratePosition : MonoBehaviour {
 
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
-        BoardConfiguration.Instance.GenerateboardConfiguration(inputFEN);
+        GameStateManager.Instance.GenerateGameState(inputFEN);
         Game.Instance.DestroyPieces();
         Game.Instance.GeneratePieces();
     }

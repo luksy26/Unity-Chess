@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Game : MonoBehaviour {
@@ -7,12 +6,11 @@ public class Game : MonoBehaviour {
     public GameObject[,] currentPieces;
     public List<GameObject> blackPieces, whitePieces;
     public GameObject chessPiecePrefab;
-    public string currentPlayer;
+    public char currentPlayer;
     public string playerPerspective;
 
     public void Start() {
-        currentPlayer = "white";
-        playerPerspective = "white";
+        //playerPerspective = "white";
         currentPieces = new GameObject[8, 8];
         blackPieces = new();
         whitePieces = new();
@@ -27,7 +25,9 @@ public class Game : MonoBehaviour {
     }
 
     public void GeneratePieces() {
-        char[,] boardConfiguration = BoardConfiguration.Instance.boardConfiguration;
+        GameState gameState = GameStateManager.Instance.gameState;
+        char[,] boardConfiguration = gameState.boardConfiguration;
+        currentPlayer = gameState.whoMoves;
 
         for (int i = 0; i < boardConfiguration.GetLength(0); ++i) {
             for (int j = 0; j < boardConfiguration.GetLength(1); ++j) {
@@ -87,22 +87,13 @@ public class Game : MonoBehaviour {
         }
         currentPieces[new_i, new_j] = currentPieces[old_i, old_j];
         currentPieces[old_i, old_j] = null;
-        BoardConfiguration.Instance.MovePiece(old_i, old_j, new_i, new_j);
-
-        Debug.Log("Board Configuration Changed:");
-        for (int i = 0; i < 8; i++) {
-            string row = "";
-            for (int j = 0; j < 8; j++) {
-                row += BoardConfiguration.Instance.boardConfiguration[i, j];
-            }
-            Debug.Log(row);
-        }
+        GameStateManager.Instance.MovePiece(old_i, old_j, new_i, new_j);
     }
     public void SwapPlayer() {
-        if (currentPlayer.Equals("white")) {
-            currentPlayer = "black";
+        if (currentPlayer == 'w') {
+            currentPlayer = 'b';
         } else {
-            currentPlayer = "white";
+            currentPlayer = 'w';
         }
     }
     private string GetPieceName(char x) {

@@ -56,7 +56,7 @@ public class PieceMover : MonoBehaviour {
             bool backToStart = true;
 
             if (IsInBounds(mousePosition)) {
-                string piece_owner = GetPieceOwner(name);
+                char piece_owner = GetPieceOwner(name);
                 if (currentGame.currentPlayer.Equals(piece_owner)) {
                     PiecePlacer placer = GetComponent<PiecePlacer>();
                     char old_file = placer.GetFile();
@@ -100,10 +100,10 @@ public class PieceMover : MonoBehaviour {
         }
         return rank;
     }
-    private string GetPieceOwner(string piece_name) {
+    private char GetPieceOwner(string piece_name) {
         if (piece_name.Contains("white")) {
-            return "white";
+            return 'w';
         }
-        return "black";
+        return 'b';
     }
 }
