@@ -96,7 +96,7 @@ public class GameStateManager : MonoBehaviour {
     }
 
     public void MovePiece(int old_i, int old_j, int new_i, int new_j) {
-        
+
         if (gameState.boardConfiguration[new_i, new_j] != '-' || char.ToLower(gameState.boardConfiguration[old_i, old_j]) == 'p') {
             gameState.moveCounter50Move = 0;
         } else {

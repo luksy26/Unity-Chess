@@ -87,7 +87,14 @@ public class Game : MonoBehaviour {
         }
         currentPieces[new_i, new_j] = currentPieces[old_i, old_j];
         currentPieces[old_i, old_j] = null;
+
+        PiecePlacer placer = currentPieces[new_i, new_j].GetComponent<PiecePlacer>();
+        placer.SetFile(new_file);
+        placer.SetRank(new_rank);
+        placer.SetGlobalCoords(playerPerspective);
+
         GameStateManager.Instance.MovePiece(old_i, old_j, new_i, new_j);
+
     }
     public void SwapPlayer() {
         if (currentPlayer == 'w') {

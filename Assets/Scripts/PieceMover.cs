@@ -1,4 +1,3 @@
-using System.IO;
 using UnityEngine;
 
 public class PieceMover : MonoBehaviour {
@@ -65,11 +64,7 @@ public class PieceMover : MonoBehaviour {
                     int new_rank = GetRank(mousePosition.y, currentGame.playerPerspective);
                     if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank)) {
                         backToStart = false;
-                        Debug.Log("new file is " + new_file + " new rank is " + new_rank);
                         currentGame.MovePiece(old_file, old_rank, new_file, new_rank);
-                        placer.SetFile(new_file);
-                        placer.SetRank(new_rank);
-                        placer.SetGlobalCoords(currentGame.playerPerspective);
                     }
                 }
             }
