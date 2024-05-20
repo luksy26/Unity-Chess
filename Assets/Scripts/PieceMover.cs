@@ -62,7 +62,7 @@ public class PieceMover : MonoBehaviour {
                     int old_rank = placer.GetRank();
                     char new_file = GetFile(mousePosition.x, currentGame.playerPerspective);
                     int new_rank = GetRank(mousePosition.y, currentGame.playerPerspective);
-                    if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank)) {
+                    if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank, GameStateManager.Instance.gameState)) {
                         backToStart = false;
                         currentGame.MovePiece(old_file, old_rank, new_file, new_rank);
                     }
@@ -76,7 +76,7 @@ public class PieceMover : MonoBehaviour {
         }
     }
     public bool IsInBounds(Vector3 pos) {
-        if (pos.x < xMin || pos.x > xMax || pos.y < yMin || pos.y > yMax) {
+        if (pos.x < xMin || pos.x >= xMax || pos.y < yMin || pos.y >= yMax) {
             return false;
         }
         return true;

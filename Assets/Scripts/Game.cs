@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class Game : MonoBehaviour {
@@ -72,18 +74,41 @@ public class Game : MonoBehaviour {
         }
     }
     public void MovePiece(char old_file, int old_rank, char new_file, int new_rank) {
+        GameStateManager manager = GameStateManager.Instance;
         int old_i = 8 - old_rank;
         int old_j = old_file - 'a';
         int new_i = 8 - new_rank;
         int new_j = new_file - 'a';
+        bool promoting = false;
+        string movedPieceName = currentPieces[old_i, old_j].name;
         if (currentPieces[new_i, new_j] != null) {
             Debug.Log("destroying " + currentPieces[new_i, new_j].name);
-            if (currentPieces[new_i, new_j].name.Contains("black")) {
+            if (currentPlayer == 'w') {
                 blackPieces.Remove(currentPieces[new_i, new_j]);
             } else {
                 whitePieces.Remove(currentPieces[new_i, new_j]);
             }
             Destroy(currentPieces[new_i, new_j]);
+        }
+        if (movedPieceName.Contains("pawn")) {
+            if (new_i == 0 || new_i == 7) {
+                promoting = true;
+            } else {
+                char enPassantFile = manager.gameState.enPassantFile;
+                int enPassantRank = manager.gameState.enPassantRank;
+                // pawn captured the en-passant target
+                if (new_file == enPassantFile && new_rank == enPassantRank) {
+                    if (currentPlayer == 'w') {
+                        Debug.Log("destroying " + currentPieces[new_i + 1, new_j].name);
+                        blackPieces.Remove(currentPieces[new_i + 1, new_j]);
+                        Destroy(currentPieces[new_i + 1, new_j]);
+                    } else {
+                        Debug.Log("destroying " + currentPieces[new_i - 1, new_j].name);
+                        whitePieces.Remove(currentPieces[new_i - 1, new_j]);
+                        Destroy(currentPieces[new_i - 1, new_j]);
+                    }
+                }
+            }
         }
         currentPieces[new_i, new_j] = currentPieces[old_i, old_j];
         currentPieces[old_i, old_j] = null;
@@ -92,8 +117,16 @@ public class Game : MonoBehaviour {
         placer.SetFile(new_file);
         placer.SetRank(new_rank);
         placer.SetGlobalCoords(playerPerspective);
+        if (promoting) {
+            string new_name = currentPlayer == 'w' ? "white_queen" : "black_queen";
+            currentPieces[new_i, new_j].name = new_name;
+            currentPieces[new_i, new_j].GetComponent<SpriteRenderer>().sprite =
+                currentPieces[new_i, new_j].GetComponent<SpriteFactory>()
+                    .GetSprite(new_name);
 
-        GameStateManager.Instance.MovePiece(old_i, old_j, new_i, new_j);
+        }
+
+        manager.MovePiece(old_i, old_j, new_i, new_j);
 
     }
     public void SwapPlayer() {

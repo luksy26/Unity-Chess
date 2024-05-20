@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Text;
+using System;
 
 public class GameStateManager : MonoBehaviour {
     public static GameStateManager Instance { get; private set; }
@@ -76,7 +77,7 @@ public class GameStateManager : MonoBehaviour {
         }
         ++index;
         if (inputFEN_sb[index] == '-') {
-            gameState.enPassantFile = '\0';
+            gameState.enPassantFile = '*';
             gameState.enPassantRank = 0;
             ++index;
         } else {
@@ -96,14 +97,44 @@ public class GameStateManager : MonoBehaviour {
     }
 
     public void MovePiece(int old_i, int old_j, int new_i, int new_j) {
-
-        if (gameState.boardConfiguration[new_i, new_j] != '-' || char.ToLower(gameState.boardConfiguration[old_i, old_j]) == 'p') {
+        bool movingToEmptySquare = gameState.boardConfiguration[new_i, new_j] == '-';
+        // capturing a piece or advancing a pawn
+        if (!movingToEmptySquare || char.ToLower(gameState.boardConfiguration[old_i, old_j]) == 'p') {
             gameState.moveCounter50Move = 0;
         } else {
             ++gameState.moveCounter50Move;
         }
+        // we have a new en-passant target
+        if (char.ToLower(gameState.boardConfiguration[old_i, old_j]) == 'p' && Math.Abs(new_i - old_i) == 2) {
+            gameState.enPassantFile = (char)(new_j + 'a');
+            gameState.enPassantRank = 8 - new_i;
+            if (gameState.whoMoves == 'w') {
+                --gameState.enPassantRank;
+            } else {
+                ++gameState.enPassantRank;
+            }
+        } else {
+            gameState.enPassantFile = '*';
+            gameState.enPassantRank = 0;
+        }
+
         gameState.boardConfiguration[new_i, new_j] = gameState.boardConfiguration[old_i, old_j];
         gameState.boardConfiguration[old_i, old_j] = '-';
+
+        // a pawn was moved
+        if (char.ToLower(gameState.boardConfiguration[new_i, new_j]) == 'p') {
+            if (new_i == 0) { // white is promoting
+                gameState.boardConfiguration[0, new_j] = 'Q';
+            } else if (new_i == 7) { // black is promoting
+                gameState.boardConfiguration[7, new_j] = 'q';
+            } else if (Math.Abs(new_j - new_i) == 1 && movingToEmptySquare) { // moving en-passant
+                if (gameState.whoMoves == 'w') {
+                    gameState.boardConfiguration[new_i + 1, new_j] = '-'; // removing captured piece
+                } else {
+                    gameState.boardConfiguration[new_i - 1, new_j] = '-'; // removing captured piece
+                }
+            }
+        }
 
         if (gameState.whoMoves == 'b') {
             ++gameState.moveCounterFull;
@@ -128,7 +159,7 @@ public class GameStateManager : MonoBehaviour {
         Debug.Log("White can" + (gameState.white_O_O_O ? " " : "\'t ") + "long castle");
         Debug.Log("Black can" + (gameState.black_O_O ? " " : "\'t ") + "short castle");
         Debug.Log("Black can" + (gameState.black_O_O ? " " : "\'t ") + "long castle");
-        Debug.Log(gameState.enPassantRank == 0 ? "no en-passant available" : (gameState.enPassantFile + gameState.enPassantRank));
+        Debug.Log(gameState.enPassantRank == 0 ? "no en-passant available" : (gameState.enPassantFile + gameState.enPassantRank.ToString()));
         Debug.Log("50 move counter " + gameState.moveCounter50Move + " fullmove counter " + gameState.moveCounterFull);
     }
 }
