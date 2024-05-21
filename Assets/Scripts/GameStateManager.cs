@@ -47,6 +47,13 @@ public class GameStateManager : MonoBehaviour {
                     }
                 } else if (inputFEN_sb[index] != '/') {
                     gameState.boardConfiguration[i, j] = inputFEN_sb[index];
+                    if (inputFEN_sb[index] == 'k') {
+                        gameState.blackKingRow = i;
+                        gameState.blackKingColumn = j;
+                    } else if (inputFEN_sb[index] == 'K') {
+                        gameState.whiteKingRow = i;
+                        gameState.whiteKingColumn = j;
+                    }
                     ++index;
                 } else {
                     ++index;
@@ -135,6 +142,21 @@ public class GameStateManager : MonoBehaviour {
                 }
             }
         }
+        // king moved
+        if (char.ToLower(gameState.boardConfiguration[new_i, new_j]) == 'k') {
+            // update data in gameState
+            if (gameState.whoMoves == 'w') {
+                gameState.whiteKingRow = new_i;
+                gameState.whiteKingColumn = new_j;
+                gameState.white_O_O = false;
+                gameState.white_O_O_O = false;
+            } else {
+                gameState.blackKingRow = new_i;
+                gameState.blackKingColumn = new_j;
+                gameState.black_O_O = false;
+                gameState.black_O_O_O = false;
+            }
+        }
 
         if (gameState.whoMoves == 'b') {
             ++gameState.moveCounterFull;
@@ -159,7 +181,10 @@ public class GameStateManager : MonoBehaviour {
         Debug.Log("White can" + (gameState.white_O_O_O ? " " : "\'t ") + "long castle");
         Debug.Log("Black can" + (gameState.black_O_O ? " " : "\'t ") + "short castle");
         Debug.Log("Black can" + (gameState.black_O_O ? " " : "\'t ") + "long castle");
-        Debug.Log(gameState.enPassantRank == 0 ? "no en-passant available" : (gameState.enPassantFile + gameState.enPassantRank.ToString()));
+        Debug.Log(gameState.enPassantRank == 0 ? "no en-passant available" : "en-passant at " + gameState.enPassantFile + gameState.enPassantRank);
         Debug.Log("50 move counter " + gameState.moveCounter50Move + " fullmove counter " + gameState.moveCounterFull);
+        char whiteKingFile = (char)(gameState.whiteKingColumn + 'a'), blackKingFile = (char)(gameState.blackKingColumn + 'a');
+        int whiteKingRank = 8 - gameState.whiteKingRow, blackKingRank = 8 - gameState.blackKingRow;
+        Debug.Log("white king at " + whiteKingFile + whiteKingRank + ", black king at " + blackKingFile + blackKingRank);
     }
 }
