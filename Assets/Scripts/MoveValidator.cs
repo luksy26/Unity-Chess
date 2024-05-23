@@ -221,7 +221,8 @@ public class MoveValidator : MonoBehaviour {
                     Debug.Log("false 8");
                     return false;
                 }
-                bool blockingPieces = boardConfiguration[old_i, old_j - 1] != '-' || boardConfiguration[old_i, old_j - 2] != '-';
+                bool blockingPieces = boardConfiguration[old_i, old_j - 1] != '-' || boardConfiguration[old_i, old_j - 2] != '-' ||
+                        boardConfiguration[old_i, old_j - 3] != '-';
                 if (blockingPieces) {
                     Debug.Log("false 9");
                     return false;
