@@ -61,6 +61,9 @@ public class GameStateManager : MonoBehaviour {
                 }
             }
         }
+        if (inputFEN_sb[index] != ' ') {
+            ++index;
+        }
         gameState.whoMoves = inputFEN_sb[++index];
         index += 2;
 
@@ -179,7 +182,7 @@ public class GameStateManager : MonoBehaviour {
                 } else if (old_j == 7) {
                     gameState.black_O_O = false;
                 }
-            } 
+            }
         }
 
         // king moved
