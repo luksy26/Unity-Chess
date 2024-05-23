@@ -227,6 +227,7 @@ public class MoveValidator : MonoBehaviour {
                     Debug.Log("false 9");
                     return false;
                 }
+                // trying to castle through check
                 if (!IsKingSafeAt(old_i, old_j - 1, gameState, -1, -1, -1, -1)) {
                     Debug.Log("false 10");
                     return false;

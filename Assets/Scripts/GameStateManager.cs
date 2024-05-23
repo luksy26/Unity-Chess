@@ -231,7 +231,7 @@ public class GameStateManager : MonoBehaviour {
         Debug.Log("White can" + (gameState.white_O_O ? " " : "\'t ") + "short castle");
         Debug.Log("White can" + (gameState.white_O_O_O ? " " : "\'t ") + "long castle");
         Debug.Log("Black can" + (gameState.black_O_O ? " " : "\'t ") + "short castle");
-        Debug.Log("Black can" + (gameState.black_O_O ? " " : "\'t ") + "long castle");
+        Debug.Log("Black can" + (gameState.black_O_O_O ? " " : "\'t ") + "long castle");
         Debug.Log(gameState.enPassantRank == 0 ? "no en-passant available" : "en-passant at " + gameState.enPassantFile + gameState.enPassantRank);
         Debug.Log("50 move counter " + gameState.moveCounter50Move + " fullmove counter " + gameState.moveCounterFull);
         char whiteKingFile = (char)(gameState.whiteKingColumn + 'a'), blackKingFile = (char)(gameState.blackKingColumn + 'a');
