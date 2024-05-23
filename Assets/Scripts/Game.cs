@@ -102,19 +102,17 @@ public class Game : MonoBehaviour {
                 // pawn captured the en-passant target
                 if (new_file == enPassantFile && new_rank == enPassantRank) {
                     if (currentPlayer == 'w') {
-                        Debug.Log("destroying " + currentPieces[new_i + 1, new_j].name);
                         blackPieces.Remove(currentPieces[new_i + 1, new_j]);
                         Destroy(currentPieces[new_i + 1, new_j]);
+                        currentPieces[new_i + 1, new_j] = null;
                     } else {
-                        Debug.Log("destroying " + currentPieces[new_i - 1, new_j].name);
                         whitePieces.Remove(currentPieces[new_i - 1, new_j]);
                         Destroy(currentPieces[new_i - 1, new_j]);
+                        currentPieces[new_i - 1, new_j] = null;
                     }
                 }
             }
-        } else if (movedPieceName.Contains("king") && Math.Abs(new_j - old_j) == 2) {
-            // the king has just castled
-
+        } else if (movedPieceName.Contains("king") && Math.Abs(new_j - old_j) == 2) { // the king has just castled
             // we need to change the rook's placement as well
             PiecePlacer rookPlacer;
             // short castle
@@ -122,10 +120,14 @@ public class Game : MonoBehaviour {
                 rookPlacer = currentPieces[new_i, 7].GetComponent<PiecePlacer>();
                 rookPlacer.SetFile((char)(new_file - 1));
                 rookPlacer.SetGlobalCoords(playerPerspective);
+                currentPieces[new_i, 5] = currentPieces[new_i, 7];
+                currentPieces[new_i, 7] = null;
             } else { // long castle
                 rookPlacer = currentPieces[new_i, 0].GetComponent<PiecePlacer>();
                 rookPlacer.SetFile((char)(new_file + 1));
                 rookPlacer.SetGlobalCoords(playerPerspective);
+                currentPieces[new_i, 3] = currentPieces[new_i, 0];
+                currentPieces[new_i, 0] = null;
             }
         }
         currentPieces[new_i, new_j] = currentPieces[old_i, old_j];

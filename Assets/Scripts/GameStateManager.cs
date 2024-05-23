@@ -156,7 +156,7 @@ public class GameStateManager : MonoBehaviour {
                 gameState.boardConfiguration[0, new_j] = 'Q';
             } else if (new_i == 7) { // black is promoting
                 gameState.boardConfiguration[7, new_j] = 'q';
-            } else if (Math.Abs(new_j - new_i) == 1 && movingToEmptySquare) { // moving en-passant
+            } else if (Math.Abs(new_j - old_j) == 1 && movingToEmptySquare) { // moving en-passant
                 if (gameState.whoMoves == 'w') {
                     gameState.boardConfiguration[new_i + 1, new_j] = '-'; // removing captured piece
                 } else {
@@ -223,9 +223,10 @@ public class GameStateManager : MonoBehaviour {
         for (int i = 0; i < 8; i++) {
             string row = "";
             for (int j = 0; j < 8; j++) {
-                row += gameState.boardConfiguration[i, j];
+                char element = gameState.boardConfiguration[i, j];
+                row += element + "  "; // Add two spaces after each character
             }
-            Debug.Log(row);
+            Debug.Log(row.TrimEnd());
         }
         Debug.Log("Current player: " + gameState.whoMoves);
         Debug.Log("White can" + (gameState.white_O_O ? " " : "\'t ") + "short castle");
