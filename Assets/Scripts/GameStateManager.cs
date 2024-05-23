@@ -111,6 +111,27 @@ public class GameStateManager : MonoBehaviour {
         } else {
             ++gameState.moveCounter50Move;
         }
+
+        // a piece was captured
+        if (!movingToEmptySquare) {
+            // on black's backrank
+            if (new_i == 0) {
+                // took black's rook on a8
+                if (new_j == 0) {
+                    gameState.black_O_O_O = false;
+                } else if (new_j == 7) { // took black's rook on h8
+                    gameState.black_O_O = false;
+                }
+            } else if (new_i == 7) { // on white's backrank
+                // took white's rook on a1
+                if (new_j == 0) {
+                    gameState.white_O_O_O = false;
+                } else if (new_j == 7) { // took white's rook on h1
+                    gameState.white_O_O = false;
+                }
+            }
+        }
+
         // we have a new en-passant target
         if (char.ToLower(gameState.boardConfiguration[old_i, old_j]) == 'p' && Math.Abs(new_i - old_i) == 2) {
             gameState.enPassantFile = (char)(new_j + 'a');
@@ -125,6 +146,7 @@ public class GameStateManager : MonoBehaviour {
             gameState.enPassantRank = 0;
         }
 
+        // move the piece on the new square
         gameState.boardConfiguration[new_i, new_j] = gameState.boardConfiguration[old_i, old_j];
         gameState.boardConfiguration[old_i, old_j] = '-';
 
@@ -142,6 +164,24 @@ public class GameStateManager : MonoBehaviour {
                 }
             }
         }
+        // a rook was moved
+        if (char.ToLower(gameState.boardConfiguration[new_i, new_j]) == 'r') {
+            // from the backrank
+            if (gameState.whoMoves == 'w' && old_i == 7) {
+                if (old_j == 0) {
+                    gameState.white_O_O_O = false;
+                } else if (old_j == 7) {
+                    gameState.white_O_O = false;
+                }
+            } else if (gameState.whoMoves == 'b' && old_i == 0) {
+                if (old_j == 0) {
+                    gameState.black_O_O_O = false;
+                } else if (old_j == 7) {
+                    gameState.black_O_O = false;
+                }
+            } 
+        }
+
         // king moved
         if (char.ToLower(gameState.boardConfiguration[new_i, new_j]) == 'k') {
             // update data in gameState
@@ -155,6 +195,17 @@ public class GameStateManager : MonoBehaviour {
                 gameState.blackKingColumn = new_j;
                 gameState.black_O_O = false;
                 gameState.black_O_O_O = false;
+            }
+            // the king just castled
+            if (Math.Abs(new_j - old_j) == 2) {
+                // short castle
+                if (new_j > old_j) {
+                    gameState.boardConfiguration[new_i, new_j - 1] = gameState.boardConfiguration[new_i, new_j + 1];
+                    gameState.boardConfiguration[new_i, new_j + 1] = '-';
+                } else { // long castle
+                    gameState.boardConfiguration[new_i, new_j + 1] = gameState.boardConfiguration[new_i, new_j - 2];
+                    gameState.boardConfiguration[new_i, new_j - 2] = '-';
+                }
             }
         }
 

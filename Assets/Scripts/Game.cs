@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -79,6 +80,8 @@ public class Game : MonoBehaviour {
         int new_j = new_file - 'a';
         bool promoting = false;
         string movedPieceName = currentPieces[old_i, old_j].name;
+
+        // check if we a piece was captured
         if (currentPieces[new_i, new_j] != null) {
             Debug.Log("destroying " + currentPieces[new_i, new_j].name);
             if (currentPlayer == 'w') {
@@ -88,7 +91,9 @@ public class Game : MonoBehaviour {
             }
             Destroy(currentPieces[new_i, new_j]);
         }
+        // check if a pawn moved
         if (movedPieceName.Contains("pawn")) {
+            // check if the pawn reached the last rank
             if (new_i == 0 || new_i == 7) {
                 promoting = true;
             } else {
@@ -107,6 +112,21 @@ public class Game : MonoBehaviour {
                     }
                 }
             }
+        } else if (movedPieceName.Contains("king") && Math.Abs(new_j - old_j) == 2) {
+            // the king has just castled
+
+            // we need to change the rook's placement as well
+            PiecePlacer rookPlacer;
+            // short castle
+            if (new_j > old_j) {
+                rookPlacer = currentPieces[new_i, 7].GetComponent<PiecePlacer>();
+                rookPlacer.SetFile((char)(new_file - 1));
+                rookPlacer.SetGlobalCoords(playerPerspective);
+            } else { // long castle
+                rookPlacer = currentPieces[new_i, 0].GetComponent<PiecePlacer>();
+                rookPlacer.SetFile((char)(new_file + 1));
+                rookPlacer.SetGlobalCoords(playerPerspective);
+            }
         }
         currentPieces[new_i, new_j] = currentPieces[old_i, old_j];
         currentPieces[old_i, old_j] = null;
@@ -123,9 +143,7 @@ public class Game : MonoBehaviour {
                     .GetSprite(new_name);
 
         }
-
         manager.MovePiece(old_i, old_j, new_i, new_j);
-
     }
     public void SwapPlayer() {
         if (currentPlayer == 'w') {

@@ -169,6 +169,72 @@ public class MoveValidator : MonoBehaviour {
     }
 
     public bool IsLegalKingMove(int old_i, int old_j, int new_i, int new_j, GameState gameState) {
+        bool moving2Files = Math.Abs(new_j - old_j) == 2;
+
+        // check if trying to castle
+        if (moving2Files) {
+            bool kingOnProperFile = old_j == 4;
+            if (!kingOnProperFile) {
+                Debug.Log("false 1");
+                return false;
+            }
+            bool kingSameRank = old_i == new_i;
+            if (!kingSameRank) {
+                Debug.Log("false 2");
+                return false;
+            }
+            bool backRank = (gameState.whoMoves == 'w' && old_i == 7) || (gameState.whoMoves == 'b' && old_i == 0);
+            if (!backRank) {
+                Debug.Log("false 3");
+                return false;
+            }
+            // trying to castle while checked
+            if (!IsKingSafeAt(old_i, old_j, gameState, -1, -1, -1, -1)) {
+                Debug.Log("false 4");
+                return false;
+            }
+            char[,] boardConfiguration = gameState.boardConfiguration;
+            // trying to short castle
+            if (new_j > old_j) {
+                // already moved the king or rooks
+                if ((gameState.whoMoves == 'w' && !gameState.white_O_O) || (gameState.whoMoves == 'b' && !gameState.black_O_O)) {
+                    Debug.Log("false 5");
+                    return false;
+                }
+                bool blockingPieces = boardConfiguration[old_i, old_j + 1] != '-' || boardConfiguration[old_i, old_j + 2] != '-';
+                if (blockingPieces) {
+                    Debug.Log("false 6");
+                    return false;
+                }
+                // trying to castle through check
+                if (!IsKingSafeAt(old_i, old_j + 1, gameState, -1, -1, -1, -1)) {
+                    Debug.Log("false 7");
+                    return false;
+                }
+                // can castle (haven't checked for final position checks)
+                return true;
+            }
+            // trying to long castle
+            if (new_j < old_j) {
+                // already moved the king or rooks
+                if ((gameState.whoMoves == 'w' && !gameState.white_O_O_O) || (gameState.whoMoves == 'b' && !gameState.black_O_O_O)) {
+                    Debug.Log("false 8");
+                    return false;
+                }
+                bool blockingPieces = boardConfiguration[old_i, old_j - 1] != '-' || boardConfiguration[old_i, old_j - 2] != '-';
+                if (blockingPieces) {
+                    Debug.Log("false 9");
+                    return false;
+                }
+                if (!IsKingSafeAt(old_i, old_j - 1, gameState, -1, -1, -1, -1)) {
+                    Debug.Log("false 10");
+                    return false;
+                }
+                // can castle (haven't checked for final position checks)
+                return true;
+            }
+        }
+
         // moving too far
         if (Math.Abs(new_i - old_i) > 1 || Math.Abs(new_j - old_j) > 1) {
             return false;
@@ -183,7 +249,7 @@ public class MoveValidator : MonoBehaviour {
         bool restoreBoard = false;
         bool targetingEnPassant = false;
         char oldSquare = '-', newSquare = '-', enPassantSquare = '-';
-        
+
         // a piece is moving so we need to check king safety on a new configuration
         if (old_i != -1) {
             restoreBoard = true;
@@ -216,7 +282,6 @@ public class MoveValidator : MonoBehaviour {
                 if (knight_j >= 0 && knight_j <= 7) {
                     // if we are here then the position is in bounds
                     if (boardConfiguration[knight_i, knight_j] == enemyKnight) {
-                        Debug.Log("false 1");
                         if (restoreBoard) {
                             RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
                                 oldSquare, newSquare, enPassantSquare);
@@ -239,7 +304,6 @@ public class MoveValidator : MonoBehaviour {
                     RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
                         oldSquare, newSquare, enPassantSquare);
                 }
-                Debug.Log("false 2");
                 return false;
             }
         }
@@ -261,7 +325,6 @@ public class MoveValidator : MonoBehaviour {
                             RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
                                 oldSquare, newSquare, enPassantSquare);
                         }
-                        Debug.Log("false 3");
                         return false;
                     }
                 }
@@ -287,7 +350,6 @@ public class MoveValidator : MonoBehaviour {
 
                 char potentialPiece = boardConfiguration[piece_i, piece_j];
                 if (potentialPiece == enemyQueen || potentialPiece == enemyBishop) {
-                    Debug.Log("false 4");
                     if (restoreBoard) {
                         RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
                             oldSquare, newSquare, enPassantSquare);
@@ -314,7 +376,6 @@ public class MoveValidator : MonoBehaviour {
 
                 char potentialPiece = boardConfiguration[piece_i, piece_j];
                 if (potentialPiece == enemyQueen || potentialPiece == enemyRook) {
-                    Debug.Log("false 5");
                     if (restoreBoard) {
                         RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
                             oldSquare, newSquare, enPassantSquare);
