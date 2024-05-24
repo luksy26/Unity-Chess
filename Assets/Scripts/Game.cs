@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,11 +11,14 @@ public class Game : MonoBehaviour {
     public char currentPlayer;
     public string playerPerspective;
 
+    Hashtable gameStates;
+
     public void Start() {
         //playerPerspective = "white";
         currentPieces = new GameObject[8, 8];
         blackPieces = new();
         whitePieces = new();
+        gameStates = new();
     }
     private void Awake() {
         if (Instance == null) {
@@ -27,6 +31,10 @@ public class Game : MonoBehaviour {
 
     public void GeneratePieces() {
         GameState gameState = GameStateManager.Instance.gameState;
+
+        // add the gameState in the hashtable
+        gameStates.Add(gameState, 1);
+
         char[,] boardConfiguration = gameState.boardConfiguration;
         currentPlayer = gameState.whoMoves;
 
@@ -146,11 +154,22 @@ public class Game : MonoBehaviour {
 
         }
         manager.MovePiece(old_i, old_j, new_i, new_j);
+        if (gameStates.ContainsKey(manager.gameState)) {
+            int noOccurences = (int)gameStates[manager.gameState];
+            ++noOccurences;
+            if (noOccurences == 3) {
+                currentPlayer = '-';
+                Debug.Log("Draw by 3-fold repetition");
+            }
+            gameStates[manager.gameState] = noOccurences;
+        } else {
+            gameStates.Add(manager.gameState, 1);
+        }
     }
     public void SwapPlayer() {
         if (currentPlayer == 'w') {
             currentPlayer = 'b';
-        } else {
+        } else if (currentPlayer == 'b') {
             currentPlayer = 'w';
         }
     }
