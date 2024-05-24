@@ -1,7 +1,3 @@
-
-
-using System;
-
 public class GameState {
     public char[,] boardConfiguration;
     public char whoMoves;

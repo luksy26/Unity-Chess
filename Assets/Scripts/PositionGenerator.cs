@@ -12,7 +12,7 @@ public class PositionGenerator : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         GameStateManager.Instance.GenerateGameState(inputFEN);
-        Game.Instance.DestroyPieces();
-        Game.Instance.GeneratePieces();
+        Game.Instance.DestroyPosition();
+        Game.Instance.GeneratePosition();
     }
 }

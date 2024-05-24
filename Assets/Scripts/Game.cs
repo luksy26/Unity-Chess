@@ -29,7 +29,7 @@ public class Game : MonoBehaviour {
         }
     }
 
-    public void GeneratePieces() {
+    public void GeneratePosition() {
         GameState gameState = GameStateManager.Instance.gameState;
 
         // add the gameState in the hashtable
@@ -69,17 +69,7 @@ public class Game : MonoBehaviour {
         placer.SetGlobalCoords(playerPerspective);
         return obj;
     }
-    public void DestroyPieces() {
-        for (int i = 0; i < currentPieces.GetLength(0); ++i) {
-            for (int j = 0; j < currentPieces.GetLength(1); ++j) {
-                if (currentPieces[i, j] != null) {
-                    blackPieces.Remove(currentPieces[i, j]);
-                    whitePieces.Remove(currentPieces[i, j]);
-                    Destroy(currentPieces[i, j]);
-                }
-            }
-        }
-    }
+
     public void MovePiece(char old_file, int old_rank, char new_file, int new_rank) {
         GameStateManager manager = GameStateManager.Instance;
         int old_i = 8 - old_rank;
@@ -172,6 +162,22 @@ public class Game : MonoBehaviour {
         } else if (currentPlayer == 'b') {
             currentPlayer = 'w';
         }
+    }
+
+    public void DestroyPosition() {
+        for (int i = 0; i < currentPieces.GetLength(0); ++i) {
+            for (int j = 0; j < currentPieces.GetLength(1); ++j) {
+                if (currentPieces[i, j] != null) {
+                    // Remove the GameObjects from the matrixx
+                    blackPieces.Remove(currentPieces[i, j]);
+                    whitePieces.Remove(currentPieces[i, j]);
+                    // Destroy the objects
+                    Destroy(currentPieces[i, j]);
+                }
+            }
+        }
+        // Reset the positions hashtable
+        gameStates.Clear();
     }
     private string GetPieceName(char x) {
         return x switch {
