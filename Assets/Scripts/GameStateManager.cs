@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Text;
-using System;
 
 public class GameStateManager : MonoBehaviour {
     public static GameStateManager Instance { get; private set; }

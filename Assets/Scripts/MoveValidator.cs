@@ -3,16 +3,26 @@ using UnityEngine;
 
 public class MoveValidator : MonoBehaviour {
 
-    public bool IsLegalMove(char old_file, int old_rank, char new_file, int new_rank, GameState gameState) {
+    public bool IsLegalMove(Move move, GameState gameState) {
+        char oldFile, newFile;
+        int oldRank, newRank;
+
+        oldFile = move.oldFile;
+        newFile = move.newFile;
+        oldRank = move.oldRank;
+        newRank = move.newRank;
+
         // trying to move in place
-        if (old_file == new_file && old_rank == new_rank) {
+        if (oldFile == newFile && oldRank == newRank) {
             return false;
         }
         char[,] boardConfiguration = gameState.boardConfiguration;
-        int old_i = 8 - old_rank;
-        int old_j = old_file - 'a';
-        int new_i = 8 - new_rank;
-        int new_j = new_file - 'a';
+
+        IndexMove indexMove = new(move);
+        int old_i = indexMove.oldRow;
+        int old_j = indexMove.oldColumn;
+        int new_i = indexMove.newRow;
+        int new_j = indexMove.newColumn;
 
         char pieceChar = boardConfiguration[old_i, old_j];
         char targetSquareChar = boardConfiguration[new_i, new_j];
@@ -34,17 +44,24 @@ public class MoveValidator : MonoBehaviour {
         }
 
         return GetPieceType(pieceChar) switch {
-            "rook" => IsLegalRookMove(old_i, old_j, new_i, new_j, gameState) && IsKingSafeAt(king_i, king_j, gameState, old_i, old_j, new_i, new_j),
-            "knight" => IsLegalKnightMove(old_i, old_j, new_i, new_j, gameState) && IsKingSafeAt(king_i, king_j, gameState, old_i, old_j, new_i, new_j),
-            "bishop" => IsLegalBishopMove(old_i, old_j, new_i, new_j, gameState) && IsKingSafeAt(king_i, king_j, gameState, old_i, old_j, new_i, new_j),
-            "queen" => IsLegalQueenMove(old_i, old_j, new_i, new_j, gameState) && IsKingSafeAt(king_i, king_j, gameState, old_i, old_j, new_i, new_j),
-            "king" => IsLegalKingMove(old_i, old_j, new_i, new_j, gameState) && IsKingSafeAt(new_i, new_j, gameState, -1, -1, -1, -1),
-            "pawn" => IsLegalPawnMove(old_i, old_j, new_i, new_j, gameState) && IsKingSafeAt(king_i, king_j, gameState, old_i, old_j, new_i, new_j),
+            "rook" => IsLegalRookMove(indexMove, gameState) && IsKingSafeAt(king_i, king_j, gameState, indexMove),
+            "knight" => IsLegalKnightMove(indexMove, gameState) && IsKingSafeAt(king_i, king_j, gameState, indexMove),
+            "bishop" => IsLegalBishopMove(indexMove, gameState) && IsKingSafeAt(king_i, king_j, gameState, indexMove),
+            "queen" => IsLegalQueenMove(indexMove, gameState) && IsKingSafeAt(king_i, king_j, gameState, indexMove),
+            "king" => IsLegalKingMove(indexMove, gameState) && IsKingSafeAt(new_i, new_j, gameState, null),
+            "pawn" => IsLegalPawnMove(indexMove, gameState) && IsKingSafeAt(king_i, king_j, gameState, indexMove),
             _ => false,
         };
     }
 
-    public bool IsLegalPawnMove(int old_i, int old_j, int new_i, int new_j, GameState gameState) {
+    public bool IsLegalPawnMove(IndexMove indexMove, GameState gameState) {
+        int old_i, new_i, old_j, new_j;
+
+        old_i = indexMove.oldRow;
+        old_j = indexMove.oldColumn;
+        new_i = indexMove.newRow;
+        new_j = indexMove.newColumn;
+
         bool forwardOrDiagonalPawn = (Math.Abs(new_i - old_i) <= 2) && (Math.Abs(old_j - new_j) <= 1);
         // pawn moving more than 2 ranks or more than one file
         if (!forwardOrDiagonalPawn) {
@@ -79,7 +96,7 @@ public class MoveValidator : MonoBehaviour {
         }
 
         if (moving2Squares) {
-            int old_rank = RowIndexToRank(old_i);
+            int old_rank = RowToRank(old_i);
             // trying to move 2 ranks, but the pawn is not on its starting position or the pawn is jumping over a piece
             if (whoMoves == 'w' && (old_rank != 2 || gameState.boardConfiguration[5, old_j] != '-')) {
                 return false;
@@ -91,13 +108,20 @@ public class MoveValidator : MonoBehaviour {
 
         // if capturing an empty, non en-passant square
         if (capturing && gameState.boardConfiguration[new_i, new_j] == '-' &&
-                (RowIndexToRank(new_i) != gameState.enPassantRank || ColumnIndexToFile(new_j) != gameState.enPassantFile)) {
+                (RowToRank(new_i) != gameState.enPassantRank || ColumnToFile(new_j) != gameState.enPassantFile)) {
             return false;
         }
         // we have covered all possible illegal pawn moves (not considering pinned pieces)
         return true;
     }
-    public bool IsLegalRookMove(int old_i, int old_j, int new_i, int new_j, GameState gameState) {
+    public bool IsLegalRookMove(IndexMove indexMove, GameState gameState) {
+        int old_i, new_i, old_j, new_j;
+
+        old_i = indexMove.oldRow;
+        old_j = indexMove.oldColumn;
+        new_i = indexMove.newRow;
+        new_j = indexMove.newColumn;
+
         bool movingSameFile = old_j == new_j;
         bool movingSameRank = old_i == new_i;
 
@@ -127,7 +151,14 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    public bool IsLegalBishopMove(int old_i, int old_j, int new_i, int new_j, GameState gameState) {
+    public bool IsLegalBishopMove(IndexMove indexMove, GameState gameState) {
+        int old_i, new_i, old_j, new_j;
+
+        old_i = indexMove.oldRow;
+        old_j = indexMove.oldColumn;
+        new_i = indexMove.newRow;
+        new_j = indexMove.newColumn;
+
         int rankDiff = new_i - old_i;
         int fileDiff = new_j - old_j;
 
@@ -148,12 +179,19 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    public bool IsLegalQueenMove(int old_i, int old_j, int new_i, int new_j, GameState gameState) {
+    public bool IsLegalQueenMove(IndexMove indexMove, GameState gameState) {
         // queen can move either as a rook or as a bishop
-        return IsLegalBishopMove(old_i, old_j, new_i, new_j, gameState) || IsLegalRookMove(old_i, old_j, new_i, new_j, gameState);
+        return IsLegalBishopMove(indexMove, gameState) || IsLegalRookMove(indexMove, gameState);
     }
 
-    public bool IsLegalKnightMove(int old_i, int old_j, int new_i, int new_j, GameState gameState) {
+    public bool IsLegalKnightMove(IndexMove indexMove, GameState gameState) {
+        int old_i, new_i, old_j, new_j;
+
+        old_i = indexMove.oldRow;
+        old_j = indexMove.oldColumn;
+        new_i = indexMove.newRow;
+        new_j = indexMove.newColumn;
+
         int rankDiff = new_i - old_i;
         int fileDiff = new_j - old_j;
         // moving too far or moving like a rook
@@ -168,29 +206,32 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    public bool IsLegalKingMove(int old_i, int old_j, int new_i, int new_j, GameState gameState) {
+    public bool IsLegalKingMove(IndexMove indexMove, GameState gameState) {
+        int old_i, new_i, old_j, new_j;
+
+        old_i = indexMove.oldRow;
+        old_j = indexMove.oldColumn;
+        new_i = indexMove.newRow;
+        new_j = indexMove.newColumn;
+
         bool moving2Files = Math.Abs(new_j - old_j) == 2;
 
         // check if trying to castle
         if (moving2Files) {
             bool kingOnProperFile = old_j == 4;
             if (!kingOnProperFile) {
-                Debug.Log("false 1");
                 return false;
             }
             bool kingSameRank = old_i == new_i;
             if (!kingSameRank) {
-                Debug.Log("false 2");
                 return false;
             }
             bool backRank = (gameState.whoMoves == 'w' && old_i == 7) || (gameState.whoMoves == 'b' && old_i == 0);
             if (!backRank) {
-                Debug.Log("false 3");
                 return false;
             }
             // trying to castle while checked
-            if (!IsKingSafeAt(old_i, old_j, gameState, -1, -1, -1, -1)) {
-                Debug.Log("false 4");
+            if (!IsKingSafeAt(old_i, old_j, gameState, null)) {
                 return false;
             }
             char[,] boardConfiguration = gameState.boardConfiguration;
@@ -198,17 +239,14 @@ public class MoveValidator : MonoBehaviour {
             if (new_j > old_j) {
                 // already moved the king or rooks
                 if ((gameState.whoMoves == 'w' && !gameState.white_O_O) || (gameState.whoMoves == 'b' && !gameState.black_O_O)) {
-                    Debug.Log("false 5");
                     return false;
                 }
                 bool blockingPieces = boardConfiguration[old_i, old_j + 1] != '-' || boardConfiguration[old_i, old_j + 2] != '-';
                 if (blockingPieces) {
-                    Debug.Log("false 6");
                     return false;
                 }
                 // trying to castle through check
-                if (!IsKingSafeAt(old_i, old_j + 1, gameState, -1, -1, -1, -1)) {
-                    Debug.Log("false 7");
+                if (!IsKingSafeAt(old_i, old_j + 1, gameState, null)) {
                     return false;
                 }
                 // can castle (haven't checked for final position checks)
@@ -218,18 +256,15 @@ public class MoveValidator : MonoBehaviour {
             if (new_j < old_j) {
                 // already moved the king or rooks
                 if ((gameState.whoMoves == 'w' && !gameState.white_O_O_O) || (gameState.whoMoves == 'b' && !gameState.black_O_O_O)) {
-                    Debug.Log("false 8");
                     return false;
                 }
                 bool blockingPieces = boardConfiguration[old_i, old_j - 1] != '-' || boardConfiguration[old_i, old_j - 2] != '-' ||
                         boardConfiguration[old_i, old_j - 3] != '-';
                 if (blockingPieces) {
-                    Debug.Log("false 9");
                     return false;
                 }
                 // trying to castle through check
-                if (!IsKingSafeAt(old_i, old_j - 1, gameState, -1, -1, -1, -1)) {
-                    Debug.Log("false 10");
+                if (!IsKingSafeAt(old_i, old_j - 1, gameState, null)) {
                     return false;
                 }
                 // can castle (haven't checked for final position checks)
@@ -245,7 +280,8 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    public bool IsKingSafeAt(int king_i, int king_j, GameState gameState, int old_i, int old_j, int new_i, int new_j) {
+    public bool IsKingSafeAt(int king_i, int king_j, GameState gameState, IndexMove indexMove) {
+
         char[,] boardConfiguration = gameState.boardConfiguration;
 
         bool restoreBoard = false;
@@ -253,11 +289,18 @@ public class MoveValidator : MonoBehaviour {
         char oldSquare = '-', newSquare = '-', enPassantSquare = '-';
 
         // a piece is moving so we need to check king safety on a new configuration
-        if (old_i != -1) {
+        if (indexMove != null) {
+            int old_i, new_i, old_j, new_j;
+
+            old_i = indexMove.oldRow;
+            old_j = indexMove.oldColumn;
+            new_i = indexMove.newRow;
+            new_j = indexMove.newColumn;
+
             restoreBoard = true;
             oldSquare = boardConfiguration[old_i, old_j];
             newSquare = boardConfiguration[new_i, new_j];
-            targetingEnPassant = gameState.enPassantFile == (char)('a' + new_j) && gameState.enPassantRank == 8 - new_i;
+            targetingEnPassant = gameState.enPassantFile == ColumnToFile(new_j) && gameState.enPassantRank == RowToRank(new_i);
             if (char.ToLower(oldSquare) == 'p' && targetingEnPassant) {
                 if (gameState.whoMoves == 'w') {
                     enPassantSquare = boardConfiguration[new_i + 1, new_j];
@@ -285,8 +328,7 @@ public class MoveValidator : MonoBehaviour {
                     // if we are here then the position is in bounds
                     if (boardConfiguration[knight_i, knight_j] == enemyKnight) {
                         if (restoreBoard) {
-                            RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
-                                oldSquare, newSquare, enPassantSquare);
+                            RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                         }
                         return false;
                     }
@@ -303,8 +345,7 @@ public class MoveValidator : MonoBehaviour {
             if ((king_j + 1 <= 7 && boardConfiguration[pawn_i, king_j + 1] == enemyPawn) ||
                 (king_j - 1 >= 0 && boardConfiguration[pawn_i, king_j - 1] == enemyPawn)) {
                 if (restoreBoard) {
-                    RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
-                        oldSquare, newSquare, enPassantSquare);
+                    RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                 }
                 return false;
             }
@@ -324,8 +365,7 @@ public class MoveValidator : MonoBehaviour {
                     // if we are here then the position is in bounds
                     if (boardConfiguration[enemy_king_i, enemy_king_j] == enemyKing) {
                         if (restoreBoard) {
-                            RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
-                                oldSquare, newSquare, enPassantSquare);
+                            RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                         }
                         return false;
                     }
@@ -353,8 +393,7 @@ public class MoveValidator : MonoBehaviour {
                 char potentialPiece = boardConfiguration[piece_i, piece_j];
                 if (potentialPiece == enemyQueen || potentialPiece == enemyBishop) {
                     if (restoreBoard) {
-                        RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
-                            oldSquare, newSquare, enPassantSquare);
+                        RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                     }
                     return false;
                 } else if (potentialPiece != '-' && potentialPiece != kingChar) {
@@ -379,8 +418,7 @@ public class MoveValidator : MonoBehaviour {
                 char potentialPiece = boardConfiguration[piece_i, piece_j];
                 if (potentialPiece == enemyQueen || potentialPiece == enemyRook) {
                     if (restoreBoard) {
-                        RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
-                            oldSquare, newSquare, enPassantSquare);
+                        RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                     }
                     return false;
                 } else if (potentialPiece != '-' && potentialPiece != kingChar) {
@@ -391,16 +429,22 @@ public class MoveValidator : MonoBehaviour {
         }
 
         if (restoreBoard) {
-            RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, old_i, old_j, new_i, new_j,
-                oldSquare, newSquare, enPassantSquare);
+            RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
         }
 
         // we have checked all possible enemy pieces attacks
         return true;
     }
 
-    void RestoreBoard(char[,] boardConfiguration, bool targetingEnPassant, char whoMoves, int old_i, int old_j,
-                        int new_i, int new_j, char oldSquare, char newSquare, char enPassantSquare) {
+    void RestoreBoard(char[,] boardConfiguration, bool targetingEnPassant, char whoMoves, IndexMove indexMove,
+        char oldSquare, char newSquare, char enPassantSquare) {
+        int old_i, new_i, old_j, new_j;
+
+        old_i = indexMove.oldRow;
+        old_j = indexMove.oldColumn;
+        new_i = indexMove.newRow;
+        new_j = indexMove.newColumn;
+
         if (targetingEnPassant) {
             if (whoMoves == 'w') {
                 boardConfiguration[new_i + 1, new_j] = enPassantSquare;
@@ -423,10 +467,10 @@ public class MoveValidator : MonoBehaviour {
             _ => "",
         };
     }
-    private char ColumnIndexToFile(int j) {
+    private char ColumnToFile(int j) {
         return (char)(j + 'a');
     }
-    private int RowIndexToRank(int i) {
+    private int RowToRank(int i) {
         return 8 - i;
     }
 }

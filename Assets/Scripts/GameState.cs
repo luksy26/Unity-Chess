@@ -66,7 +66,14 @@ public class GameState {
     }
 
     // update the game state after a piece has moved
-    public void MovePiece(int old_i, int old_j, int new_i, int new_j) {
+    public void MovePiece(IndexMove indexMove) {
+        int old_i, old_j, new_i, new_j;
+
+        old_i = indexMove.oldRow;
+        old_j = indexMove.oldColumn;
+        new_i = indexMove.newRow;
+        new_j = indexMove.newColumn;
+
         bool movingToEmptySquare = boardConfiguration[new_i, new_j] == '-';
         bool pawnMoved = char.ToLower(boardConfiguration[old_i, old_j]) == 'p';
         bool rookMoved = char.ToLower(boardConfiguration[old_i, old_j]) == 'r';

@@ -10,7 +10,6 @@ public class Game : MonoBehaviour {
     public GameObject chessPiecePrefab;
     public char currentPlayer;
     public string playerPerspective;
-
     Hashtable gameStates;
 
     public void Start() {
@@ -70,80 +69,76 @@ public class Game : MonoBehaviour {
         return obj;
     }
 
-    public void MovePiece(char old_file, int old_rank, char new_file, int new_rank) {
+    public void MovePiece(Move move) {
         GameState gameState = GameStateManager.Instance.globalGameState;
-        int old_i = 8 - old_rank;
-        int old_j = old_file - 'a';
-        int new_i = 8 - new_rank;
-        int new_j = new_file - 'a';
+        IndexMove indexMove = new(move);
         bool promoting = false;
-        string movedPieceName = currentPieces[old_i, old_j].name;
+        string movedPieceName = currentPieces[indexMove.oldRow, indexMove.oldColumn].name;
 
-        // check if we a piece was captured
-        if (currentPieces[new_i, new_j] != null) {
-            Debug.Log("destroying " + currentPieces[new_i, new_j].name);
+        // check if a piece was captured
+        if (currentPieces[indexMove.newRow, indexMove.newColumn] != null) {
+            Debug.Log("destroying " + currentPieces[indexMove.newRow, indexMove.newColumn].name);
             if (currentPlayer == 'w') {
-                blackPieces.Remove(currentPieces[new_i, new_j]);
+                blackPieces.Remove(currentPieces[indexMove.newRow, indexMove.newColumn]);
             } else {
-                whitePieces.Remove(currentPieces[new_i, new_j]);
+                whitePieces.Remove(currentPieces[indexMove.newRow, indexMove.newColumn]);
             }
-            Destroy(currentPieces[new_i, new_j]);
+            Destroy(currentPieces[indexMove.newRow, indexMove.newColumn]);
         }
         // check if a pawn moved
         if (movedPieceName.Contains("pawn")) {
             // check if the pawn reached the last rank
-            if (new_i == 0 || new_i == 7) {
+            if (indexMove.newRow == 0 || indexMove.newRow == 7) {
                 promoting = true;
             } else {
                 char enPassantFile = gameState.enPassantFile;
                 int enPassantRank = gameState.enPassantRank;
                 // pawn captured the en-passant target
-                if (new_file == enPassantFile && new_rank == enPassantRank) {
+                if (move.newFile == enPassantFile && move.newRank == enPassantRank) {
                     if (currentPlayer == 'w') {
-                        blackPieces.Remove(currentPieces[new_i + 1, new_j]);
-                        Destroy(currentPieces[new_i + 1, new_j]);
-                        currentPieces[new_i + 1, new_j] = null;
+                        blackPieces.Remove(currentPieces[indexMove.newRow + 1, indexMove.newColumn]);
+                        Destroy(currentPieces[indexMove.newRow + 1, indexMove.newColumn]);
+                        currentPieces[indexMove.newRow + 1, indexMove.newColumn] = null;
                     } else {
-                        whitePieces.Remove(currentPieces[new_i - 1, new_j]);
-                        Destroy(currentPieces[new_i - 1, new_j]);
-                        currentPieces[new_i - 1, new_j] = null;
+                        whitePieces.Remove(currentPieces[indexMove.newRow - 1, indexMove.newColumn]);
+                        Destroy(currentPieces[indexMove.newRow - 1, indexMove.newColumn]);
+                        currentPieces[indexMove.newRow - 1, indexMove.newColumn] = null;
                     }
                 }
             }
-        } else if (movedPieceName.Contains("king") && Math.Abs(new_j - old_j) == 2) { // the king has just castled
+        } else if (movedPieceName.Contains("king") && Math.Abs(indexMove.newColumn - indexMove.oldColumn) == 2) { // the king has just castled
             // we need to change the rook's placement as well
             PiecePlacer rookPlacer;
             // short castle
-            if (new_j > old_j) {
-                rookPlacer = currentPieces[new_i, 7].GetComponent<PiecePlacer>();
-                rookPlacer.SetFile((char)(new_file - 1));
+            if (indexMove.newColumn > indexMove.oldColumn) {
+                rookPlacer = currentPieces[indexMove.newRow, 7].GetComponent<PiecePlacer>();
+                rookPlacer.SetFile((char)(move.newFile - 1));
                 rookPlacer.SetGlobalCoords(playerPerspective);
-                currentPieces[new_i, 5] = currentPieces[new_i, 7];
-                currentPieces[new_i, 7] = null;
+                currentPieces[indexMove.newRow, 5] = currentPieces[indexMove.newRow, 7];
+                currentPieces[indexMove.newRow, 7] = null;
             } else { // long castle
-                rookPlacer = currentPieces[new_i, 0].GetComponent<PiecePlacer>();
-                rookPlacer.SetFile((char)(new_file + 1));
+                rookPlacer = currentPieces[indexMove.newRow, 0].GetComponent<PiecePlacer>();
+                rookPlacer.SetFile((char)(move.newFile + 1));
                 rookPlacer.SetGlobalCoords(playerPerspective);
-                currentPieces[new_i, 3] = currentPieces[new_i, 0];
-                currentPieces[new_i, 0] = null;
+                currentPieces[indexMove.newRow, 3] = currentPieces[indexMove.newRow, 0];
+                currentPieces[indexMove.newRow, 0] = null;
             }
         }
-        currentPieces[new_i, new_j] = currentPieces[old_i, old_j];
-        currentPieces[old_i, old_j] = null;
+        currentPieces[indexMove.newRow, indexMove.newColumn] = currentPieces[indexMove.oldRow, indexMove.oldColumn];
+        currentPieces[indexMove.oldRow, indexMove.oldColumn] = null;
 
-        PiecePlacer placer = currentPieces[new_i, new_j].GetComponent<PiecePlacer>();
-        placer.SetFile(new_file);
-        placer.SetRank(new_rank);
+        PiecePlacer placer = currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<PiecePlacer>();
+        placer.SetFile(move.newFile);
+        placer.SetRank(move.newRank);
         placer.SetGlobalCoords(playerPerspective);
         if (promoting) {
             string new_name = currentPlayer == 'w' ? "white_queen" : "black_queen";
-            currentPieces[new_i, new_j].name = new_name;
-            currentPieces[new_i, new_j].GetComponent<SpriteRenderer>().sprite =
-                currentPieces[new_i, new_j].GetComponent<SpriteFactory>()
-                    .GetSprite(new_name);
+            currentPieces[indexMove.newRow, indexMove.newColumn].name = new_name;
+            currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<SpriteRenderer>().sprite =
+                GetComponent<SpriteFactory>().GetSprite(new_name);
 
         }
-        gameState.MovePiece(old_i, old_j, new_i, new_j);
+        gameState.MovePiece(indexMove);
         Debug.Log("GameState changed:");
         Debug.Log(gameState);
         if (gameStates.ContainsKey(gameState)) {

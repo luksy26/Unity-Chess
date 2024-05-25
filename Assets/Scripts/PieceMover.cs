@@ -58,13 +58,14 @@ public class PieceMover : MonoBehaviour {
                 char piece_owner = GetPieceOwner(name);
                 if (currentGame.currentPlayer.Equals(piece_owner)) {
                     PiecePlacer placer = GetComponent<PiecePlacer>();
-                    char old_file = placer.GetFile();
-                    int old_rank = placer.GetRank();
-                    char new_file = GetFile(mousePosition.x, currentGame.playerPerspective);
-                    int new_rank = GetRank(mousePosition.y, currentGame.playerPerspective);
-                    if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank, GameStateManager.Instance.globalGameState)) {
+                    char oldFile = placer.GetFile();
+                    int oldRank = placer.GetRank();
+                    char newFile = GetFile(mousePosition.x, currentGame.playerPerspective);
+                    int newRank = GetRank(mousePosition.y, currentGame.playerPerspective);
+                    Move move = new(oldFile, oldRank, newFile, newRank);
+                    if (validator.IsLegalMove(move, GameStateManager.Instance.globalGameState)) {
                         backToStart = false;
-                        currentGame.MovePiece(old_file, old_rank, new_file, new_rank);
+                        currentGame.MovePiece(move);
                     }
                 }
             }
