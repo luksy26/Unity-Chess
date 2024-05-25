@@ -6,7 +6,7 @@ public class GameStateManager : MonoBehaviour {
     public static GameStateManager Instance { get; private set; }
 
     // very important structure, will be used across multiple game components
-    public GameState gameState;
+    public GameState globalGameState;
 
     // default starting position
     public string defaultFEN;
@@ -22,7 +22,7 @@ public class GameStateManager : MonoBehaviour {
 
     public void Start() {
         defaultFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-        gameState = new();
+        globalGameState = new();
     }
 
     public void GenerateGameState(string inputFEN) {
@@ -30,7 +30,7 @@ public class GameStateManager : MonoBehaviour {
             inputFEN = defaultFEN;
         }
 
-        gameState.boardConfiguration = new char[8, 8];
+        globalGameState.boardConfiguration = new char[8, 8];
 
         StringBuilder inputFEN_sb = new(inputFEN);
         int index = 0;
@@ -39,20 +39,20 @@ public class GameStateManager : MonoBehaviour {
                 if (char.IsDigit(inputFEN_sb[index])) {
                     int emptySpaces = inputFEN_sb[index] - '0';
                     if (emptySpaces > 0) {
-                        gameState.boardConfiguration[i, j] = '-';
+                        globalGameState.boardConfiguration[i, j] = '-';
                         inputFEN_sb[index] = (char)('0' + emptySpaces - 1);
                     } else {
                         ++index;
                         --j;
                     }
                 } else if (inputFEN_sb[index] != '/') {
-                    gameState.boardConfiguration[i, j] = inputFEN_sb[index];
+                    globalGameState.boardConfiguration[i, j] = inputFEN_sb[index];
                     if (inputFEN_sb[index] == 'k') {
-                        gameState.blackKingRow = i;
-                        gameState.blackKingColumn = j;
+                        globalGameState.blackKingRow = i;
+                        globalGameState.blackKingColumn = j;
                     } else if (inputFEN_sb[index] == 'K') {
-                        gameState.whiteKingRow = i;
-                        gameState.whiteKingColumn = j;
+                        globalGameState.whiteKingRow = i;
+                        globalGameState.whiteKingColumn = j;
                     }
                     ++index;
                 } else {
@@ -64,22 +64,22 @@ public class GameStateManager : MonoBehaviour {
         if (inputFEN_sb[index] != ' ') {
             ++index;
         }
-        gameState.whoMoves = inputFEN_sb[++index];
+        globalGameState.whoMoves = inputFEN_sb[++index];
         index += 2;
 
         if (inputFEN_sb[index] == '-') {
-            gameState.white_O_O = false;
-            gameState.black_O_O = false;
-            gameState.white_O_O_O = false;
-            gameState.black_O_O_O = false;
+            globalGameState.white_O_O = false;
+            globalGameState.black_O_O = false;
+            globalGameState.white_O_O_O = false;
+            globalGameState.black_O_O_O = false;
             ++index;
         } else {
             while (inputFEN_sb[index] != ' ') {
                 switch (inputFEN_sb[index]) {
-                    case 'K': gameState.white_O_O = true; break;
-                    case 'Q': gameState.white_O_O_O = true; break;
-                    case 'k': gameState.black_O_O = true; break;
-                    case 'q': gameState.black_O_O_O = true; break;
+                    case 'K': globalGameState.white_O_O = true; break;
+                    case 'Q': globalGameState.white_O_O_O = true; break;
+                    case 'k': globalGameState.black_O_O = true; break;
+                    case 'q': globalGameState.black_O_O_O = true; break;
                     default: Debug.Log("Unrecognized character in 3rd section of FEN"); break;
                 }
                 ++index;
@@ -87,159 +87,22 @@ public class GameStateManager : MonoBehaviour {
         }
         ++index;
         if (inputFEN_sb[index] == '-') {
-            gameState.enPassantFile = '*';
-            gameState.enPassantRank = 0;
+            globalGameState.enPassantFile = '*';
+            globalGameState.enPassantRank = 0;
             ++index;
         } else {
-            gameState.enPassantFile = inputFEN_sb[index++];
-            gameState.enPassantRank = inputFEN_sb[index++] - '0';
+            globalGameState.enPassantFile = inputFEN_sb[index++];
+            globalGameState.enPassantRank = inputFEN_sb[index++] - '0';
         }
         ++index;
 
         string moveCountersString = inputFEN_sb.ToString(index, inputFEN_sb.Length - index);
         string[] moveCounters = moveCountersString.Split(' ');
 
-        gameState.moveCounter50Move = int.Parse(moveCounters[0]);
-        gameState.moveCounterFull = int.Parse(moveCounters[1]);
+        globalGameState.moveCounter50Move = int.Parse(moveCounters[0]);
+        globalGameState.moveCounterFull = int.Parse(moveCounters[1]);
 
-        Debug.Log("GameState Generated:");
-        PrintGameState();
-    }
-
-    public void MovePiece(int old_i, int old_j, int new_i, int new_j) {
-        bool movingToEmptySquare = gameState.boardConfiguration[new_i, new_j] == '-';
-        // capturing a piece or advancing a pawn
-        if (!movingToEmptySquare || char.ToLower(gameState.boardConfiguration[old_i, old_j]) == 'p') {
-            gameState.moveCounter50Move = 0;
-        } else {
-            ++gameState.moveCounter50Move;
-        }
-
-        // a piece was captured
-        if (!movingToEmptySquare) {
-            // on black's backrank
-            if (new_i == 0) {
-                // took black's rook on a8
-                if (new_j == 0) {
-                    gameState.black_O_O_O = false;
-                } else if (new_j == 7) { // took black's rook on h8
-                    gameState.black_O_O = false;
-                }
-            } else if (new_i == 7) { // on white's backrank
-                // took white's rook on a1
-                if (new_j == 0) {
-                    gameState.white_O_O_O = false;
-                } else if (new_j == 7) { // took white's rook on h1
-                    gameState.white_O_O = false;
-                }
-            }
-        }
-
-        // we have a new en-passant target
-        if (char.ToLower(gameState.boardConfiguration[old_i, old_j]) == 'p' && Math.Abs(new_i - old_i) == 2) {
-            gameState.enPassantFile = (char)(new_j + 'a');
-            gameState.enPassantRank = 8 - new_i;
-            if (gameState.whoMoves == 'w') {
-                --gameState.enPassantRank;
-            } else {
-                ++gameState.enPassantRank;
-            }
-        } else {
-            gameState.enPassantFile = '*';
-            gameState.enPassantRank = 0;
-        }
-
-        // move the piece on the new square
-        gameState.boardConfiguration[new_i, new_j] = gameState.boardConfiguration[old_i, old_j];
-        gameState.boardConfiguration[old_i, old_j] = '-';
-
-        // a pawn was moved
-        if (char.ToLower(gameState.boardConfiguration[new_i, new_j]) == 'p') {
-            if (new_i == 0) { // white is promoting
-                gameState.boardConfiguration[0, new_j] = 'Q';
-            } else if (new_i == 7) { // black is promoting
-                gameState.boardConfiguration[7, new_j] = 'q';
-            } else if (Math.Abs(new_j - old_j) == 1 && movingToEmptySquare) { // moving en-passant
-                if (gameState.whoMoves == 'w') {
-                    gameState.boardConfiguration[new_i + 1, new_j] = '-'; // removing captured piece
-                } else {
-                    gameState.boardConfiguration[new_i - 1, new_j] = '-'; // removing captured piece
-                }
-            }
-        }
-        // a rook was moved
-        if (char.ToLower(gameState.boardConfiguration[new_i, new_j]) == 'r') {
-            // from the backrank
-            if (gameState.whoMoves == 'w' && old_i == 7) {
-                if (old_j == 0) {
-                    gameState.white_O_O_O = false;
-                } else if (old_j == 7) {
-                    gameState.white_O_O = false;
-                }
-            } else if (gameState.whoMoves == 'b' && old_i == 0) {
-                if (old_j == 0) {
-                    gameState.black_O_O_O = false;
-                } else if (old_j == 7) {
-                    gameState.black_O_O = false;
-                }
-            }
-        }
-
-        // king moved
-        if (char.ToLower(gameState.boardConfiguration[new_i, new_j]) == 'k') {
-            // update data in gameState
-            if (gameState.whoMoves == 'w') {
-                gameState.whiteKingRow = new_i;
-                gameState.whiteKingColumn = new_j;
-                gameState.white_O_O = false;
-                gameState.white_O_O_O = false;
-            } else {
-                gameState.blackKingRow = new_i;
-                gameState.blackKingColumn = new_j;
-                gameState.black_O_O = false;
-                gameState.black_O_O_O = false;
-            }
-            // the king just castled
-            if (Math.Abs(new_j - old_j) == 2) {
-                // short castle
-                if (new_j > old_j) {
-                    gameState.boardConfiguration[new_i, new_j - 1] = gameState.boardConfiguration[new_i, new_j + 1];
-                    gameState.boardConfiguration[new_i, new_j + 1] = '-';
-                } else { // long castle
-                    gameState.boardConfiguration[new_i, new_j + 1] = gameState.boardConfiguration[new_i, new_j - 2];
-                    gameState.boardConfiguration[new_i, new_j - 2] = '-';
-                }
-            }
-        }
-
-        if (gameState.whoMoves == 'b') {
-            ++gameState.moveCounterFull;
-            gameState.whoMoves = 'w';
-        } else {
-            gameState.whoMoves = 'b';
-        }
-        Debug.Log("GameState changed:");
-        PrintGameState();
-    }
-
-    public void PrintGameState() {
-        for (int i = 0; i < 8; i++) {
-            string row = "";
-            for (int j = 0; j < 8; j++) {
-                char element = gameState.boardConfiguration[i, j];
-                row += element + "  "; // Add two spaces after each character
-            }
-            Debug.Log(row.TrimEnd());
-        }
-        Debug.Log("Current player: " + gameState.whoMoves);
-        Debug.Log("White can" + (gameState.white_O_O ? " " : "\'t ") + "short castle");
-        Debug.Log("White can" + (gameState.white_O_O_O ? " " : "\'t ") + "long castle");
-        Debug.Log("Black can" + (gameState.black_O_O ? " " : "\'t ") + "short castle");
-        Debug.Log("Black can" + (gameState.black_O_O_O ? " " : "\'t ") + "long castle");
-        Debug.Log(gameState.enPassantRank == 0 ? "no en-passant available" : "en-passant at " + gameState.enPassantFile + gameState.enPassantRank);
-        Debug.Log("50 move counter " + gameState.moveCounter50Move + " fullmove counter " + gameState.moveCounterFull);
-        char whiteKingFile = (char)(gameState.whiteKingColumn + 'a'), blackKingFile = (char)(gameState.blackKingColumn + 'a');
-        int whiteKingRank = 8 - gameState.whiteKingRow, blackKingRank = 8 - gameState.blackKingRow;
-        Debug.Log("white king at " + whiteKingFile + whiteKingRank + ", black king at " + blackKingFile + blackKingRank);
+        Debug.Log("Global GameState Generated:");
+        Debug.Log(globalGameState);
     }
 }

@@ -30,13 +30,13 @@ public class Game : MonoBehaviour {
     }
 
     public void GeneratePosition() {
-        GameState gameState = GameStateManager.Instance.gameState;
+        GameState globalGameState = GameStateManager.Instance.globalGameState;
 
         // add the gameState in the hashtable
-        gameStates.Add(gameState, 1);
+        gameStates.Add(globalGameState, 1);
 
-        char[,] boardConfiguration = gameState.boardConfiguration;
-        currentPlayer = gameState.whoMoves;
+        char[,] boardConfiguration = globalGameState.boardConfiguration;
+        currentPlayer = globalGameState.whoMoves;
 
         for (int i = 0; i < boardConfiguration.GetLength(0); ++i) {
             for (int j = 0; j < boardConfiguration.GetLength(1); ++j) {
@@ -61,7 +61,7 @@ public class Game : MonoBehaviour {
         GameObject obj = Instantiate(chessPiecePrefab, new Vector3(0, 0, -0.01f), Quaternion.identity);
 
         obj.name = name;
-        obj.GetComponent<SpriteRenderer>().sprite = obj.GetComponent<SpriteFactory>().GetSprite(name);
+        obj.GetComponent<SpriteRenderer>().sprite = GetComponent<SpriteFactory>().GetSprite(name);
 
         PiecePlacer placer = obj.GetComponent<PiecePlacer>();
         placer.SetFile(file);
@@ -71,7 +71,7 @@ public class Game : MonoBehaviour {
     }
 
     public void MovePiece(char old_file, int old_rank, char new_file, int new_rank) {
-        GameStateManager manager = GameStateManager.Instance;
+        GameState gameState = GameStateManager.Instance.globalGameState;
         int old_i = 8 - old_rank;
         int old_j = old_file - 'a';
         int new_i = 8 - new_rank;
@@ -95,8 +95,8 @@ public class Game : MonoBehaviour {
             if (new_i == 0 || new_i == 7) {
                 promoting = true;
             } else {
-                char enPassantFile = manager.gameState.enPassantFile;
-                int enPassantRank = manager.gameState.enPassantRank;
+                char enPassantFile = gameState.enPassantFile;
+                int enPassantRank = gameState.enPassantRank;
                 // pawn captured the en-passant target
                 if (new_file == enPassantFile && new_rank == enPassantRank) {
                     if (currentPlayer == 'w') {
@@ -143,17 +143,19 @@ public class Game : MonoBehaviour {
                     .GetSprite(new_name);
 
         }
-        manager.MovePiece(old_i, old_j, new_i, new_j);
-        if (gameStates.ContainsKey(manager.gameState)) {
-            int noOccurences = (int)gameStates[manager.gameState];
+        gameState.MovePiece(old_i, old_j, new_i, new_j);
+        Debug.Log("GameState changed:");
+        Debug.Log(gameState);
+        if (gameStates.ContainsKey(gameState)) {
+            int noOccurences = (int)gameStates[gameState];
             ++noOccurences;
             if (noOccurences == 3) {
                 currentPlayer = '-';
                 Debug.Log("Draw by 3-fold repetition");
             }
-            gameStates[manager.gameState] = noOccurences;
+            gameStates[gameState] = noOccurences;
         } else {
-            gameStates.Add(manager.gameState, 1);
+            gameStates.Add(gameState, 1);
         }
     }
     public void SwapPlayer() {

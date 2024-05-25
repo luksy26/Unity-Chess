@@ -62,7 +62,7 @@ public class PieceMover : MonoBehaviour {
                     int old_rank = placer.GetRank();
                     char new_file = GetFile(mousePosition.x, currentGame.playerPerspective);
                     int new_rank = GetRank(mousePosition.y, currentGame.playerPerspective);
-                    if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank, GameStateManager.Instance.gameState)) {
+                    if (validator.IsLegalMove(old_file, old_rank, new_file, new_rank, GameStateManager.Instance.globalGameState)) {
                         backToStart = false;
                         currentGame.MovePiece(old_file, old_rank, new_file, new_rank);
                     }
