@@ -71,8 +71,6 @@ public class PieceMover : MonoBehaviour {
             }
             if (backToStart) {
                 transform.position = initialPosition;
-            } else {
-                currentGame.SwapPlayer();
             }
         }
     }

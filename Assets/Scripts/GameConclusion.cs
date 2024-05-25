@@ -1,4 +1,5 @@
-public enum GameConlusion {
+public enum GameConclusion {
+    NotOver,
     Checkmate,
     Stalemate,
     DrawBy50MoveRule,

@@ -138,21 +138,40 @@ public class Game : MonoBehaviour {
                 GetComponent<SpriteFactory>().GetSprite(new_name);
 
         }
+        SwapPlayer();
+        // make the move to update the gameState
         gameState.MovePiece(indexMove);
         Debug.Log("GameState changed:");
         Debug.Log(gameState);
+
+        // adding the gameState to the hashtable
         if (gameStates.ContainsKey(gameState)) {
             int noOccurences = (int)gameStates[gameState];
             ++noOccurences;
-            if (noOccurences == 3) {
-                currentPlayer = '-';
-                Debug.Log("Draw by 3-fold repetition");
-            }
             gameStates[gameState] = noOccurences;
         } else {
             gameStates.Add(gameState, 1);
         }
+        switch (GameStateManager.Instance.GetGameConclusion(gameState, gameStates)) {
+            case GameConclusion.DrawBy50MoveRule: {
+                    currentPlayer = '-';
+                    Debug.Log("Draw by 50 move rule");
+                    break;
+                }
+            case GameConclusion.DrawByRepetition: {
+                    currentPlayer = '-';
+                    Debug.Log("Draw by 3-fold repetition");
+                    break;
+                }
+            case GameConclusion.DrawByInsufficientMaterial: {
+                    currentPlayer = '-';
+                    Debug.Log("Draw by insufficient material");
+                    break;
+                }
+            default: break;
+        }
     }
+
     public void SwapPlayer() {
         if (currentPlayer == 'w') {
             currentPlayer = 'b';

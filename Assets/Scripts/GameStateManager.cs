@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Text;
+using System.Linq;
+using System.Collections;
 
 public class GameStateManager : MonoBehaviour {
     public static GameStateManager Instance { get; private set; }
@@ -30,6 +32,8 @@ public class GameStateManager : MonoBehaviour {
         }
 
         globalGameState.boardConfiguration = new char[8, 8];
+        globalGameState.noBlackPieces = 0;
+        globalGameState.noWhitePieces = 0;
 
         StringBuilder inputFEN_sb = new(inputFEN);
         int index = 0;
@@ -46,6 +50,11 @@ public class GameStateManager : MonoBehaviour {
                     }
                 } else if (inputFEN_sb[index] != '/') {
                     globalGameState.boardConfiguration[i, j] = inputFEN_sb[index];
+                    if (char.IsUpper(inputFEN_sb[index])) {
+                        ++globalGameState.noWhitePieces;
+                    } else {
+                        ++globalGameState.noBlackPieces;
+                    }
                     if (inputFEN_sb[index] == 'k') {
                         globalGameState.blackKingRow = i;
                         globalGameState.blackKingColumn = j;
@@ -103,5 +112,68 @@ public class GameStateManager : MonoBehaviour {
 
         Debug.Log("Global GameState Generated:");
         Debug.Log(globalGameState);
+    }
+
+    public GameConclusion GetGameConclusion(GameState gameState, Hashtable gameStates) {
+        if (gameState.moveCounter50Move == 100) {
+            return GameConclusion.DrawBy50MoveRule;
+        }
+        if (gameStates != null && (int)gameStates[gameState] >= 3) {
+            return GameConclusion.DrawByRepetition;
+        }
+        if (gameState.noBlackPieces == 1 && gameState.noWhitePieces == 1) {
+            return GameConclusion.DrawByInsufficientMaterial;
+        }
+        // black only has a lone king
+        if (gameState.noBlackPieces == 1) {
+            // white has a king and one other piece
+            if (gameState.noWhitePieces == 2) {
+                string board = new(gameState.boardConfiguration.Cast<char>().ToArray());
+                int whiteKnightFound = board.IndexOf('N');
+                int whiteBishopFound = board.IndexOf('B');
+                // king vs king and knight
+                if (whiteKnightFound >= 0) {
+                    return GameConclusion.DrawByInsufficientMaterial;
+                }
+                // king vs king and bishop
+                if (whiteBishopFound >= 0) {
+                    return GameConclusion.DrawByInsufficientMaterial;
+                }
+            }
+        }
+        // white only has a lone king
+        if (gameState.noWhitePieces == 1) {
+            // black has a king and one other piece
+            if (gameState.noBlackPieces == 2) {
+                string board = new(gameState.boardConfiguration.Cast<char>().ToArray());
+                int blackKnightFound = board.IndexOf('n');
+                int blackBishopFound = board.IndexOf('b');
+                // king vs king and knight
+                if (blackKnightFound >= 0) {
+                    return GameConclusion.DrawByInsufficientMaterial;
+                }
+                // king vs king and bishop
+                if (blackBishopFound >= 0) {
+                    return GameConclusion.DrawByInsufficientMaterial;
+                }
+            }
+        }
+        if (gameState.noWhitePieces == 2 && gameState.noBlackPieces == 2) {
+            string board = new(gameState.boardConfiguration.Cast<char>().ToArray());
+            int blackBishopFound = board.IndexOf('b');
+            int whiteBishopFound = board.IndexOf('B');
+            // king and bishop vs king and bishop
+            if (blackBishopFound >= 0 && whiteBishopFound >= 0) {
+                int blackRow = blackBishopFound / 8;
+                int blackColumn = blackBishopFound % 8;
+                int whiteRow = whiteBishopFound / 8;
+                int whiteColumn = whiteBishopFound % 8;
+                // check if the bishops are the same color
+                if (blackRow + blackColumn % 2 == whiteRow + whiteColumn % 2) {
+                    return GameConclusion.DrawByInsufficientMaterial;
+                }
+            }
+        }
+        return GameConclusion.NotOver;
     }
 }

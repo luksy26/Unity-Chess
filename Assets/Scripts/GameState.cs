@@ -2,6 +2,8 @@ using System;
 
 public class GameState {
     public char[,] boardConfiguration;
+    public int noBlackPieces;
+    public int noWhitePieces;
     public char whoMoves;
     public int moveCounter50Move;
     public int moveCounterFull;
@@ -88,6 +90,11 @@ public class GameState {
 
         // a piece was captured
         if (!movingToEmptySquare) {
+            if (whoMoves == 'w') {
+                --noBlackPieces;
+            } else {
+                --noWhitePieces;
+            }
             // on black's backrank
             if (new_i == 0) {
                 // possibly took black's rook on a8
@@ -137,8 +144,10 @@ public class GameState {
                 // remove the pawn that was captured en-passant (its rank depends on who moves)
                 if (whoMoves == 'w') {
                     boardConfiguration[new_i + 1, new_j] = '-';
+                    --noBlackPieces;
                 } else {
                     boardConfiguration[new_i - 1, new_j] = '-';
+                    --noWhitePieces;
                 }
             }
         }
@@ -208,6 +217,8 @@ public class GameState {
             }
             sb.AppendLine(row.TrimEnd());
         }
+        sb.AppendLine("Number of black pieces: " + noBlackPieces);
+        sb.AppendLine("Number of white pieces: " + noWhitePieces);
         sb.AppendLine("Current player: " + whoMoves);
         sb.AppendLine("White can" + (white_O_O ? " " : "\'t ") + "short castle");
         sb.AppendLine("White can" + (white_O_O_O ? " " : "\'t ") + "long castle");
