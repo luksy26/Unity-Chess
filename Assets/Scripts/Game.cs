@@ -53,6 +53,7 @@ public class Game : MonoBehaviour {
                 }
             }
         }
+        HandleGameState(globalGameState, gameStates);
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -152,6 +153,10 @@ public class Game : MonoBehaviour {
         } else {
             gameStates.Add(gameState, 1);
         }
+        HandleGameState(gameState, gameStates);
+    }
+
+    public void HandleGameState(GameState gameState, Hashtable gameStates) {
         switch (GameStateManager.Instance.GetGameConclusion(gameState, gameStates)) {
             case GameConclusion.DrawBy50MoveRule: {
                     currentPlayer = '-';

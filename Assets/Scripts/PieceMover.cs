@@ -1,11 +1,11 @@
 using UnityEngine;
+using static MoveValidator;
 
 public class PieceMover : MonoBehaviour {
     private bool isDragging = false;
     private Vector3 initialPosition;
     private GameObject gameController;
     private Game currentGame;
-    private MoveValidator validator;
     private static readonly float xMax = 4;
     private static readonly float yMax = 4;
     private static readonly float xMin = -4;
@@ -17,7 +17,6 @@ public class PieceMover : MonoBehaviour {
         SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
         gameController = GameObject.FindGameObjectWithTag("GameController");
         currentGame = gameController.GetComponent<Game>();
-        validator = gameController.GetComponent<MoveValidator>();
 
         if (boxCollider != null && spriteRenderer != null) {
             boxCollider.size = spriteRenderer.size;
@@ -63,7 +62,7 @@ public class PieceMover : MonoBehaviour {
                     char newFile = GetFile(mousePosition.x, currentGame.playerPerspective);
                     int newRank = GetRank(mousePosition.y, currentGame.playerPerspective);
                     Move move = new(oldFile, oldRank, newFile, newRank);
-                    if (validator.IsLegalMove(move, GameStateManager.Instance.globalGameState)) {
+                    if (IsLegalMove(move, GameStateManager.Instance.globalGameState)) {
                         backToStart = false;
                         currentGame.MovePiece(move);
                     }

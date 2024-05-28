@@ -14,4 +14,7 @@ public class Move {
         oldFile = (char)(indexMove.oldColumn + 'a');
         newFile = (char)(indexMove.newColumn + 'a');
     }
+    public override string ToString() {
+        return oldFile.ToString() + oldRank.ToString() + " to " + newFile + newRank;
+    }
 }

@@ -7,4 +7,10 @@ public class IndexMove {
         oldColumn = move.oldFile - 'a';
         newColumn = move.newFile - 'a';
     }
+    public IndexMove(int oldRow, int oldColumn, int newRow, int newColumn) {
+        this.oldRow = oldRow;
+        this.oldColumn = oldColumn;
+        this.newRow = newRow;
+        this.newColumn = newColumn;
+    }
 }

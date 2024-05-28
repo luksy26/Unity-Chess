@@ -2,6 +2,8 @@ using UnityEngine;
 using System.Text;
 using System.Linq;
 using System.Collections;
+using static MoveGenerator;
+using System.Collections.Generic;
 
 public class GameStateManager : MonoBehaviour {
     public static GameStateManager Instance { get; private set; }
@@ -173,6 +175,13 @@ public class GameStateManager : MonoBehaviour {
                     return GameConclusion.DrawByInsufficientMaterial;
                 }
             }
+        }
+        Debug.Log("Legal Moves:");
+
+        List<IndexMove> moves = GetLegalMoves(gameState);
+        foreach(IndexMove move in moves) {
+            Move readableMove = new(move);
+            Debug.Log(readableMove);
         }
         return GameConclusion.NotOver;
     }

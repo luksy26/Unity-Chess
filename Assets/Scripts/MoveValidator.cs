@@ -1,10 +1,9 @@
 using System;
-using UnityEngine;
 using static KingSafety;
 
-public class MoveValidator : MonoBehaviour {
+public static class MoveValidator {
 
-    public bool IsLegalMove(Move move, GameState gameState) {
+    public static bool IsLegalMove(Move move, GameState gameState) {
         char oldFile, newFile;
         int oldRank, newRank;
 
@@ -55,7 +54,7 @@ public class MoveValidator : MonoBehaviour {
         };
     }
 
-    public bool IsLegalPawnMove(IndexMove indexMove, GameState gameState) {
+    public static bool IsLegalPawnMove(IndexMove indexMove, GameState gameState) {
         int old_i, new_i, old_j, new_j;
 
         old_i = indexMove.oldRow;
@@ -115,7 +114,7 @@ public class MoveValidator : MonoBehaviour {
         // we have covered all possible illegal pawn moves (not considering pinned pieces)
         return true;
     }
-    public bool IsLegalRookMove(IndexMove indexMove, GameState gameState) {
+    public static bool IsLegalRookMove(IndexMove indexMove, GameState gameState) {
         int old_i, new_i, old_j, new_j;
 
         old_i = indexMove.oldRow;
@@ -152,7 +151,7 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    public bool IsLegalBishopMove(IndexMove indexMove, GameState gameState) {
+    public static bool IsLegalBishopMove(IndexMove indexMove, GameState gameState) {
         int old_i, new_i, old_j, new_j;
 
         old_i = indexMove.oldRow;
@@ -180,12 +179,12 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    public bool IsLegalQueenMove(IndexMove indexMove, GameState gameState) {
+    public static bool IsLegalQueenMove(IndexMove indexMove, GameState gameState) {
         // queen can move either as a rook or as a bishop
         return IsLegalBishopMove(indexMove, gameState) || IsLegalRookMove(indexMove, gameState);
     }
 
-    public bool IsLegalKnightMove(IndexMove indexMove, GameState gameState) {
+    public static bool IsLegalKnightMove(IndexMove indexMove, GameState gameState) {
         int old_i, new_i, old_j, new_j;
 
         old_i = indexMove.oldRow;
@@ -207,7 +206,7 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    public bool IsLegalKingMove(IndexMove indexMove, GameState gameState) {
+    public static bool IsLegalKingMove(IndexMove indexMove, GameState gameState) {
         int old_i, new_i, old_j, new_j;
 
         old_i = indexMove.oldRow;
@@ -281,7 +280,7 @@ public class MoveValidator : MonoBehaviour {
         return true;
     }
 
-    private string GetPieceType(char x) {
+    private static string GetPieceType(char x) {
         return x switch {
             'r' or 'R' => "rook",
             'n' or 'N' => "knight",
