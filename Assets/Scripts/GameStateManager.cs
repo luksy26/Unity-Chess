@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Text;
 using System.Linq;
 using System.Collections;
-using static MoveGenerator;
 using System.Collections.Generic;
+using static MoveGenerator;
 
 public class GameStateManager : MonoBehaviour {
     public static GameStateManager Instance { get; private set; }
@@ -183,6 +183,7 @@ public class GameStateManager : MonoBehaviour {
             Move readableMove = new(move);
             Debug.Log(readableMove);
         }
+        Debug.Log("found " + moves.Count + " legal moves");
         return GameConclusion.NotOver;
     }
 }

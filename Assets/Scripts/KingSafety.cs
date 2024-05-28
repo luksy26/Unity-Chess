@@ -1,5 +1,9 @@
+using UnityEngine;
+
 public static class KingSafety {
     public static bool IsKingSafeAt(int king_i, int king_j, GameState gameState, IndexMove indexMove) {
+
+        //Debug.Log("Checking king safety");
 
         char[,] boardConfiguration = gameState.boardConfiguration;
 
