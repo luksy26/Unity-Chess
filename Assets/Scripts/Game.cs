@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
@@ -55,6 +56,7 @@ public class Game : MonoBehaviour {
             }
         }
         HandleGameState(globalGameState, gameStates);
+        RunEngine(globalGameState);
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -145,7 +147,10 @@ public class Game : MonoBehaviour {
         // make the move to update the gameState
         gameState.MovePiece(indexMove);
         Debug.Log("GameState changed:");
+        Debug.Log("Local:");
         Debug.Log(gameState);
+        Debug.Log("Global:");
+        Debug.Log(GameStateManager.Instance.globalGameState);
 
         // adding the gameState to the hashtable
         if (gameStates.ContainsKey(gameState)) {
@@ -155,17 +160,26 @@ public class Game : MonoBehaviour {
         } else {
             gameStates.Add(gameState, 1);
         }
+
+        HandleGameState(gameState, gameStates);
+
         // wait for next frame
         await Task.Yield();
-        await Task.Run(() => HandleGameState(gameState, gameStates));
+        await Task.Run(() => RunEngine(gameState));
+    }
+
+    public void RunEngine(GameState gameState) {
+        GameStateManager.Instance.IsEngineRunning = true;
+        string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
+        using StreamWriter writer = new(outPath, false);
+        for (int depth = 1; depth < 5; ++depth) {
+            maxDepth = depth;
+            Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0, writer));
+        }
+        GameStateManager.Instance.IsEngineRunning = false;
     }
 
     public void HandleGameState(GameState gameState, Hashtable gameStates) {
-        GameStateManager.Instance.IsEngineRunning = true;
-        // for (int depth = 1; depth < 5; ++ depth) {
-        //     maxDepth = depth;
-        //     Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0));
-        // }
         switch (GameStateManager.Instance.GetGameConclusion(gameState, gameStates)) {
             case GameConclusion.DrawBy50MoveRule: {
                     currentPlayer = '-';
@@ -183,18 +197,17 @@ public class Game : MonoBehaviour {
                     break;
                 }
             case GameConclusion.Checkmate: {
-                Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
-                currentPlayer = '-';
-                break;
-            }
-            case GameConclusion.Stalemate: {
-                Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
+                    Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
                     currentPlayer = '-';
                     break;
-            }
+                }
+            case GameConclusion.Stalemate: {
+                    Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
+                    currentPlayer = '-';
+                    break;
+                }
             default: break;
         }
-        GameStateManager.Instance.IsEngineRunning = false;
     }
 
     public void SwapPlayer() {

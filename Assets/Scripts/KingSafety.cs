@@ -3,8 +3,6 @@ using UnityEngine;
 public static class KingSafety {
     public static bool IsKingSafeAt(int king_i, int king_j, GameState gameState, IndexMove indexMove) {
 
-        //Debug.Log("Checking king safety");
-
         char[,] boardConfiguration = gameState.boardConfiguration;
 
         bool restoreBoard = false;
@@ -168,7 +166,7 @@ public static class KingSafety {
         new_i = indexMove.newRow;
         new_j = indexMove.newColumn;
 
-        if (targetingEnPassant) {
+        if (char.ToLower(oldSquare) == 'p' && targetingEnPassant) {
             if (whoMoves == 'w') {
                 boardConfiguration[new_i + 1, new_j] = enPassantSquare;
             } else {

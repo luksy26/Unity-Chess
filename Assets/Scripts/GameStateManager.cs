@@ -127,8 +127,10 @@ public class GameStateManager : MonoBehaviour {
         if (gameState.moveCounter50Move == 100) {
             return GameConclusion.DrawBy50MoveRule;
         }
-        if (gameStates != null && (int)gameStates[gameState] >= 3) {
-            return GameConclusion.DrawByRepetition;
+        if (gameStates != null) {
+            if ((int)gameStates[gameState] >= 3) {
+                return GameConclusion.DrawByRepetition;
+            }
         }
         if (gameState.noBlackPieces == 1 && gameState.noWhitePieces == 1) {
             return GameConclusion.DrawByInsufficientMaterial;
@@ -183,7 +185,6 @@ public class GameStateManager : MonoBehaviour {
                 }
             }
         }
-
         List<IndexMove> moves = GetLegalMoves(gameState);
 
         // Debug.Log("found " + moves.Count + " legal moves:");
