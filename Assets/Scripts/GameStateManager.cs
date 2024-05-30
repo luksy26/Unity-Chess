@@ -4,12 +4,14 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using static MoveGenerator;
+using static KingSafety;
 
 public class GameStateManager : MonoBehaviour {
     public static GameStateManager Instance { get; private set; }
 
     // very important structure, will be used across multiple game components
     public GameState globalGameState;
+    public bool IsEngineRunning;
 
     // default starting position
     public string defaultFEN;
@@ -26,6 +28,7 @@ public class GameStateManager : MonoBehaviour {
     public void Start() {
         defaultFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         globalGameState = new();
+        IsEngineRunning = false;
     }
 
     public void GenerateGameState(string inputFEN) {
@@ -77,11 +80,11 @@ public class GameStateManager : MonoBehaviour {
         globalGameState.whoMoves = inputFEN_sb[++index];
         index += 2;
 
+        globalGameState.white_O_O = false;
+        globalGameState.black_O_O = false;
+        globalGameState.white_O_O_O = false;
+        globalGameState.black_O_O_O = false;
         if (inputFEN_sb[index] == '-') {
-            globalGameState.white_O_O = false;
-            globalGameState.black_O_O = false;
-            globalGameState.white_O_O_O = false;
-            globalGameState.black_O_O_O = false;
             ++index;
         } else {
             while (inputFEN_sb[index] != ' ') {
@@ -106,14 +109,18 @@ public class GameStateManager : MonoBehaviour {
         }
         ++index;
 
-        string moveCountersString = inputFEN_sb.ToString(index, inputFEN_sb.Length - index);
-        string[] moveCounters = moveCountersString.Split(' ');
+        if (index > inputFEN_sb.Length) {
+            globalGameState.moveCounter50Move = 0;
+            globalGameState.moveCounterFull = 1;
+        } else {
+            string moveCountersString = inputFEN_sb.ToString(index, inputFEN_sb.Length - index);
+            string[] moveCounters = moveCountersString.Split(' ');
 
-        globalGameState.moveCounter50Move = int.Parse(moveCounters[0]);
-        globalGameState.moveCounterFull = int.Parse(moveCounters[1]);
-
-        Debug.Log("Global GameState Generated:");
-        Debug.Log(globalGameState);
+            globalGameState.moveCounter50Move = int.Parse(moveCounters[0]);
+            globalGameState.moveCounterFull = int.Parse(moveCounters[1]);
+        }
+        // Debug.Log("Global GameState Generated:");
+        // Debug.Log(globalGameState);
     }
 
     public GameConclusion GetGameConclusion(GameState gameState, Hashtable gameStates) {
@@ -176,14 +183,22 @@ public class GameStateManager : MonoBehaviour {
                 }
             }
         }
-        Debug.Log("Legal Moves:");
 
         List<IndexMove> moves = GetLegalMoves(gameState);
-        foreach(IndexMove move in moves) {
-            Move readableMove = new(move);
-            Debug.Log(readableMove);
+
+        // Debug.Log("found " + moves.Count + " legal moves:");
+        // foreach(IndexMove move in moves) {
+        //     Debug.Log(new Move(move));
+        // }
+
+        if (moves.Count == 0) {
+            int kingRow = gameState.whoMoves == 'w' ? gameState.whiteKingRow : gameState.blackKingRow;
+            int kingColumn = gameState.whoMoves == 'w' ? gameState.whiteKingColumn : gameState.blackKingColumn;
+            if (IsKingSafeAt(kingRow, kingColumn, gameState, null)) {
+                return GameConclusion.Stalemate;
+            }
+            return GameConclusion.Checkmate;
         }
-        Debug.Log("found " + moves.Count + " legal moves");
         return GameConclusion.NotOver;
     }
 }

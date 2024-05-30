@@ -12,6 +12,30 @@ public class GameState {
     public int blackKingRow, blackKingColumn, whiteKingRow, whiteKingColumn;
     public bool white_O_O, white_O_O_O, black_O_O, black_O_O_O;
 
+    // Default constructor
+    public GameState() {}
+
+    public GameState (GameState other) {
+        boardConfiguration = new char[8, 8];
+        Array.Copy(other.boardConfiguration, boardConfiguration, 64);
+        noBlackPieces = other.noBlackPieces;
+        noWhitePieces = other.noWhitePieces;
+        whoMoves = other.whoMoves;
+        moveCounter50Move = other.moveCounter50Move;
+        moveCounterFull = other.moveCounterFull;
+        enPassantFile = other.enPassantFile;
+        enPassantRank = other.enPassantRank;
+        blackKingRow = other.blackKingRow;
+        blackKingColumn = other.blackKingColumn;
+        whiteKingRow = other.whiteKingRow;
+        whiteKingColumn = other.whiteKingColumn;
+        white_O_O = other.white_O_O;
+        white_O_O_O = other.white_O_O_O;
+        black_O_O = other.black_O_O;
+        black_O_O_O = other.black_O_O_O;
+    }
+
+
     // we need to define the hashing function in order to store the gameState in a hashtable
     public override int GetHashCode() {
         int hash = whoMoves.GetHashCode();

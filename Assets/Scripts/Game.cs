@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
+using static PositionCounter;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -13,7 +15,6 @@ public class Game : MonoBehaviour {
     Hashtable gameStates;
 
     public void Start() {
-        //playerPerspective = "white";
         currentPieces = new GameObject[8, 8];
         blackPieces = new();
         whitePieces = new();
@@ -70,7 +71,7 @@ public class Game : MonoBehaviour {
         return obj;
     }
 
-    public void MovePiece(Move move) {
+    public async void MovePiece(Move move) {
         GameState gameState = GameStateManager.Instance.globalGameState;
         IndexMove indexMove = new(move);
         bool promoting = false;
@@ -139,6 +140,7 @@ public class Game : MonoBehaviour {
                 GetComponent<SpriteFactory>().GetSprite(new_name);
 
         }
+
         SwapPlayer();
         // make the move to update the gameState
         gameState.MovePiece(indexMove);
@@ -153,10 +155,17 @@ public class Game : MonoBehaviour {
         } else {
             gameStates.Add(gameState, 1);
         }
-        HandleGameState(gameState, gameStates);
+        // wait for next frame
+        await Task.Yield();
+        await Task.Run(() => HandleGameState(gameState, gameStates));
     }
 
     public void HandleGameState(GameState gameState, Hashtable gameStates) {
+        GameStateManager.Instance.IsEngineRunning = true;
+        // for (int depth = 1; depth < 5; ++ depth) {
+        //     maxDepth = depth;
+        //     Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0));
+        // }
         switch (GameStateManager.Instance.GetGameConclusion(gameState, gameStates)) {
             case GameConclusion.DrawBy50MoveRule: {
                     currentPlayer = '-';
@@ -173,8 +182,19 @@ public class Game : MonoBehaviour {
                     Debug.Log("Draw by insufficient material");
                     break;
                 }
+            case GameConclusion.Checkmate: {
+                Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
+                currentPlayer = '-';
+                break;
+            }
+            case GameConclusion.Stalemate: {
+                Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
+                    currentPlayer = '-';
+                    break;
+            }
             default: break;
         }
+        GameStateManager.Instance.IsEngineRunning = false;
     }
 
     public void SwapPlayer() {

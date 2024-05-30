@@ -60,7 +60,7 @@ public static class MoveGenerator {
         // check diagonal pawn movement (captures)
 
         // capture to the right, check in-bounds first
-        if (old_j + 1 < 8) {
+        if (old_j + 1 <= 7) {
             char pieceOwner = GetPieceOwner(boardConfiguration[old_i + forwardY, old_j + 1]);
             // capturing enemy piece (could also be en-passant target, which is always an enemy piece)
             if (pieceOwner == opponent || (pieceOwner == '-' &&
@@ -72,7 +72,7 @@ public static class MoveGenerator {
             }
         }
         // capture to the left, check in-bounds first
-        if (old_j - 1 > 0) {
+        if (old_j - 1 >= 0) {
             char pieceOwner = GetPieceOwner(boardConfiguration[old_i + forwardY, old_j - 1]);
             // capturing enemy piece (could also be en-passant target, which is always an enemy piece)
             if (pieceOwner == opponent || (pieceOwner == '-' &&
@@ -358,7 +358,7 @@ public static class MoveGenerator {
         if ((gameState.whoMoves == 'w' && gameState.white_O_O_O) || (gameState.whoMoves == 'b' && gameState.black_O_O_O)) {
             // it's implied the king is on its starting square
             // no blocking pieces
-            if (boardConfiguration[old_i, old_j - 1] == '-' && boardConfiguration[old_i, old_j - 2] == '-' && boardConfiguration[old_i, old_j - 3] == 0) {
+            if (boardConfiguration[old_i, old_j - 1] == '-' && boardConfiguration[old_i, old_j - 2] == '-' && boardConfiguration[old_i, old_j - 3] == '-') {
                 // not castling through or into check
                 if (IsKingSafeAt(old_i, old_j - 1, gameState, null) && IsKingSafeAt(old_i, old_j - 2, gameState, null)) {
                     legalMoves.Add(new IndexMove(old_i, old_j, old_i, old_j - 2));
