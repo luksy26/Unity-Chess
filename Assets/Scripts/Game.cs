@@ -57,6 +57,7 @@ public class Game : MonoBehaviour {
                 }
             }
         }
+
         HandleGameState(globalGameState, gameStates);
 
         await Task.Yield();
@@ -83,16 +84,6 @@ public class Game : MonoBehaviour {
         bool promoting = false;
         string movedPieceName = currentPieces[indexMove.oldRow, indexMove.oldColumn].name;
 
-        // check if a piece was captured
-        if (currentPieces[indexMove.newRow, indexMove.newColumn] != null) {
-            Debug.Log("destroying " + currentPieces[indexMove.newRow, indexMove.newColumn].name);
-            if (currentPlayer == 'w') {
-                blackPieces.Remove(currentPieces[indexMove.newRow, indexMove.newColumn]);
-            } else {
-                whitePieces.Remove(currentPieces[indexMove.newRow, indexMove.newColumn]);
-            }
-            Destroy(currentPieces[indexMove.newRow, indexMove.newColumn]);
-        }
         // check if a pawn moved
         if (movedPieceName.Contains("pawn")) {
             // check if the pawn reached the last rank
@@ -132,30 +123,52 @@ public class Game : MonoBehaviour {
                 currentPieces[indexMove.newRow, 0] = null;
             }
         }
-        currentPieces[indexMove.newRow, indexMove.newColumn] = currentPieces[indexMove.oldRow, indexMove.oldColumn];
-        currentPieces[indexMove.oldRow, indexMove.oldColumn] = null;
 
-        PiecePlacer placer = currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<PiecePlacer>();
-        placer.SetFile(move.newFile);
-        placer.SetRank(move.newRank);
-        placer.SetGlobalCoords(playerPerspective);
         if (promoting) {
+            // make the promoted pawn temporarily invisible
+            currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = false;
             GameStateManager.Instance.isPromotionMenuDisplayed = true;
             string new_name = await promotionManager.GeneratePromotionMenu(playerPerspective, currentPlayer, move.newFile);
+            // promotion is cancelled due to reset position button
+            if (new_name == null) {
+                GameStateManager.Instance.isPromotionMenuDisplayed = false;
+                return;
+            }
             GameStateManager.Instance.isPromotionMenuDisplayed = false;
+            // promotion was cancelled, but game does not reset
+            if (new_name.Equals("")) {
+                // make the piece visible and put it back
+                currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = true;
+                currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
+                return;
+            }
             // set the piece selected for promotion
             move.promotesInto = new_name[0];
+            if (move.promotesInto == 'k') {
+                move.promotesInto = 'n';
+            }
             if (currentPlayer == 'w') {
                 move.promotesInto = char.ToUpper(move.promotesInto);
             }
             indexMove.promotesInto = move.promotesInto;
             // get the name for the new sprite
             new_name = (currentPlayer == 'w' ? "white" : "black") + "_" + new_name;
-            currentPieces[indexMove.newRow, indexMove.newColumn].name = new_name;
-            currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<SpriteRenderer>().sprite =
+            currentPieces[indexMove.oldRow, indexMove.oldColumn].name = new_name;
+            currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().sprite =
                 GetComponent<SpriteFactory>().GetSprite(new_name);
+            // make the pawn visible again
+            currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = true;
             Debug.Log("Button clicked: " + new_name);
         }
+
+        // Destroy old piece (if the square was occupied), update internal GameObject array, and reposition the moved piece
+        DestroyPieceAt(indexMove.newRow, indexMove.newColumn);
+        currentPieces[indexMove.newRow, indexMove.newColumn] = currentPieces[indexMove.oldRow, indexMove.oldColumn];
+        currentPieces[indexMove.oldRow, indexMove.oldColumn] = null;
+        PiecePlacer placer = currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<PiecePlacer>();
+        placer.SetFile(move.newFile);
+        placer.SetRank(move.newRank);
+        placer.SetGlobalCoords(playerPerspective);
 
         SwapPlayer();
         // make the move to update the gameState
@@ -177,6 +190,21 @@ public class Game : MonoBehaviour {
         // wait for next frame
         // await Task.Yield();
         // await Task.Run(() => RunEngine(gameState));
+    }
+
+    public void CancelMovePiece() {
+        promotionManager.CancelPromotionMenu();
+    }
+
+    public void DestroyPieceAt(int row, int column) {
+        if (currentPieces[row, column] != null) {
+            if (currentPlayer == 'w') {
+                blackPieces.Remove(currentPieces[row, column]);
+            } else {
+                whitePieces.Remove(currentPieces[row, column]);
+            }
+            Destroy(currentPieces[row, column]);
+        }
     }
 
     public void RunEngine(GameState gameState) {

@@ -61,6 +61,7 @@ public class PositionGenerator : MonoBehaviour {
         // } else {
         //     Debug.Log("file not found");
         // }
+        Game.Instance.CancelMovePiece();
         GameStateManager.Instance.GenerateGameState(inputFEN);
         Game.Instance.DestroyPosition();
         Game.Instance.GeneratePosition();

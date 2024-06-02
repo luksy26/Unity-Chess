@@ -120,8 +120,8 @@ public class GameStateManager : MonoBehaviour {
             globalGameState.moveCounter50Move = int.Parse(moveCounters[0]);
             globalGameState.moveCounterFull = int.Parse(moveCounters[1]);
         }
-        // Debug.Log("Global GameState Generated:");
-        // Debug.Log(globalGameState);
+        Debug.Log("Global GameState Generated:");
+        Debug.Log(globalGameState);
     }
 
     public GameConclusion GetGameConclusion(GameState gameState, Hashtable gameStates) {

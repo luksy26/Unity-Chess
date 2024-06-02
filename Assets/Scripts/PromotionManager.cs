@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -12,12 +11,14 @@ public class PromotionManager : MonoBehaviour {
     private TaskCompletionSource<string> tcs; // task to process which button was pressed
     private int positionYIncrement; // indicates whether we generate the buttons from the top or from the bottom of the screen
     private float firstButtonX, firstButtonY; // placement of the first button, depends on playerPerspective, currentPlayer and piece file
+    bool samePerspective; // used to choose version of cancel promotion button
 
-    public Task<string> GeneratePromotionMenu(string playerPerspective, char whoMoves, char file) {
+    public async Task<string> GeneratePromotionMenu(string playerPerspective, char whoMoves, char file) {
         // values if playing from the perspective of the player who moves
         firstButtonX = -3.5f;
         firstButtonY = 3.5f;
         // if playing from the perspective of the player who moves
+        samePerspective = playerPerspective[0] == whoMoves;
         if (playerPerspective[0] == whoMoves) {
             // buttons will generate top-down
             positionYIncrement = -1;
@@ -38,56 +39,70 @@ public class PromotionManager : MonoBehaviour {
         tcs = new TaskCompletionSource<string>();
 
         // generate the buttons and wait for user input
-        StartCoroutine(GeneratePromotionMenuButtons(whoMoves));
-
-        // return the pieceName string
-        return tcs.Task;
+        GeneratePromotionMenuButtons(whoMoves, samePerspective);
+        return await tcs.Task;
     }
 
-    public IEnumerator GeneratePromotionMenuButtons(char whoMoves) {
-        for (int i = 0; i < 4; ++i) {
+    private void GeneratePromotionMenuButtons(char whoMoves, bool samePerspective) {
+        string buttonName;
+        for (int i = 0; i < 5; ++i) {
             // create the button GameObject
             GameObject button = Instantiate(promotionPieceButton, canvas.transform);
 
             RectTransform rectTransform = button.GetComponent<RectTransform>();
             // position the button
-            rectTransform.localPosition = new Vector3(firstButtonX, firstButtonY + i * positionYIncrement, -0.02f);
+            rectTransform.localPosition = new Vector3(firstButtonX, firstButtonY + i * positionYIncrement, -0.03f);
             Sprite pieceSprite;
-            if (whoMoves == 'w') {
-                pieceSprite = buttonSprites[i];
-            } else { // black pieces sprites are at an offset of 4 in the list
-                pieceSprite = buttonSprites[i + 4];
+            if (i == 4) {
+                // this is the cancel button
+                if (samePerspective) {
+                    pieceSprite = buttonSprites[8];
+                    buttonName = "SamePerspective";
+                } else {
+                    pieceSprite = buttonSprites[9];
+                    buttonName = "OppositePerspective";
+                }
+            } else {
+                if (whoMoves == 'w') {
+                    pieceSprite = buttonSprites[i];
+                    buttonName = buttonSprites[i].name;
+                } else { // black pieces sprites are at an offset of 4 in the list
+                    pieceSprite = buttonSprites[i + 4];
+                    buttonName = buttonSprites[i + 4].name;
+                }
             }
-            button.GetComponent<Image>().sprite = pieceSprite;
-            // add behaviour when pressing the button
-            int index = i;
-            button.GetComponent<Button>().onClick.AddListener(() => HandleButtonClick(index));
-            button.name = "PromotionButton_" + buttonSprites[i].name;
-            buttons.Add(button);
-        }
-
-        // wait until one of the buttons is pressed
-        yield return new WaitUntil(() => tcs.Task.IsCompleted);
-
-        // remove buttons from the screen
-        foreach (GameObject button in buttons) {
-            Destroy(button);
-        }
-        buttons.Clear();
+        button.GetComponent<Image>().sprite = pieceSprite;
+        // add behaviour when pressing the button
+        int index = i;
+        button.GetComponent<Button>().onClick.AddListener(() => {
+            tcs.TrySetResult(GetResultFromIndex(index));
+            DestroyButtons();
+        });
+        button.name = "PromotionButton_" + buttonName;
+        buttons.Add(button);
     }
+}
 
-    public void HandleButtonClick(int index) {
-        // store result in the task depending on which button was pressed
-        string result = GetResultFromIndex(index);
-        tcs.SetResult(result);
+public void CancelPromotionMenu() {
+    if (tcs != null && !tcs.Task.IsCompleted) {
+        tcs.TrySetResult(null);
     }
-    private string GetResultFromIndex(int index) {
-        return index switch {
-            0 => "queen",
-            1 => "knight",
-            2 => "rook",
-            3 => "bishop",
-            _ => "",
-        };
+    DestroyButtons();
+}
+
+private void DestroyButtons() {
+    foreach (GameObject button in buttons) {
+        Destroy(button);
     }
+    buttons.Clear();
+}
+private string GetResultFromIndex(int index) {
+    return index switch {
+        0 => "queen",
+        1 => "knight",
+        2 => "rook",
+        3 => "bishop",
+        _ => "", // indicates cancelling promotion
+    };
+}
 }
