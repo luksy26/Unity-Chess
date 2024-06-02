@@ -1,3 +1,5 @@
+using System;
+
 public class IndexMove {
     public int oldRow, oldColumn, newRow, newColumn;
     public char promotesInto;
@@ -15,5 +17,12 @@ public class IndexMove {
         this.newRow = newRow;
         this.newColumn = newColumn;
         this.promotesInto = promotesInto;
+    }
+    public IndexMove(IndexMove indexMove) {
+        oldRow = indexMove.oldRow;
+        newRow = indexMove.newRow;
+        oldColumn = indexMove.oldColumn;
+        newColumn = indexMove.newColumn;
+        promotesInto = indexMove.promotesInto;
     }
 }

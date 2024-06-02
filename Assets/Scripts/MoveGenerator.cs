@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using static KingSafety;
 
@@ -29,8 +31,9 @@ public static class MoveGenerator {
     public static void AddLegalPawnMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
         char[,] boardConfiguration = gameState.boardConfiguration;
         int forwardY, kingRow, kingColumn, startingRow;
-        char opponent;
-        if (gameState.whoMoves == 'w') {
+        char opponent, whoMoves = gameState.whoMoves;
+        bool canPromote = (gameState.whoMoves == 'w' && old_i == 1) || (gameState.whoMoves == 'b' && old_i == 6);
+        if (whoMoves == 'w') {
             forwardY = -1;
             kingRow = gameState.whiteKingRow;
             kingColumn = gameState.whiteKingColumn;
@@ -48,7 +51,11 @@ public static class MoveGenerator {
         if (boardConfiguration[old_i + forwardY, old_j] == '-') {
             IndexMove pawnOneUp = new(old_i, old_j, old_i + forwardY, old_j);
             if (IsKingSafeAt(kingRow, kingColumn, gameState, pawnOneUp)) {
-                legalMoves.Add(pawnOneUp);
+                if (canPromote) {
+                    AddAllPromotionTypes(pawnOneUp, whoMoves, legalMoves);
+                } else {
+                    legalMoves.Add(pawnOneUp);
+                }
             }
             // pawn can move two squares
             if (old_i == startingRow && boardConfiguration[old_i + 2 * forwardY, old_j] == '-') {
@@ -68,7 +75,11 @@ public static class MoveGenerator {
                 RowToRank(old_i + forwardY) == gameState.enPassantRank && ColumnToFile(old_j + 1) == gameState.enPassantFile)) {
                 IndexMove captureRight = new(old_i, old_j, old_i + forwardY, old_j + 1);
                 if (IsKingSafeAt(kingRow, kingColumn, gameState, captureRight)) {
-                    legalMoves.Add(captureRight);
+                    if (canPromote) {
+                        AddAllPromotionTypes(captureRight, whoMoves, legalMoves);
+                    } else {
+                        legalMoves.Add(captureRight);
+                    }
                 }
             }
         }
@@ -80,10 +91,36 @@ public static class MoveGenerator {
                 RowToRank(old_i + forwardY) == gameState.enPassantRank && ColumnToFile(old_j - 1) == gameState.enPassantFile)) {
                 IndexMove captureLeft = new(old_i, old_j, old_i + forwardY, old_j - 1);
                 if (IsKingSafeAt(kingRow, kingColumn, gameState, captureLeft)) {
-                    legalMoves.Add(captureLeft);
+                    if (canPromote) {
+                        AddAllPromotionTypes(captureLeft, whoMoves, legalMoves);
+                    } else {
+                        legalMoves.Add(captureLeft);
+                    }
                 }
             }
         }
+    }
+
+    public static void AddAllPromotionTypes(IndexMove indexMove, char whoMoves, List<IndexMove> legalMoves) {
+        IndexMove promoteQueen, promoteKnight, promoteBishop, promoteRook;
+
+        promoteQueen = new IndexMove(indexMove) {
+            promotesInto = whoMoves == 'w' ? 'Q' : 'q'
+        };
+        promoteKnight = new IndexMove(indexMove) {
+            promotesInto = whoMoves == 'w' ? 'N' : 'n'
+        };
+        promoteBishop = new IndexMove(indexMove) {
+            promotesInto = whoMoves == 'w' ? 'B' : 'b'
+        };
+        promoteRook = new IndexMove(indexMove) {
+            promotesInto = whoMoves == 'w' ? 'R' : 'r'
+        };
+
+        legalMoves.Add(promoteQueen);
+        legalMoves.Add(promoteKnight);
+        legalMoves.Add(promoteBishop);
+        legalMoves.Add(promoteRook);
     }
     public static void AddLegalBishopMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
         char[,] boardConfiguration = gameState.boardConfiguration;
