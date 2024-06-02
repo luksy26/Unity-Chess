@@ -112,7 +112,7 @@ public static class MoveGenerator {
         int noSafeSquaresInit = 0;
         int noUnsafeSquaresInit = 0;
         // bishop's current square is part of both diagonals
-        if (IsKingSafeAt(kingRow, kingColumn, gameState, null)) {
+        if (IsKingSafeAt(kingRow, kingColumn, gameState)) {
             ++noSafeSquaresInit;
         } else {
             ++noUnsafeSquaresInit;
@@ -188,7 +188,7 @@ public static class MoveGenerator {
 
         bool initialPositionSafe;
 
-        if (IsKingSafeAt(kingRow, kingColumn, gameState, null)) {
+        if (IsKingSafeAt(kingRow, kingColumn, gameState)) {
             initialPositionSafe = true;
         } else {
             initialPositionSafe = false;
@@ -252,7 +252,7 @@ public static class MoveGenerator {
         int noSafeSquaresInit = 0;
         int noUnsafeSquaresInit = 0;
         // rook's current square is part of both lines
-        if (IsKingSafeAt(kingRow, kingColumn, gameState, null)) {
+        if (IsKingSafeAt(kingRow, kingColumn, gameState)) {
             ++noSafeSquaresInit;
         } else {
             ++noUnsafeSquaresInit;
@@ -334,14 +334,14 @@ public static class MoveGenerator {
                 // not trying to capture own piece
                 if (pieceOwner != gameState.whoMoves) {
                     // king not in check
-                    if (IsKingSafeAt(new_i, new_j, gameState, null)) {
+                    if (IsKingSafeAt(new_i, new_j, gameState)) {
                         legalMoves.Add(new IndexMove(old_i, old_j, new_i, new_j));
                     }
                 }
             }
         }
         // if king is in check we cannot castle
-        if (!IsKingSafeAt(old_i, old_j, gameState, null)) {
+        if (!IsKingSafeAt(old_i, old_j, gameState)) {
             return;
         }
         // try to short castle
@@ -350,7 +350,7 @@ public static class MoveGenerator {
             // no blocking pieces
             if (boardConfiguration[old_i, old_j + 1] == '-' && boardConfiguration[old_i, old_j + 2] == '-') {
                 // not castling through or into check
-                if (IsKingSafeAt(old_i, old_j + 1, gameState, null) && IsKingSafeAt(old_i, old_j + 2, gameState, null)) {
+                if (IsKingSafeAt(old_i, old_j + 1, gameState) && IsKingSafeAt(old_i, old_j + 2, gameState)) {
                     legalMoves.Add(new IndexMove(old_i, old_j, old_i, old_j + 2));
                 }
             }
@@ -361,7 +361,7 @@ public static class MoveGenerator {
             // no blocking pieces
             if (boardConfiguration[old_i, old_j - 1] == '-' && boardConfiguration[old_i, old_j - 2] == '-' && boardConfiguration[old_i, old_j - 3] == '-') {
                 // not castling through or into check
-                if (IsKingSafeAt(old_i, old_j - 1, gameState, null) && IsKingSafeAt(old_i, old_j - 2, gameState, null)) {
+                if (IsKingSafeAt(old_i, old_j - 1, gameState) && IsKingSafeAt(old_i, old_j - 2, gameState)) {
                     legalMoves.Add(new IndexMove(old_i, old_j, old_i, old_j - 2));
                 }
             }

@@ -30,7 +30,7 @@ public class Game : MonoBehaviour {
         }
     }
 
-    public void GeneratePosition() {
+    public async void GeneratePosition() {
         GameState globalGameState = GameStateManager.Instance.globalGameState;
 
         // add the gameState in the hashtable
@@ -56,7 +56,9 @@ public class Game : MonoBehaviour {
             }
         }
         HandleGameState(globalGameState, gameStates);
-        RunEngine(globalGameState);
+
+        await Task.Yield();
+        await Task.Run(() => RunEngine(globalGameState));
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -172,7 +174,7 @@ public class Game : MonoBehaviour {
         GameStateManager.Instance.IsEngineRunning = true;
         string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
         using StreamWriter writer = new(outPath, false);
-        for (int depth = 1; depth < 5; ++depth) {
+        for (int depth = 1; depth < 6; ++depth) {
             maxDepth = depth;
             Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0, writer));
         }

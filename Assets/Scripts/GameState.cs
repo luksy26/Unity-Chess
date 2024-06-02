@@ -13,9 +13,9 @@ public class GameState {
     public bool white_O_O, white_O_O_O, black_O_O, black_O_O_O;
 
     // Default constructor
-    public GameState() {}
+    public GameState() { }
 
-    public GameState (GameState other) {
+    public GameState(GameState other) {
         boardConfiguration = new char[8, 8];
         Array.Copy(other.boardConfiguration, boardConfiguration, 64);
         noBlackPieces = other.noBlackPieces;
