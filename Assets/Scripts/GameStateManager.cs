@@ -11,7 +11,7 @@ public class GameStateManager : MonoBehaviour {
 
     // very important structure, will be used across multiple game components
     public GameState globalGameState;
-    public bool IsEngineRunning;
+    public bool IsEngineRunning, isPromotionMenuDisplayed;
 
     // default starting position
     public string defaultFEN;
@@ -29,6 +29,7 @@ public class GameStateManager : MonoBehaviour {
         defaultFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         globalGameState = new();
         IsEngineRunning = false;
+        isPromotionMenuDisplayed = false;
     }
 
     public void GenerateGameState(string inputFEN) {

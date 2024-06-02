@@ -8,6 +8,7 @@ using static PositionCounter;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
+    public PromotionManager promotionManager;
     public GameObject[,] currentPieces;
     public List<GameObject> blackPieces, whitePieces;
     public GameObject chessPiecePrefab;
@@ -20,6 +21,7 @@ public class Game : MonoBehaviour {
         blackPieces = new();
         whitePieces = new();
         gameStates = new();
+        promotionManager = GetComponent<PromotionManager>();
     }
     private void Awake() {
         if (Instance == null) {
@@ -58,7 +60,7 @@ public class Game : MonoBehaviour {
         HandleGameState(globalGameState, gameStates);
 
         await Task.Yield();
-        await Task.Run(() => RunEngine(globalGameState));
+        //await Task.Run(() => RunEngine(globalGameState));
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -138,20 +140,27 @@ public class Game : MonoBehaviour {
         placer.SetRank(move.newRank);
         placer.SetGlobalCoords(playerPerspective);
         if (promoting) {
-            string new_name = currentPlayer == 'w' ? "white_queen" : "black_queen";
+            GameStateManager.Instance.isPromotionMenuDisplayed = true;
+            string new_name = await promotionManager.GeneratePromotionMenu(playerPerspective, currentPlayer, move.newFile);
+            GameStateManager.Instance.isPromotionMenuDisplayed = false;
+            // set the piece selected for promotion
+            move.promotesInto = new_name[0];
+            if (currentPlayer == 'w') {
+                move.promotesInto = char.ToUpper(move.promotesInto);
+            }
+            indexMove.promotesInto = move.promotesInto;
+            // get the name for the new sprite
+            new_name = (currentPlayer == 'w' ? "white" : "black") + "_" + new_name;
             currentPieces[indexMove.newRow, indexMove.newColumn].name = new_name;
             currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<SpriteRenderer>().sprite =
                 GetComponent<SpriteFactory>().GetSprite(new_name);
-
+            Debug.Log("Button clicked: " + new_name);
         }
 
         SwapPlayer();
         // make the move to update the gameState
         gameState.MovePiece(indexMove);
         Debug.Log("GameState changed:");
-        Debug.Log("Local:");
-        Debug.Log(gameState);
-        Debug.Log("Global:");
         Debug.Log(GameStateManager.Instance.globalGameState);
 
         // adding the gameState to the hashtable
@@ -166,8 +175,8 @@ public class Game : MonoBehaviour {
         HandleGameState(gameState, gameStates);
 
         // wait for next frame
-        await Task.Yield();
-        await Task.Run(() => RunEngine(gameState));
+        // await Task.Yield();
+        // await Task.Run(() => RunEngine(gameState));
     }
 
     public void RunEngine(GameState gameState) {

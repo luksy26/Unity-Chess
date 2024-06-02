@@ -24,10 +24,12 @@ public class PieceMover : MonoBehaviour {
     }
 
     public void OnMouseDown() {
-        Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        isDragging = true;
-        initialPosition = transform.position;
-        transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
+        if (!GameStateManager.Instance.isPromotionMenuDisplayed) {
+            Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            isDragging = true;
+            initialPosition = transform.position;
+            transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
+        }
     }
 
     public void OnMouseDrag() {

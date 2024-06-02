@@ -160,10 +160,8 @@ public class GameState {
 
         // a pawn was moved
         if (pawnMoved) {
-            if (new_i == 0) { // white is promoting
-                boardConfiguration[0, new_j] = 'Q';
-            } else if (new_i == 7) { // black is promoting
-                boardConfiguration[7, new_j] = 'q';
+            if (new_i == 0 || new_i == 7) { // pawn is promoting
+                boardConfiguration[new_i, new_j] = indexMove.promotesInto;
             } else if (Math.Abs(new_j - old_j) == 1 && movingToEmptySquare) { // changed files and moved to an empty square
                 // remove the pawn that was captured en-passant (its rank depends on who moves)
                 if (whoMoves == 'w') {

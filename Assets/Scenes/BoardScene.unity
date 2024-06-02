@@ -166,6 +166,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d51854d7f14bc5d48825d396196f857d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsEngineRunning: 0
+  isPromotionMenuDisplayed: 0
   defaultFEN: 
 --- !u!1 &369212471
 GameObject:
@@ -736,6 +738,7 @@ GameObject:
   - component: {fileID: 1480655574}
   - component: {fileID: 1480655575}
   - component: {fileID: 1480655577}
+  - component: {fileID: 1480655578}
   m_Layer: 0
   m_Name: GameController
   m_TagString: GameController
@@ -770,6 +773,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37c73163068040f41af88113c9517496, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  promotionManager: {fileID: 0}
   blackPieces: []
   whitePieces: []
   chessPiecePrefab: {fileID: 1349441230006070361, guid: 592ccfb394f1e5740b5e64aae3a0927c, type: 3}
@@ -799,6 +803,29 @@ MonoBehaviour:
   white_bishop: {fileID: 21300000, guid: 957f44387e89b6745ab937d6891d9c06, type: 3}
   white_knight: {fileID: 21300000, guid: b683a7e14106931428f1a0b4f2ed5a15, type: 3}
   white_rook: {fileID: 21300000, guid: acd52f38f1cd1214ba6b2592a07d89f9, type: 3}
+--- !u!114 &1480655578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1480655573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c99442101f5bf14897b0780f05076c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canvas: {fileID: 1238640591}
+  promotionPieceButton: {fileID: 6093344864470359985, guid: 9b7116319b2d9f246b5a718c65bc3cef, type: 3}
+  buttonSprites:
+  - {fileID: 21300000, guid: 939f9c8cc02bb5a428b7118296c4595e, type: 3}
+  - {fileID: 21300000, guid: 5d699b4ba48b30e459ebb23aa0c5be0c, type: 3}
+  - {fileID: 21300000, guid: cb8f941986ea345469fe4df820af6104, type: 3}
+  - {fileID: 21300000, guid: 75ac90771b4b03c4888c58f63f9beb42, type: 3}
+  - {fileID: 21300000, guid: 942cc06168bd35d4b97106e6f709df95, type: 3}
+  - {fileID: 21300000, guid: 99e493ccf0a0ce549984cdd28cfc29ec, type: 3}
+  - {fileID: 21300000, guid: a4f35441971384646af119926f8fcd31, type: 3}
+  - {fileID: 21300000, guid: 2501edfe6a125a040b0a06037ae2f7ee, type: 3}
 --- !u!1 &1585163929
 GameObject:
   m_ObjectHideFlags: 0
