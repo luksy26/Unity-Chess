@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -158,7 +159,6 @@ public class Game : MonoBehaviour {
                 GetComponent<SpriteFactory>().GetSprite(new_name);
             // make the pawn visible again
             currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = true;
-            Debug.Log("Button clicked: " + new_name);
         }
 
         // Destroy old piece (if the square was occupied), update internal GameObject array, and reposition the moved piece
@@ -173,8 +173,8 @@ public class Game : MonoBehaviour {
         SwapPlayer();
         // make the move to update the gameState
         gameState.MovePiece(indexMove);
-        Debug.Log("GameState changed:");
-        Debug.Log(GameStateManager.Instance.globalGameState);
+        UnityEngine.Debug.Log("GameState changed:");
+        UnityEngine.Debug.Log(GameStateManager.Instance.globalGameState);
 
         // adding the gameState to the hashtable
         if (gameStates.ContainsKey(gameState)) {
@@ -213,7 +213,11 @@ public class Game : MonoBehaviour {
         using StreamWriter writer = new(outPath, false);
         for (int depth = 1; depth < 6; ++depth) {
             maxDepth = depth;
-            Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0, writer));
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
+            UnityEngine.Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0, writer));
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("For depth " + depth + " time is " + stopwatch.ElapsedMilliseconds + "ms");
         }
         GameStateManager.Instance.IsEngineRunning = false;
     }
@@ -222,26 +226,26 @@ public class Game : MonoBehaviour {
         switch (GameStateManager.Instance.GetGameConclusion(gameState, gameStates)) {
             case GameConclusion.DrawBy50MoveRule: {
                     currentPlayer = '-';
-                    Debug.Log("Draw by 50 move rule");
+                    UnityEngine.Debug.Log("Draw by 50 move rule");
                     break;
                 }
             case GameConclusion.DrawByRepetition: {
                     currentPlayer = '-';
-                    Debug.Log("Draw by 3-fold repetition");
+                    UnityEngine.Debug.Log("Draw by 3-fold repetition");
                     break;
                 }
             case GameConclusion.DrawByInsufficientMaterial: {
                     currentPlayer = '-';
-                    Debug.Log("Draw by insufficient material");
+                    UnityEngine.Debug.Log("Draw by insufficient material");
                     break;
                 }
             case GameConclusion.Checkmate: {
-                    Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
+                    UnityEngine.Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
                     currentPlayer = '-';
                     break;
                 }
             case GameConclusion.Stalemate: {
-                    Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
+                    UnityEngine.Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
                     currentPlayer = '-';
                     break;
                 }
