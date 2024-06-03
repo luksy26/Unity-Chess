@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
 using static KingSafety;
@@ -8,11 +10,23 @@ public static class MoveGenerator {
     public static List<IndexMove> GetLegalMoves(GameState gameState) {
         List<IndexMove> legalMoves = new();
         char[,] boardConfiguration = gameState.boardConfiguration;
-        char whoMoves = gameState.whoMoves;
+        // Hashtable piecesHashtable = gameState.whoMoves == 'w' ? gameState.whitePiecesPositions : gameState.blackPiecesPositions;
+        // foreach (int key in piecesHashtable.Keys) {
+        //     int i = key / 8, j = key % 8;
+        //     switch (boardConfiguration[i, j]) {
+        //         case 'p' or 'P': AddLegalPawnMoves(gameState, i, j, legalMoves); break;
+        //         case 'b' or 'B': AddLegalBishopMoves(gameState, i, j, legalMoves); break;
+        //         case 'n' or 'N': AddLegalKnightMoves(gameState, i, j, legalMoves); break;
+        //         case 'r' or 'R': AddLegalRookMoves(gameState, i, j, legalMoves); break;
+        //         case 'q' or 'Q': AddLegalQueenMoves(gameState, i, j, legalMoves); break;
+        //         case 'k' or 'K': AddLegalKingMoves(gameState, i, j, legalMoves); break;
+        //         default: break;
+        //     }
+        // }
+
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
-                // piece belongs to current player
-                if (whoMoves == GetPieceOwner(boardConfiguration[i, j])) {
+                if (GetPieceOwner(boardConfiguration[i, j]) == gameState.whoMoves) {
                     switch (boardConfiguration[i, j]) {
                         case 'p' or 'P': AddLegalPawnMoves(gameState, i, j, legalMoves); break;
                         case 'b' or 'B': AddLegalBishopMoves(gameState, i, j, legalMoves); break;
@@ -382,7 +396,7 @@ public static class MoveGenerator {
             return;
         }
         // try to short castle
-        if ((gameState.whoMoves == 'w' && gameState.white_O_O) || (gameState.whoMoves == 'b' && gameState.black_O_O)) {
+        if ((gameState.whoMoves == 'w' && gameState.canWhite_O_O) || (gameState.whoMoves == 'b' && gameState.canBlack_O_O)) {
             // it's implied the king is on its starting square
             // no blocking pieces
             if (boardConfiguration[old_i, old_j + 1] == '-' && boardConfiguration[old_i, old_j + 2] == '-') {
@@ -393,7 +407,7 @@ public static class MoveGenerator {
             }
         }
         // try to long castle
-        if ((gameState.whoMoves == 'w' && gameState.white_O_O_O) || (gameState.whoMoves == 'b' && gameState.black_O_O_O)) {
+        if ((gameState.whoMoves == 'w' && gameState.canWhite_O_O_O) || (gameState.whoMoves == 'b' && gameState.canBlack_O_O_O)) {
             // it's implied the king is on its starting square
             // no blocking pieces
             if (boardConfiguration[old_i, old_j - 1] == '-' && boardConfiguration[old_i, old_j - 2] == '-' && boardConfiguration[old_i, old_j - 3] == '-') {

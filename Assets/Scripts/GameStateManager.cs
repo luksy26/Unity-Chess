@@ -40,6 +40,8 @@ public class GameStateManager : MonoBehaviour {
         globalGameState.boardConfiguration = new char[8, 8];
         globalGameState.noBlackPieces = 0;
         globalGameState.noWhitePieces = 0;
+        globalGameState.whitePiecesPositions = new Hashtable();
+        globalGameState.blackPiecesPositions = new Hashtable();
 
         StringBuilder inputFEN_sb = new(inputFEN);
         int index = 0;
@@ -58,8 +60,10 @@ public class GameStateManager : MonoBehaviour {
                     globalGameState.boardConfiguration[i, j] = inputFEN_sb[index];
                     if (char.IsUpper(inputFEN_sb[index])) {
                         ++globalGameState.noWhitePieces;
+                        globalGameState.whitePiecesPositions.Add(i * 8 + j, 1);
                     } else {
                         ++globalGameState.noBlackPieces;
+                        globalGameState.blackPiecesPositions.Add(i * 8 + j, 1);
                     }
                     if (inputFEN_sb[index] == 'k') {
                         globalGameState.blackKingRow = i;
@@ -81,19 +85,19 @@ public class GameStateManager : MonoBehaviour {
         globalGameState.whoMoves = inputFEN_sb[++index];
         index += 2;
 
-        globalGameState.white_O_O = false;
-        globalGameState.black_O_O = false;
-        globalGameState.white_O_O_O = false;
-        globalGameState.black_O_O_O = false;
+        globalGameState.canWhite_O_O = false;
+        globalGameState.canBlack_O_O = false;
+        globalGameState.canWhite_O_O_O = false;
+        globalGameState.canBlack_O_O_O = false;
         if (inputFEN_sb[index] == '-') {
             ++index;
         } else {
             while (inputFEN_sb[index] != ' ') {
                 switch (inputFEN_sb[index]) {
-                    case 'K': globalGameState.white_O_O = true; break;
-                    case 'Q': globalGameState.white_O_O_O = true; break;
-                    case 'k': globalGameState.black_O_O = true; break;
-                    case 'q': globalGameState.black_O_O_O = true; break;
+                    case 'K': globalGameState.canWhite_O_O = true; break;
+                    case 'Q': globalGameState.canWhite_O_O_O = true; break;
+                    case 'k': globalGameState.canBlack_O_O = true; break;
+                    case 'q': globalGameState.canBlack_O_O_O = true; break;
                     default: Debug.Log("Unrecognized character in 3rd section of FEN"); break;
                 }
                 ++index;

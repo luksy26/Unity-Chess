@@ -239,7 +239,7 @@ public static class MoveValidator {
             // trying to short castle
             if (new_j > old_j) {
                 // already moved the king or rooks
-                if ((gameState.whoMoves == 'w' && !gameState.white_O_O) || (gameState.whoMoves == 'b' && !gameState.black_O_O)) {
+                if ((gameState.whoMoves == 'w' && !gameState.canWhite_O_O) || (gameState.whoMoves == 'b' && !gameState.canBlack_O_O)) {
                     return false;
                 }
                 bool blockingPieces = boardConfiguration[old_i, old_j + 1] != '-' || boardConfiguration[old_i, old_j + 2] != '-';
@@ -256,7 +256,7 @@ public static class MoveValidator {
             // trying to long castle
             if (new_j < old_j) {
                 // already moved the king or rooks
-                if ((gameState.whoMoves == 'w' && !gameState.white_O_O_O) || (gameState.whoMoves == 'b' && !gameState.black_O_O_O)) {
+                if ((gameState.whoMoves == 'w' && !gameState.canWhite_O_O_O) || (gameState.whoMoves == 'b' && !gameState.canBlack_O_O_O)) {
                     return false;
                 }
                 bool blockingPieces = boardConfiguration[old_i, old_j - 1] != '-' || boardConfiguration[old_i, old_j - 2] != '-' ||

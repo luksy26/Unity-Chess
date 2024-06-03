@@ -62,7 +62,7 @@ public class Game : MonoBehaviour {
         HandleGameState(globalGameState, gameStates);
 
         await Task.Yield();
-        await Task.Run(() => RunEngine(globalGameState));
+        // await Task.Run(() => RunEngine(globalGameState));
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -172,7 +172,7 @@ public class Game : MonoBehaviour {
 
         SwapPlayer();
         // make the move to update the gameState
-        gameState.MovePiece(indexMove);
+        gameState.MakeMove(indexMove);
         UnityEngine.Debug.Log("GameState changed:");
         UnityEngine.Debug.Log(GameStateManager.Instance.globalGameState);
 
@@ -189,7 +189,7 @@ public class Game : MonoBehaviour {
 
         // wait for next frame
         await Task.Yield();
-        await Task.Run(() => RunEngine(gameState));
+        // await Task.Run(() => RunEngine(gameState));
     }
 
     public void CancelMovePiece() {
