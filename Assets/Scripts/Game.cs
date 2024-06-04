@@ -209,13 +209,13 @@ public class Game : MonoBehaviour {
 
     public void RunEngine(GameState gameState) {
         GameStateManager.Instance.IsEngineRunning = true;
-        // string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
-        // using StreamWriter writer = new(outPath, false);
+        string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
+        using StreamWriter writer = new(outPath, false);
         for (int depth = 1; depth < 6; ++depth) {
             maxDepth = depth;
             Stopwatch stopwatch = new();
             stopwatch.Start();
-            UnityEngine.Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0));
+            UnityEngine.Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0, writer));
             stopwatch.Stop();
             UnityEngine.Debug.Log("For depth " + depth + " time is " + stopwatch.ElapsedMilliseconds + "ms");
         }

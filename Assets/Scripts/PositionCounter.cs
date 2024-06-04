@@ -19,6 +19,15 @@ public static class PositionCounter {
             }
             sum += numberPositions;
             gameState.UnmakeMoveNoHashtable(move);
+
+            // GameState newGameState = new(gameState);
+            // newGameState.MakeMoveClean(move);
+            // int numberPositions = SearchPositions(newGameState, depth + 1, writer);
+            // // if (depth == 0 && maxDepth == 2) {
+            // //     //Debug.Log(new Move(move) + ": " + numberPositions);
+            // //     writer?.WriteLine(new Move(move) + ": " + numberPositions);
+            // // }
+            // sum += numberPositions;
         }
         return sum;
     }

@@ -193,10 +193,10 @@ public class GameStateManager : MonoBehaviour {
         }
         List<IndexMove> moves = GetLegalMoves(gameState);
 
-        // Debug.Log("found " + moves.Count + " legal moves:");
-        // foreach(IndexMove move in moves) {
-        //     Debug.Log(new Move(move));
-        // }
+        Debug.Log("found " + moves.Count + " legal moves:");
+        foreach(IndexMove move in moves) {
+            Debug.Log(new Move(move));
+        }
 
         if (moves.Count == 0) {
             int kingRow = gameState.whoMoves == 'w' ? gameState.whiteKingRow : gameState.blackKingRow;

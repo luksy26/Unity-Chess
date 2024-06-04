@@ -378,7 +378,7 @@ public class GameState {
             }
         } else { // previous en-passant is no longer valid and we don't have a new one
             enPassantFile = '*';
-            enPassantRank = 0;
+            enPassantRank = -1;
         }
 
         // move the piece on the new square

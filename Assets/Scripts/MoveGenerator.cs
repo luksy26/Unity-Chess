@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using Unity.VisualScripting;
 using UnityEngine;
 using static KingSafety;
 
@@ -10,6 +9,7 @@ public static class MoveGenerator {
     public static List<IndexMove> GetLegalMoves(GameState gameState) {
         List<IndexMove> legalMoves = new();
         char[,] boardConfiguration = gameState.boardConfiguration;
+        bool kingInDoubleCheck = false;
 
         // Hashtable piecesHashtable = gameState.whoMoves == 'w' ? gameState.whitePiecesPositions : gameState.blackPiecesPositions;
         // foreach (int key in piecesHashtable.Keys) {
@@ -25,16 +25,21 @@ public static class MoveGenerator {
         //     }
         // }
 
+        List<int> attackers = GetKingAttackers(gameState);
+
+        if (attackers.Count > 1)
+            kingInDoubleCheck = true;
+
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
                 if (GetPieceOwner(boardConfiguration[i, j]) == gameState.whoMoves) {
                     switch (boardConfiguration[i, j]) {
-                        case 'p' or 'P': AddLegalPawnMoves(gameState, i, j, legalMoves); break;
-                        case 'b' or 'B': AddLegalBishopMoves(gameState, i, j, legalMoves); break;
-                        case 'n' or 'N': AddLegalKnightMoves(gameState, i, j, legalMoves); break;
-                        case 'r' or 'R': AddLegalRookMoves(gameState, i, j, legalMoves); break;
-                        case 'q' or 'Q': AddLegalQueenMoves(gameState, i, j, legalMoves); break;
-                        case 'k' or 'K': AddLegalKingMoves(gameState, i, j, legalMoves); break;
+                        case 'p' or 'P': if (!kingInDoubleCheck) AddLegalPawnMoves(gameState, i, j, attackers, legalMoves); break;
+                        case 'b' or 'B': if (!kingInDoubleCheck) AddLegalBishopMoves(gameState, i, j, attackers, legalMoves); break;
+                        case 'n' or 'N': if (!kingInDoubleCheck) AddLegalKnightMoves(gameState, i, j, attackers, legalMoves); break;
+                        case 'r' or 'R': if (!kingInDoubleCheck) AddLegalRookMoves(gameState, i, j, attackers, legalMoves); break;
+                        case 'q' or 'Q': if (!kingInDoubleCheck) AddLegalQueenMoves(gameState, i, j, attackers, legalMoves); break;
+                        case 'k' or 'K': AddLegalKingMoves(gameState, i, j, attackers, legalMoves); break;
                         default: break;
                     }
                 }
@@ -43,7 +48,7 @@ public static class MoveGenerator {
         return legalMoves;
     }
 
-    public static void AddLegalPawnMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
+    public static void AddLegalPawnMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
         char[,] boardConfiguration = gameState.boardConfiguration;
         int forwardY, kingRow, kingColumn, startingRow;
         char opponent, whoMoves = gameState.whoMoves;
@@ -62,21 +67,80 @@ public static class MoveGenerator {
             startingRow = 1;
             opponent = 'w';
         }
+
+        bool sameDiagonal = Math.Abs(kingRow - old_i) == Math.Abs(kingColumn - old_j);
+        bool sameRank = kingRow == old_i;
+        bool sameFile = kingColumn == old_j;
+        bool sameLine = sameRank || sameFile;
+        int attackerType = -1;
+        int attacker_i = -1, attacker_j = -1;
+        if (attackers.Count > 0) {
+            attacker_i = attackers[0] / 8;
+            attacker_j = attackers[0] % 8;
+            switch (char.ToLower(boardConfiguration[attacker_i, attacker_j])) {
+                case 'p': attackerType = 0; break;
+                case 'b': attackerType = 1; break;
+                case 'r': attackerType = 2; break;
+                case 'n': attackerType = 3; break;
+                case 'q': // queen is attacking like a rook
+                    if (attacker_i == kingRow || attacker_j == kingColumn) {
+                        attackerType = 2;
+                    } else { // queen is attacking like a bishop
+                        attackerType = 1;
+                    }
+                    break;
+                default: break;
+            }
+        }
+
         // check forward pawn movement (square above the pawn must be empty)
         if (boardConfiguration[old_i + forwardY, old_j] == '-') {
             IndexMove pawnOneUp = new(old_i, old_j, old_i + forwardY, old_j);
-            if (IsKingSafeAt(kingRow, kingColumn, gameState, pawnOneUp)) {
-                if (canPromote) {
-                    AddAllPromotionTypes(pawnOneUp, whoMoves, legalMoves);
-                } else {
-                    legalMoves.Add(pawnOneUp);
+            bool resolvesAttacker = false;
+            switch (attackerType) {
+                case -1: resolvesAttacker = true; break;
+                case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, pawnOneUp); break;
+                case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, pawnOneUp); break;
+                case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, pawnOneUp); break;
+                case 3: resolvesAttacker = false; break;
+            }
+            // if a potential attacker has been blocked/captured
+            if (resolvesAttacker) {
+                bool keepsLine = kingColumn == old_j || kingRow == old_i + forwardY; 
+                // moving the piece doesn't cause the king to be in check
+                if ((!sameDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, pawnOneUp)) &&
+                (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, pawnOneUp))) {
+                    if (canPromote) {
+                        AddAllPromotionTypes(pawnOneUp, whoMoves, legalMoves);
+                    } else {
+                        legalMoves.Add(pawnOneUp);
+                    }
                 }
             }
+
             // pawn can move two squares
             if (old_i == startingRow && boardConfiguration[old_i + 2 * forwardY, old_j] == '-') {
                 IndexMove pawnTwoUp = new(old_i, old_j, old_i + 2 * forwardY, old_j);
-                if (IsKingSafeAt(kingRow, kingColumn, gameState, pawnTwoUp)) {
-                    legalMoves.Add(pawnTwoUp);
+                resolvesAttacker = false;
+                switch (attackerType) {
+                    case -1: resolvesAttacker = true; break;
+                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, pawnTwoUp); break;
+                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, pawnTwoUp); break;
+                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, pawnTwoUp); break;
+                    case 3: resolvesAttacker = false; break;
+                }
+                // if a potential attacker has been blocked/captured
+                if (resolvesAttacker) {
+                    bool keepsLine = kingColumn == old_j || kingRow == old_i + 2 * forwardY;
+                    // moving the piece doesn't cause the king to be in check
+                    if ((!sameDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, pawnTwoUp)) &&
+                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, pawnTwoUp))) {
+                        if (canPromote) {
+                            AddAllPromotionTypes(pawnTwoUp, whoMoves, legalMoves);
+                        } else {
+                            legalMoves.Add(pawnTwoUp);
+                        }
+                    }
                 }
             }
         }
@@ -89,11 +153,26 @@ public static class MoveGenerator {
             if (pieceOwner == opponent || (pieceOwner == '-' &&
                 RowToRank(old_i + forwardY) == gameState.enPassantRank && ColumnToFile(old_j + 1) == gameState.enPassantFile)) {
                 IndexMove captureRight = new(old_i, old_j, old_i + forwardY, old_j + 1);
-                if (IsKingSafeAt(kingRow, kingColumn, gameState, captureRight)) {
-                    if (canPromote) {
-                        AddAllPromotionTypes(captureRight, whoMoves, legalMoves);
-                    } else {
-                        legalMoves.Add(captureRight);
+                bool resolvesAttacker = false;
+                switch (attackerType) {
+                    case -1: resolvesAttacker = true; break;
+                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, captureRight); break;
+                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, captureRight); break;
+                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, captureRight); break;
+                    case 3: resolvesAttacker = old_i + forwardY == attacker_i && old_j + 1 == attacker_j; break;
+                }
+                // if a potential attacker has been blocked/captured
+                if (resolvesAttacker) {
+                    bool keepsDiagonal = Math.Abs(kingRow - old_i - forwardY) == Math.Abs(kingColumn - old_j - 1);
+                    bool keepsLine = (sameRank && kingRow == old_i + forwardY) || (sameFile && kingColumn == old_j + 1);
+                    // moving the piece doesn't cause the king to be in check
+                    if ((!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, captureRight)) &&
+                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, captureRight))) {
+                        if (canPromote) {
+                            AddAllPromotionTypes(captureRight, whoMoves, legalMoves);
+                        } else {
+                            legalMoves.Add(captureRight);
+                        }
                     }
                 }
             }
@@ -105,11 +184,26 @@ public static class MoveGenerator {
             if (pieceOwner == opponent || (pieceOwner == '-' &&
                 RowToRank(old_i + forwardY) == gameState.enPassantRank && ColumnToFile(old_j - 1) == gameState.enPassantFile)) {
                 IndexMove captureLeft = new(old_i, old_j, old_i + forwardY, old_j - 1);
-                if (IsKingSafeAt(kingRow, kingColumn, gameState, captureLeft)) {
-                    if (canPromote) {
-                        AddAllPromotionTypes(captureLeft, whoMoves, legalMoves);
-                    } else {
-                        legalMoves.Add(captureLeft);
+                bool resolvesAttacker = false;
+                switch (attackerType) {
+                    case -1: resolvesAttacker = true; break;
+                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, captureLeft); break;
+                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, captureLeft); break;
+                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, captureLeft); break;
+                    case 3: resolvesAttacker = old_i + forwardY == attacker_i && old_j - 1 == attacker_j; break;
+                }
+                // if a potential attacker has been blocked/captured
+                if (resolvesAttacker) {
+                    bool keepsDiagonal = Math.Abs(kingRow - old_i - forwardY) == Math.Abs(kingColumn - old_j + 1);
+                    bool keepsLine = (sameRank && kingRow == old_i + forwardY) || (sameFile && kingColumn == old_j - 1);
+                    // moving the piece doesn't cause the king to be in check
+                    if ((!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, captureLeft)) &&
+                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, captureLeft))) {
+                        if (canPromote) {
+                            AddAllPromotionTypes(captureLeft, whoMoves, legalMoves);
+                        } else {
+                            legalMoves.Add(captureLeft);
+                        }
                     }
                 }
             }
@@ -137,7 +231,7 @@ public static class MoveGenerator {
         legalMoves.Add(promoteBishop);
         legalMoves.Add(promoteRook);
     }
-    public static void AddLegalBishopMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
+    public static void AddLegalBishopMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
         char[,] boardConfiguration = gameState.boardConfiguration;
         int kingRow, kingColumn;
         char opponent;
@@ -224,7 +318,7 @@ public static class MoveGenerator {
             }
         }
     }
-    public static void AddLegalKnightMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
+    public static void AddLegalKnightMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
         char[,] boardConfiguration = gameState.boardConfiguration;
         int kingRow, kingColumn;
         if (gameState.whoMoves == 'w') {
@@ -277,7 +371,7 @@ public static class MoveGenerator {
             }
         }
     }
-    public static void AddLegalRookMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
+    public static void AddLegalRookMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
         char[,] boardConfiguration = gameState.boardConfiguration;
         int kingRow, kingColumn;
         char opponent;
@@ -365,12 +459,12 @@ public static class MoveGenerator {
         }
     }
 
-    public static void AddLegalQueenMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
+    public static void AddLegalQueenMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
         // queen can move either as a bishop or as a rook
-        AddLegalBishopMoves(gameState, old_i, old_j, legalMoves);
-        AddLegalRookMoves(gameState, old_i, old_j, legalMoves);
+        AddLegalBishopMoves(gameState, old_i, old_j, attackers, legalMoves);
+        AddLegalRookMoves(gameState, old_i, old_j, attackers, legalMoves);
     }
-    public static void AddLegalKingMoves(GameState gameState, int old_i, int old_j, List<IndexMove> legalMoves) {
+    public static void AddLegalKingMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
         char[,] boardConfiguration = gameState.boardConfiguration;
 
         // The following arrays contain row and column increments for one-square king-movement
