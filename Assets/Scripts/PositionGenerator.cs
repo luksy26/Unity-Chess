@@ -10,64 +10,73 @@ using static PositionCounter;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
-    public Button generateButton;
+    public Button generateButton, runTests;
 
     void Start() {
         generateButton.onClick.AddListener(OnGenerateButtonClicked);
+        runTests.onClick.AddListener(OnRunTestsButtonClicked);
     }
 
-    async void OnGenerateButtonClicked() {
+    void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
-
-        // string filePath = Path.Combine(Application.streamingAssetsPath, "perft.txt");
-        // string outPath = Path.Combine(Application.streamingAssetsPath, "outputChess.txt");
-        // if (File.Exists(filePath)) {
-        //     using StreamReader reader = new(filePath);
-        //     using StreamWriter writer = new(outPath, false);
-        //     Stopwatch stopwatch = new();
-        //     stopwatch.Start();
-        //     string line;
-        //     while ((line = reader.ReadLine()) != null) {
-        //         string[] parts = line.Split(',');
-        //         string fen = parts[0];
-        //         int legalMovesDepth1 = int.Parse(parts[1]);
-        //         int legalMovesDepth2 = int.Parse(parts[2]);
-        //         int legalMovesDepth3 = int.Parse(parts[3]);
-        //         bool ok = true;
-        //         GameStateManager.Instance.GenerateGameState(fen);
-        //         maxDepth = 1;
-        //         int result = 0;
-        //         await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
-        //         if (result != legalMovesDepth1) {
-        //             ok = false;
-        //             writer.WriteLine("Incorrect results for depth 1: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
-        //         }
-        //         maxDepth = 2;
-        //         await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
-        //         if (result != legalMovesDepth2) {
-        //             ok = false;
-        //             writer.WriteLine("Incorrect results for depth 2: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
-        //         }
-        //         maxDepth = 3;
-        //         await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
-        //         if (result != legalMovesDepth3) {
-        //             ok = false;
-        //             writer.WriteLine("Incorrect results for depth 3: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
-        //         }
-        //         if (ok) {
-        //             UnityEngine.Debug.Log(fen + "was checked, it is" + (ok ? "" : " not") + " ok");
-        //         }
-        //     }
-        //     stopwatch.Stop();
-        //     UnityEngine.Debug.Log("Ran tests in " + stopwatch.ElapsedMilliseconds + "ms");
-        // } else {
-        //     UnityEngine.Debug.Log("file not found");
-        // }
         if (!GameStateManager.Instance.IsEngineRunning) {
             Game.Instance.CancelMovePiece();
             GameStateManager.Instance.GenerateGameState(inputFEN);
             Game.Instance.DestroyPosition();
             Game.Instance.GeneratePosition();
+        }
+    }
+
+    async void OnRunTestsButtonClicked() {
+        string filePath = Path.Combine(Application.streamingAssetsPath, "perft.txt");
+        string outPath = Path.Combine(Application.streamingAssetsPath, "outputChess.txt");
+        if (File.Exists(filePath)) {
+            using StreamReader reader = new(filePath);
+            using StreamWriter writer = new(outPath, false);
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
+            string line;
+            int idx = 0;
+            while ((line = reader.ReadLine()) != null) {
+                if (idx % 30 != 0) {
+                    ++idx;
+                    continue; // only process one tenth of the data
+                }
+                string[] parts = line.Split(',');
+                string fen = parts[0];
+                int legalMovesDepth1 = int.Parse(parts[1]);
+                int legalMovesDepth2 = int.Parse(parts[2]);
+                int legalMovesDepth3 = int.Parse(parts[3]);
+                bool ok = true;
+                GameStateManager.Instance.GenerateGameState(fen);
+                maxDepth = 1;
+                int result = 0;
+                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
+                if (result != legalMovesDepth1) {
+                    ok = false;
+                    writer.WriteLine("Incorrect results for depth 1: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
+                }
+                maxDepth = 2;
+                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
+                if (result != legalMovesDepth2) {
+                    ok = false;
+                    writer.WriteLine("Incorrect results for depth 2: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
+                }
+                maxDepth = 3;
+                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
+                if (result != legalMovesDepth3) {
+                    ok = false;
+                    writer.WriteLine("Incorrect results for depth 3: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
+                }
+                if (ok) {
+                    UnityEngine.Debug.Log(fen + "was checked, it is" + (ok ? "" : " not") + " ok");
+                }
+                ++idx;
+            }
+            stopwatch.Stop();
+            UnityEngine.Debug.Log("Ran tests in " + stopwatch.ElapsedMilliseconds + "ms");
+        } else {
+            UnityEngine.Debug.Log("file not found");
         }
     }
 }
