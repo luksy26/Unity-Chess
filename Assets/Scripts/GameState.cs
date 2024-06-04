@@ -6,7 +6,6 @@ using UnityEngine;
 
 public class GameState {
     public char[,] boardConfiguration;
-    public Hashtable whitePiecesPositions, blackPiecesPositions;
     public int noBlackPieces;
     public int noWhitePieces;
     public char whoMoves;
@@ -23,7 +22,6 @@ public class GameState {
     public GameState(GameState other) {
         boardConfiguration = new char[8, 8];
         Array.Copy(other.boardConfiguration, boardConfiguration, 64);
-        blackPiecesPositions = new Hashtable();
         noBlackPieces = other.noBlackPieces;
         noWhitePieces = other.noWhitePieces;
         whoMoves = other.whoMoves;
@@ -123,14 +121,6 @@ public class GameState {
         indexMove.oldIntermediarySquareState2 = 'x';
         indexMove.kingMoved = false;
 
-        // if (whoMoves == 'w') {
-        //     whitePiecesPositions.Remove(old_i * 8 + old_j);
-        //     whitePiecesPositions.Add(new_i * 8 + new_j, 1);
-        // } else {
-        //     blackPiecesPositions.Remove(old_i * 8 + old_j);
-        //     blackPiecesPositions.Add(new_i * 8 + new_j, 1);
-        // }
-
         bool movingToEmptySquare = boardConfiguration[new_i, new_j] == '-';
         bool pawnMoved = char.ToLower(boardConfiguration[old_i, old_j]) == 'p';
         bool rookMoved = char.ToLower(boardConfiguration[old_i, old_j]) == 'r';
@@ -147,10 +137,8 @@ public class GameState {
         if (!movingToEmptySquare) {
             if (whoMoves == 'w') {
                 --noBlackPieces;
-                //blackPiecesPositions.Remove(new_i * 8 + new_j);
             } else {
                 --noWhitePieces;
-                //whitePiecesPositions.Remove(new_i * 8 + new_j);
             }
             // on black's backrank
             if (new_i == 0) {
@@ -203,14 +191,12 @@ public class GameState {
                     indexMove.intermediaryColumn1 = new_j;
                     boardConfiguration[new_i + 1, new_j] = '-';
                     --noBlackPieces;
-                    //blackPiecesPositions.Remove((new_i + 1) * 8 + new_j);
                 } else {
                     indexMove.oldIntermediarySquareState1 = boardConfiguration[new_i - 1, new_j];
                     indexMove.intermediaryRow1 = new_i - 1;
                     indexMove.intermediaryColumn1 = new_j;
                     boardConfiguration[new_i - 1, new_j] = '-';
                     --noWhitePieces;
-                    //whitePiecesPositions.Remove((new_i - 1) * 8 + new_j);
                 }
             }
         }
@@ -265,13 +251,6 @@ public class GameState {
                     indexMove.intermediaryRow2 = new_i;
                     indexMove.intermediaryColumn2 = new_j + 1;
                     boardConfiguration[new_i, new_j + 1] = '-';
-                    // if (whoMoves == 'w') {
-                    //     whitePiecesPositions.Remove(new_i * 8 + new_j + 1);
-                    //     whitePiecesPositions.Add(new_i * 8 + new_j - 1, 1);
-                    // } else {
-                    //     blackPiecesPositions.Remove(new_i * 8 + new_j + 1);
-                    //     blackPiecesPositions.Add(new_i * 8 + new_j - 1, 1);
-                    // }
                 } else { // long castle
                     // square where the rook will move
                     indexMove.oldIntermediarySquareState1 = '-';
@@ -283,13 +262,6 @@ public class GameState {
                     indexMove.intermediaryRow2 = new_i;
                     indexMove.intermediaryColumn2 = new_j - 2;
                     boardConfiguration[new_i, new_j - 2] = '-';
-                    // if (whoMoves == 'w') {
-                    //     whitePiecesPositions.Remove(new_i * 8 + new_j - 2);
-                    //     whitePiecesPositions.Add(new_i * 8 + new_j + 1, 1);
-                    // } else {
-                    //     blackPiecesPositions.Remove(new_i * 8 + new_j - 2);
-                    //     blackPiecesPositions.Add(new_i * 8 + new_j + 1, 1);
-                    // }
                 }
             }
         }
@@ -334,24 +306,14 @@ public class GameState {
             boardConfiguration[indexMove.oldRow, indexMove.oldColumn] = boardConfiguration[indexMove.newRow, indexMove.newColumn];
         }
 
-        // restore hashtable of piece positions
-        // if (whoMoves == 'w') {
-        //     whitePiecesPositions.Add(indexMove.oldRow * 8 + indexMove.oldColumn, 1);
-        //     whitePiecesPositions.Remove(indexMove.newRow * 8 + indexMove.newColumn);
-        // } else {
-        //     blackPiecesPositions.Add(indexMove.oldRow * 8 + indexMove.oldColumn, 1);
-        //     blackPiecesPositions.Remove(indexMove.newRow * 8 + indexMove.newColumn);
-        // }
         // restore the square the piece moved to
         boardConfiguration[indexMove.newRow, indexMove.newColumn] = indexMove.oldSquareState;
 
         // we brought back a piece
         if (indexMove.oldSquareState != '-') {
             if (whoMoves == 'w') {
-                //blackPiecesPositions.Add(indexMove.newRow * 8 + indexMove.newColumn, 1);
                 ++noBlackPieces;
             } else {
-                //whitePiecesPositions.Add(indexMove.newRow * 8 + indexMove.newColumn, 1);
                 ++noWhitePieces;
             }
         }
@@ -372,25 +334,15 @@ public class GameState {
             boardConfiguration[indexMove.intermediaryRow1, indexMove.intermediaryColumn1] = indexMove.oldIntermediarySquareState1;
             // this square was an enemy pawn captured by en-passant
             if (indexMove.oldIntermediarySquareState1 != '-') {
-                // add the previously captured pawn back to the piece positions hashtable
+                // add the previously captured pawn back
                 if (whoMoves == 'w') {
-                    //blackPiecesPositions.Add(indexMove.intermediaryRow1 * 8 + indexMove.intermediaryColumn1, 1);
                     ++noBlackPieces;
                 } else {
-                    //whitePiecesPositions.Add(indexMove.intermediaryRow1 * 8 + indexMove.intermediaryColumn1, 1);
                     ++noWhitePieces;
                 }
             } else { // we are dealing with castling
                 // restore the second intermediate square (where the rook was placed)
                 boardConfiguration[indexMove.intermediaryRow2, indexMove.intermediaryColumn2] = indexMove.oldIntermediarySquareState2;
-                // restore the piece positions hashtable (for the position of castled rook)
-                // if (whoMoves == 'w') {
-                //     whitePiecesPositions.Add(indexMove.intermediaryRow2 * 8 + indexMove.intermediaryColumn2, 1);
-                //     whitePiecesPositions.Remove(indexMove.intermediaryRow1 * 8 + indexMove.intermediaryColumn1);
-                // } else {
-                //     blackPiecesPositions.Add(indexMove.intermediaryRow2 * 8 + indexMove.intermediaryColumn2, 1);
-                //     blackPiecesPositions.Remove(indexMove.intermediaryRow1 * 8 + indexMove.intermediaryColumn1);
-                // }
             }
         }
     }
@@ -547,21 +499,7 @@ public class GameState {
             sb.AppendLine(row.TrimEnd());
         }
         sb.AppendLine("Number of black pieces: " + noBlackPieces);
-
-        var sortedKeys = new List<int>(blackPiecesPositions.Keys.Cast<int>());
-        sortedKeys.Sort();
-        foreach (int key in sortedKeys) {
-            sb.Append(key + " ");
-        }
-        sb.AppendLine();
         sb.AppendLine("Number of white pieces: " + noWhitePieces);
-
-        sortedKeys = new List<int>(whitePiecesPositions.Keys.Cast<int>());
-        sortedKeys.Sort();
-        foreach (int key in sortedKeys) {
-            sb.Append(key + " ");
-        }
-        sb.AppendLine();
         sb.AppendLine("Current player: " + whoMoves);
         sb.AppendLine("White can" + (canWhite_O_O ? " " : "\'t ") + "short castle");
         sb.AppendLine("White can" + (canWhite_O_O_O ? " " : "\'t ") + "long castle");

@@ -62,7 +62,7 @@ public class Game : MonoBehaviour {
         HandleGameState(globalGameState, gameStates);
 
         await Task.Yield();
-        // await Task.Run(() => RunEngine(globalGameState));
+        await Task.Run(() => RunEngine(globalGameState));
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -189,7 +189,7 @@ public class Game : MonoBehaviour {
 
         // wait for next frame
         await Task.Yield();
-        // await Task.Run(() => RunEngine(gameState));
+        await Task.Run(() => RunEngine(gameState));
     }
 
     public void CancelMovePiece() {

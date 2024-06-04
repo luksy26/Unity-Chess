@@ -40,8 +40,6 @@ public class GameStateManager : MonoBehaviour {
         globalGameState.boardConfiguration = new char[8, 8];
         globalGameState.noBlackPieces = 0;
         globalGameState.noWhitePieces = 0;
-        globalGameState.whitePiecesPositions = new Hashtable();
-        globalGameState.blackPiecesPositions = new Hashtable();
 
         StringBuilder inputFEN_sb = new(inputFEN);
         int index = 0;
@@ -60,10 +58,8 @@ public class GameStateManager : MonoBehaviour {
                     globalGameState.boardConfiguration[i, j] = inputFEN_sb[index];
                     if (char.IsUpper(inputFEN_sb[index])) {
                         ++globalGameState.noWhitePieces;
-                        globalGameState.whitePiecesPositions.Add(i * 8 + j, 1);
                     } else {
                         ++globalGameState.noBlackPieces;
-                        globalGameState.blackPiecesPositions.Add(i * 8 + j, 1);
                     }
                     if (inputFEN_sb[index] == 'k') {
                         globalGameState.blackKingRow = i;
