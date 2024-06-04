@@ -11,6 +11,20 @@ public static class MoveGenerator {
         List<IndexMove> legalMoves = new();
         char[,] boardConfiguration = gameState.boardConfiguration;
 
+        // Hashtable piecesHashtable = gameState.whoMoves == 'w' ? gameState.whitePiecesPositions : gameState.blackPiecesPositions;
+        // foreach (int key in piecesHashtable.Keys) {
+        //     int i = key / 8, j = key % 8;
+        //     switch (boardConfiguration[i, j]) {
+        //         case 'p' or 'P': AddLegalPawnMoves(gameState, i, j, legalMoves); break;
+        //         case 'b' or 'B': AddLegalBishopMoves(gameState, i, j, legalMoves); break;
+        //         case 'n' or 'N': AddLegalKnightMoves(gameState, i, j, legalMoves); break;
+        //         case 'r' or 'R': AddLegalRookMoves(gameState, i, j, legalMoves); break;
+        //         case 'q' or 'Q': AddLegalQueenMoves(gameState, i, j, legalMoves); break;
+        //         case 'k' or 'K': AddLegalKingMoves(gameState, i, j, legalMoves); break;
+        //         default: break;
+        //     }
+        // }
+
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
                 if (GetPieceOwner(boardConfiguration[i, j]) == gameState.whoMoves) {

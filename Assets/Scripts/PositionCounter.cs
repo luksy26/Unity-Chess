@@ -12,13 +12,13 @@ public static class PositionCounter {
         int sum = 0;
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         foreach (IndexMove move in legalMoves) {
-            gameState.MakeMove(move);
+            gameState.MakeMoveNoHashtable(move);
             int numberPositions = SearchPositions(gameState, depth + 1, writer);
             if (depth == 0 && writer != null) {
                 writer.WriteLine(new Move(move) + ": " + numberPositions);
             }
             sum += numberPositions;
-            gameState.UnmakeMove(move);
+            gameState.UnmakeMoveNoHashtable(move);
         }
         return sum;
     }
