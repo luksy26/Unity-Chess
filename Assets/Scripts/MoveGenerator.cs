@@ -1,45 +1,84 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
-using UnityEngine;
+using System.Diagnostics;
 using static KingSafety;
 
 public static class MoveGenerator {
+
+    public struct Attacker {
+        public int type, row, column;
+    }
     public static List<IndexMove> GetLegalMoves(GameState gameState) {
         List<IndexMove> legalMoves = new();
         char[,] boardConfiguration = gameState.boardConfiguration;
         bool kingInDoubleCheck = false;
+        int kingRow, kingColumn;
 
-        // Hashtable piecesHashtable = gameState.whoMoves == 'w' ? gameState.whitePiecesPositions : gameState.blackPiecesPositions;
-        // foreach (int key in piecesHashtable.Keys) {
-        //     int i = key / 8, j = key % 8;
-        //     switch (boardConfiguration[i, j]) {
-        //         case 'p' or 'P': AddLegalPawnMoves(gameState, i, j, legalMoves); break;
-        //         case 'b' or 'B': AddLegalBishopMoves(gameState, i, j, legalMoves); break;
-        //         case 'n' or 'N': AddLegalKnightMoves(gameState, i, j, legalMoves); break;
-        //         case 'r' or 'R': AddLegalRookMoves(gameState, i, j, legalMoves); break;
-        //         case 'q' or 'Q': AddLegalQueenMoves(gameState, i, j, legalMoves); break;
-        //         case 'k' or 'K': AddLegalKingMoves(gameState, i, j, legalMoves); break;
-        //         default: break;
-        //     }
-        // }
+        if (gameState.whoMoves == 'w') {
+            kingRow = gameState.whiteKingRow;
+            kingColumn = gameState.whiteKingColumn;
+
+        } else {
+            kingRow = gameState.blackKingRow;
+            kingColumn = gameState.blackKingColumn;
+        }
 
         List<int> attackers = GetKingAttackers(gameState);
 
-        if (attackers.Count > 1)
-            kingInDoubleCheck = true;
+        Attacker attacker1 = new() {
+            type = -1
+        }, attacker2 = new() {
+            type = -1
+        };
+
+        if (attackers.Count > 0) {
+            attacker1.row = attackers[0] / 8;
+            attacker1.column = attackers[0] % 8;
+            switch (char.ToLower(boardConfiguration[attacker1.row, attacker1.column])) {
+                case 'p': attacker1.type = 0; break;
+                case 'b': attacker1.type = 1; break;
+                case 'r': attacker1.type = 2; break;
+                case 'n': attacker1.type = 3; break;
+                case 'q': // queen is attacking like a rook
+                    if (attacker1.row == kingRow || attacker1.column == kingColumn) {
+                        attacker1.type = 2;
+                    } else { // queen is attacking like a bishop
+                        attacker1.type = 1;
+                    }
+                    break;
+                default: break;
+            }
+            if (attackers.Count > 1) {
+                kingInDoubleCheck = true;
+                attacker2.row = attackers[1] / 8;
+                attacker2.column = attackers[1] % 8;
+                switch (char.ToLower(boardConfiguration[attacker2.row, attacker2.column])) {
+                    case 'p': attacker2.type = 0; break;
+                    case 'b': attacker2.type = 1; break;
+                    case 'r': attacker2.type = 2; break;
+                    case 'n': attacker2.type = 3; break;
+                    case 'q': // queen is attacking like a rook
+                        if (attacker2.row == kingRow || attacker2.column == kingColumn) {
+                            attacker2.type = 2;
+                        } else { // queen is attacking like a bishop
+                            attacker2.type = 1;
+                        }
+                        break;
+                    default: break;
+                }
+            }
+        }
 
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
                 if (GetPieceOwner(boardConfiguration[i, j]) == gameState.whoMoves) {
                     switch (boardConfiguration[i, j]) {
-                        case 'p' or 'P': if (!kingInDoubleCheck) AddLegalPawnMoves(gameState, i, j, attackers, legalMoves); break;
-                        case 'b' or 'B': if (!kingInDoubleCheck) AddLegalBishopMoves(gameState, i, j, attackers, legalMoves); break;
-                        case 'n' or 'N': if (!kingInDoubleCheck) AddLegalKnightMoves(gameState, i, j, attackers, legalMoves); break;
-                        case 'r' or 'R': if (!kingInDoubleCheck) AddLegalRookMoves(gameState, i, j, attackers, legalMoves); break;
-                        case 'q' or 'Q': if (!kingInDoubleCheck) AddLegalQueenMoves(gameState, i, j, attackers, legalMoves); break;
-                        case 'k' or 'K': AddLegalKingMoves(gameState, i, j, attackers, legalMoves); break;
+                        case 'p' or 'P': if (!kingInDoubleCheck) AddLegalPawnMoves(gameState, i, j, attacker1, legalMoves); break;
+                        case 'b' or 'B': if (!kingInDoubleCheck) AddLegalBishopMoves(gameState, i, j, attacker1, legalMoves); break;
+                        case 'n' or 'N': if (!kingInDoubleCheck) AddLegalKnightMoves(gameState, i, j, attacker1, legalMoves); break;
+                        case 'r' or 'R': if (!kingInDoubleCheck) AddLegalRookMoves(gameState, i, j, attacker1, legalMoves); break;
+                        case 'q' or 'Q': if (!kingInDoubleCheck) AddLegalQueenMoves(gameState, i, j, attacker1, legalMoves); break;
+                        case 'k' or 'K': AddLegalKingMoves(gameState, i, j, attacker1, attacker2, legalMoves); break;
                         default: break;
                     }
                 }
@@ -48,7 +87,10 @@ public static class MoveGenerator {
         return legalMoves;
     }
 
-    public static void AddLegalPawnMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
+    public static void AddLegalPawnMoves(GameState gameState, int old_i, int old_j, Attacker attacker, List<IndexMove> legalMoves) {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+
         char[,] boardConfiguration = gameState.boardConfiguration;
         int forwardY, kingRow, kingColumn, startingRow;
         char opponent, whoMoves = gameState.whoMoves;
@@ -72,44 +114,24 @@ public static class MoveGenerator {
         bool sameRank = kingRow == old_i;
         bool sameFile = kingColumn == old_j;
         bool sameLine = sameRank || sameFile;
-        int attackerType = -1;
-        int attacker_i = -1, attacker_j = -1;
-        if (attackers.Count > 0) {
-            attacker_i = attackers[0] / 8;
-            attacker_j = attackers[0] % 8;
-            switch (char.ToLower(boardConfiguration[attacker_i, attacker_j])) {
-                case 'p': attackerType = 0; break;
-                case 'b': attackerType = 1; break;
-                case 'r': attackerType = 2; break;
-                case 'n': attackerType = 3; break;
-                case 'q': // queen is attacking like a rook
-                    if (attacker_i == kingRow || attacker_j == kingColumn) {
-                        attackerType = 2;
-                    } else { // queen is attacking like a bishop
-                        attackerType = 1;
-                    }
-                    break;
-                default: break;
-            }
-        }
 
         // check forward pawn movement (square above the pawn must be empty)
         if (boardConfiguration[old_i + forwardY, old_j] == '-') {
             IndexMove pawnOneUp = new(old_i, old_j, old_i + forwardY, old_j);
             bool resolvesAttacker = false;
-            switch (attackerType) {
-                case -1: resolvesAttacker = true; break;
-                case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, pawnOneUp); break;
-                case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, pawnOneUp); break;
-                case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, pawnOneUp); break;
-                case 3: resolvesAttacker = false; break;
+            switch (attacker.type) {
+                case -1: resolvesAttacker = true; break; // king is not in check
+                case 0: resolvesAttacker = IsKingSafeFromPawn(attacker.row, attacker.column, gameState, pawnOneUp); break;
+                case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker.row, attacker.column, pawnOneUp); break;
+                case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker.row, attacker.column, pawnOneUp); break;
+                case 3: resolvesAttacker = false; break; // pawn moving forward can't capture a knight
             }
             // if a potential attacker has been blocked/captured
             if (resolvesAttacker) {
-                bool keepsLine = kingColumn == old_j || kingRow == old_i + forwardY; 
+                bool keepsLine = kingColumn == old_j || kingRow == old_i + forwardY;
                 // moving the piece doesn't cause the king to be in check
-                if ((!sameDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, pawnOneUp)) &&
-                (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, pawnOneUp))) {
+                if ((!sameDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, pawnOneUp)) &&
+                (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, pawnOneUp))) {
                     if (canPromote) {
                         AddAllPromotionTypes(pawnOneUp, whoMoves, legalMoves);
                     } else {
@@ -122,19 +144,20 @@ public static class MoveGenerator {
             if (old_i == startingRow && boardConfiguration[old_i + 2 * forwardY, old_j] == '-') {
                 IndexMove pawnTwoUp = new(old_i, old_j, old_i + 2 * forwardY, old_j);
                 resolvesAttacker = false;
-                switch (attackerType) {
+                switch (attacker.type) {
                     case -1: resolvesAttacker = true; break;
-                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, pawnTwoUp); break;
-                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, pawnTwoUp); break;
-                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, pawnTwoUp); break;
+                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker.row, attacker.column, gameState, pawnTwoUp); break;
+                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker.row, attacker.column, pawnTwoUp); break;
+                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker.row, attacker.column, pawnTwoUp); break;
                     case 3: resolvesAttacker = false; break;
                 }
                 // if a potential attacker has been blocked/captured
                 if (resolvesAttacker) {
+
                     bool keepsLine = kingColumn == old_j || kingRow == old_i + 2 * forwardY;
                     // moving the piece doesn't cause the king to be in check
-                    if ((!sameDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, pawnTwoUp)) &&
-                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, pawnTwoUp))) {
+                    if ((!sameDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, pawnTwoUp)) &&
+                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, pawnTwoUp))) {
                         if (canPromote) {
                             AddAllPromotionTypes(pawnTwoUp, whoMoves, legalMoves);
                         } else {
@@ -154,20 +177,21 @@ public static class MoveGenerator {
                 RowToRank(old_i + forwardY) == gameState.enPassantRank && ColumnToFile(old_j + 1) == gameState.enPassantFile)) {
                 IndexMove captureRight = new(old_i, old_j, old_i + forwardY, old_j + 1);
                 bool resolvesAttacker = false;
-                switch (attackerType) {
+                switch (attacker.type) {
                     case -1: resolvesAttacker = true; break;
-                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, captureRight); break;
-                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, captureRight); break;
-                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, captureRight); break;
-                    case 3: resolvesAttacker = old_i + forwardY == attacker_i && old_j + 1 == attacker_j; break;
+                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker.row, attacker.column, gameState, captureRight); break;
+                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker.row, attacker.column, captureRight); break;
+                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker.row, attacker.column, captureRight); break;
+                    case 3: resolvesAttacker = old_i + forwardY == attacker.row && old_j + 1 == attacker.column; break;
                 }
                 // if a potential attacker has been blocked/captured
                 if (resolvesAttacker) {
+
                     bool keepsDiagonal = Math.Abs(kingRow - old_i - forwardY) == Math.Abs(kingColumn - old_j - 1);
                     bool keepsLine = (sameRank && kingRow == old_i + forwardY) || (sameFile && kingColumn == old_j + 1);
                     // moving the piece doesn't cause the king to be in check
-                    if ((!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, captureRight)) &&
-                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, captureRight))) {
+                    if ((!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, captureRight)) &&
+                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, captureRight))) {
                         if (canPromote) {
                             AddAllPromotionTypes(captureRight, whoMoves, legalMoves);
                         } else {
@@ -185,20 +209,21 @@ public static class MoveGenerator {
                 RowToRank(old_i + forwardY) == gameState.enPassantRank && ColumnToFile(old_j - 1) == gameState.enPassantFile)) {
                 IndexMove captureLeft = new(old_i, old_j, old_i + forwardY, old_j - 1);
                 bool resolvesAttacker = false;
-                switch (attackerType) {
+                switch (attacker.type) {
                     case -1: resolvesAttacker = true; break;
-                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker_i, attacker_j, gameState, captureLeft); break;
-                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker_i, attacker_j, captureLeft); break;
-                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker_i, attacker_j, captureLeft); break;
-                    case 3: resolvesAttacker = old_i + forwardY == attacker_i && old_j - 1 == attacker_j; break;
+                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker.row, attacker.column, gameState, captureLeft); break;
+                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker.row, attacker.column, captureLeft); break;
+                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker.row, attacker.column, captureLeft); break;
+                    case 3: resolvesAttacker = old_i + forwardY == attacker.row && old_j - 1 == attacker.column; break;
                 }
                 // if a potential attacker has been blocked/captured
                 if (resolvesAttacker) {
+
                     bool keepsDiagonal = Math.Abs(kingRow - old_i - forwardY) == Math.Abs(kingColumn - old_j + 1);
                     bool keepsLine = (sameRank && kingRow == old_i + forwardY) || (sameFile && kingColumn == old_j - 1);
                     // moving the piece doesn't cause the king to be in check
-                    if ((!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(kingRow, kingColumn, gameState, captureLeft)) &&
-                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(kingRow, kingColumn, gameState, captureLeft))) {
+                    if ((!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, captureLeft)) &&
+                    (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, captureLeft))) {
                         if (canPromote) {
                             AddAllPromotionTypes(captureLeft, whoMoves, legalMoves);
                         } else {
@@ -208,6 +233,8 @@ public static class MoveGenerator {
                 }
             }
         }
+        stopwatch.Stop();
+        GameStateManager.Instance.numberOfTicks2 += stopwatch.ElapsedTicks;
     }
 
     public static void AddAllPromotionTypes(IndexMove indexMove, char whoMoves, List<IndexMove> legalMoves) {
@@ -231,7 +258,10 @@ public static class MoveGenerator {
         legalMoves.Add(promoteBishop);
         legalMoves.Add(promoteRook);
     }
-    public static void AddLegalBishopMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
+    public static void AddLegalBishopMoves(GameState gameState, int old_i, int old_j, Attacker attacker, List<IndexMove> legalMoves) {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+
         char[,] boardConfiguration = gameState.boardConfiguration;
         int kingRow, kingColumn;
         char opponent;
@@ -246,6 +276,11 @@ public static class MoveGenerator {
             opponent = 'w';
         }
 
+        bool sameDiagonal = Math.Abs(kingRow - old_i) == Math.Abs(kingColumn - old_j);
+        bool sameRank = kingRow == old_i;
+        bool sameFile = kingColumn == old_j;
+        bool sameLine = sameRank || sameFile;
+
         /*
             We check the main and secondary diagonal of the bishop's movement
             Each diagonal spans 2 quadrants:
@@ -258,7 +293,7 @@ public static class MoveGenerator {
         int noSafeSquaresInit = 0;
         int noUnsafeSquaresInit = 0;
         // bishop's current square is part of both diagonals
-        if (IsKingSafeAt(kingRow, kingColumn, gameState)) {
+        if (attacker.type == -1) {
             ++noSafeSquaresInit;
         } else {
             ++noUnsafeSquaresInit;
@@ -280,32 +315,56 @@ public static class MoveGenerator {
                     }
                     IndexMove bishopMove = new(old_i, old_j, new_i, new_j);
 
-                    // capturing an enemy piece
-                    if (pieceOwner == opponent) {
-                        // do final checks and stop search in this quadrant
+                    bool resolvesAttacker = false;
+                    switch (attacker.type) {
+                        case -1: resolvesAttacker = true; break;
+                        case 0: resolvesAttacker = IsKingSafeFromPawn(attacker.row, attacker.column, gameState, bishopMove); break;
+                        case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker.row, attacker.column, bishopMove); break;
+                        case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker.row, attacker.column, bishopMove); break;
+                        case 3: resolvesAttacker = new_i == attacker.row && new_j == attacker.column; break;
+                    }
+                    // if a potential attacker has been blocked/captured
+                    if (resolvesAttacker) {
+                        bool keepsDiagonal = Math.Abs(kingRow - new_i) == Math.Abs(kingColumn - new_j);
+                        bool keepsLine = (sameRank && kingRow == new_i) || (sameFile && kingColumn == new_j);
+
+                        // capturing an enemy piece
+                        if (pieceOwner == opponent) {
+                            // do final checks and stop search in this quadrant
+                            // if 2 safe squares were already found, it means we are on a safe diagonal
+                            if (noSafeSquares > 1 ||
+                            (!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, bishopMove)) &&
+                            (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, bishopMove))) {
+                                legalMoves.Add(bishopMove);
+                                ++noSafeSquares;
+                                if (noUnsafeSquares > 0) { // unsafe diagonal, so this was the only safe square
+                                    ++quadrant; // no point in searching more safe squares on this diagonal
+                                }
+                            } else {
+                                ++noUnsafeSquares;
+                                if (noSafeSquares > 0) { // the only safe square on this unsafe diagonal was already found
+                                    ++quadrant; // no point in searching more safe squares on this diagonal
+                                }
+                            }
+                            break; // rest of quadrant is blocked
+                        }
+                        // if we get here it means the bishop is moving to an empty square
                         // if 2 safe squares were already found, it means we are on a safe diagonal
-                        if (noSafeSquares > 1 || IsKingSafeAt(kingRow, kingColumn, gameState, bishopMove)) {
+                        if (noSafeSquares > 1 ||
+                            (!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, bishopMove)) &&
+                            (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, bishopMove))) {
                             legalMoves.Add(bishopMove);
                             ++noSafeSquares;
                             if (noUnsafeSquares > 0) { // unsafe diagonal, so this was the only safe square
                                 ++quadrant; // no point in searching more safe squares on this diagonal
+                                break; // of course, not in the quadrant either, since it's part of the diagonal
                             }
                         } else {
                             ++noUnsafeSquares;
                             if (noSafeSquares > 0) { // the only safe square on this unsafe diagonal was already found
                                 ++quadrant; // no point in searching more safe squares on this diagonal
+                                break; // of course, not on the quadrant either, since it's part of the diagonal
                             }
-                        }
-                        break; // rest of quadrant is blocked
-                    }
-                    // if we get here it means the bishop is moving to an empty square
-                    // if 2 safe squares were already found, it means we are on a safe diagonal
-                    if (noSafeSquares > 1 || IsKingSafeAt(kingRow, kingColumn, gameState, bishopMove)) {
-                        legalMoves.Add(bishopMove);
-                        ++noSafeSquares;
-                        if (noUnsafeSquares > 0) { // unsafe diagonal, so this was the only safe square
-                            ++quadrant; // no point in searching more safe squares on this diagonal
-                            break; // of course, not in the quadrant either, since it's part of the diagonal
                         }
                     } else {
                         ++noUnsafeSquares;
@@ -313,12 +372,20 @@ public static class MoveGenerator {
                             ++quadrant; // no point in searching more safe squares on this diagonal
                             break; // of course, not on the quadrant either, since it's part of the diagonal
                         }
+                        if (pieceOwner == opponent) {
+                            break; // rest of quadrant is blocked
+                        }
                     }
                 }
             }
         }
+        stopwatch.Stop();
+        GameStateManager.Instance.numberOfTicks3 += stopwatch.ElapsedTicks;
     }
-    public static void AddLegalKnightMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
+    public static void AddLegalKnightMoves(GameState gameState, int old_i, int old_j, Attacker attacker, List<IndexMove> legalMoves) {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+
         char[,] boardConfiguration = gameState.boardConfiguration;
         int kingRow, kingColumn;
         if (gameState.whoMoves == 'w') {
@@ -329,19 +396,28 @@ public static class MoveGenerator {
             kingRow = gameState.blackKingRow;
             kingColumn = gameState.blackKingColumn;
         }
+
+        bool sameDiagonal = Math.Abs(kingRow - old_i) == Math.Abs(kingColumn - old_j);
+        bool sameRank = kingRow == old_i;
+        bool sameFile = kingColumn == old_j;
+        bool sameLine = sameRank || sameFile;
+
         int[] LshapeXIncrements = new int[8] { -2, -2, -1, -1, 1, 1, 2, 2 };
         int[] LshapeYIncrements = new int[8] { -1, 1, -2, 2, -2, 2, -1, 1 };
 
-        bool initialPositionSafe;
-
-        if (IsKingSafeAt(kingRow, kingColumn, gameState)) {
-            initialPositionSafe = true;
-        } else {
-            initialPositionSafe = false;
+        // knight is on the same diagonal as the king and is pinned
+        if (sameDiagonal && !IsKingSafeFromDiagonalDiscovery(gameState, new IndexMove(old_i, old_j, -1, -1))) {
+            stopwatch.Stop();
+            GameStateManager.Instance.numberOfTicks4 += stopwatch.ElapsedTicks;
+            return;
         }
 
-        int noSafeSquares = 0;
-        int noUnsafeSquares = 0;
+        // knight is on the same file/rank as the king and is pinned
+        if (sameLine && !IsKingSafeFromLineDiscovery(gameState, new IndexMove(old_i, old_j, -1, -1))) {
+            stopwatch.Stop();
+            GameStateManager.Instance.numberOfTicks4 += stopwatch.ElapsedTicks;
+            return;
+        };
 
         for (int idx = 0; idx < 8; ++idx) {
             int new_i = old_i + LshapeYIncrements[idx];
@@ -349,29 +425,35 @@ public static class MoveGenerator {
             // in bounds
             if (new_i >= 0 && new_i <= 7 && new_j >= 0 && new_j <= 7) {
                 char pieceOwner = GetPieceOwner(boardConfiguration[new_i, new_j]);
-                // not trying to capture own piece
-                if (pieceOwner != gameState.whoMoves) {
-                    IndexMove knightMove = new(old_i, old_j, new_i, new_j);
-                    // if 3 safe squares were already found or if the knight is not pinned, it can move freely
-                    if ((noSafeSquares > 2) || (noSafeSquares > 0 && initialPositionSafe) || IsKingSafeAt(kingRow, kingColumn, gameState, knightMove)) {
-                        legalMoves.Add(knightMove);
-                        ++noSafeSquares;
-                        // knight may only block a line or diagonal check with 2 movements at most (knight check with only one, by capturing)
-                        if (noUnsafeSquares > 0 && noSafeSquares > 1) {
-                            break; // no point in searching for more safe squares
-                        }
-                    } else {
-                        ++noUnsafeSquares;
-                        // knight is pinned or we already found the 2 safe squares that block the check
-                        if (initialPositionSafe || noSafeSquares > 1) {
-                            break; // no point in searching for more safe squares
-                        }
-                    }
+                // knight can't move here, it is blocked by own piece
+                if (pieceOwner == gameState.whoMoves) {
+                    continue;
+                }
+                IndexMove knightMove = new(old_i, old_j, new_i, new_j);
+
+                bool resolvesAttacker = false;
+                switch (attacker.type) {
+                    case -1: resolvesAttacker = true; break;
+                    case 0: resolvesAttacker = IsKingSafeFromPawn(attacker.row, attacker.column, gameState, knightMove); break;
+                    case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker.row, attacker.column, knightMove); break;
+                    case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker.row, attacker.column, knightMove); break;
+                    case 3: resolvesAttacker = new_i == attacker.row && new_j == attacker.column; break;
+                }
+
+                // if a potential attacker has been blocked/captured
+                if (resolvesAttacker) {
+                    // we've already checked if the knight was pinned
+                    legalMoves.Add(knightMove);
                 }
             }
         }
+        stopwatch.Stop();
+        GameStateManager.Instance.numberOfTicks4 += stopwatch.ElapsedTicks;
     }
-    public static void AddLegalRookMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
+    public static void AddLegalRookMoves(GameState gameState, int old_i, int old_j, Attacker attacker, List<IndexMove> legalMoves) {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+
         char[,] boardConfiguration = gameState.boardConfiguration;
         int kingRow, kingColumn;
         char opponent;
@@ -386,6 +468,11 @@ public static class MoveGenerator {
             opponent = 'w';
         }
 
+        bool sameDiagonal = Math.Abs(kingRow - old_i) == Math.Abs(kingColumn - old_j);
+        bool sameRank = kingRow == old_i;
+        bool sameFile = kingColumn == old_j;
+        bool sameLine = sameRank || sameFile;
+
         /*
             We check the vertical and horizontal line of the rook's movement
             Each line has two directions:
@@ -398,7 +485,7 @@ public static class MoveGenerator {
         int noSafeSquaresInit = 0;
         int noUnsafeSquaresInit = 0;
         // rook's current square is part of both lines
-        if (IsKingSafeAt(kingRow, kingColumn, gameState)) {
+        if (attacker.type == -1) {
             ++noSafeSquaresInit;
         } else {
             ++noUnsafeSquaresInit;
@@ -420,51 +507,83 @@ public static class MoveGenerator {
                     }
                     IndexMove rookMove = new(old_i, old_j, new_i, new_j);
 
-                    // capturing an enemy piece
-                    if (pieceOwner == opponent) {
-                        // do final checks and stop search in this direction
+                    bool resolvesAttacker = false;
+                    switch (attacker.type) {
+                        case -1: resolvesAttacker = true; break;
+                        case 0: resolvesAttacker = IsKingSafeFromPawn(attacker.row, attacker.column, gameState, rookMove); break;
+                        case 1: resolvesAttacker = IsKingSafeFromBishop(kingRow, kingColumn, attacker.row, attacker.column, rookMove); break;
+                        case 2: resolvesAttacker = IsKingSafeFromRook(kingRow, kingColumn, attacker.row, attacker.column, rookMove); break;
+                        case 3: resolvesAttacker = new_i == attacker.row && new_j == attacker.column; break;
+                    }
+
+                    // if a potential attacker has been blocked/captured
+                    if (resolvesAttacker) {
+                        bool keepsDiagonal = Math.Abs(kingRow - new_i) == Math.Abs(kingColumn - new_j);
+                        bool keepsLine = (sameRank && kingRow == new_i) || (sameFile && kingColumn == new_j);
+                        // capturing an enemy piece
+                        if (pieceOwner == opponent) {
+                            // do final checks and stop search in this direction
+                            // if 2 safe squares were already found, it means we are on a safe line
+                            if (noSafeSquares > 1 ||
+                            (!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, rookMove)) &&
+                            (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, rookMove))) {
+                                legalMoves.Add(rookMove);
+                                ++noSafeSquares;
+                                if (noUnsafeSquares > 0) { // unsafe line, so this was the only safe square
+                                    ++direction; // no point in searching more safe squares on this line
+                                }
+                            } else {
+                                ++noUnsafeSquares;
+                                if (noSafeSquares > 0) { // the only safe square on this unsafe line was already found
+                                    ++direction; // no point in searching more safe squares on this line
+                                }
+                            }
+                            break; // this direction is blocked
+                        }
+                        // if we get here it means the rook is moving to an empty square
                         // if 2 safe squares were already found, it means we are on a safe line
-                        if (noSafeSquares > 1 || IsKingSafeAt(kingRow, kingColumn, gameState, rookMove)) {
+                        if (noSafeSquares > 1 ||
+                        (!sameDiagonal || keepsDiagonal || IsKingSafeFromDiagonalDiscovery(gameState, rookMove)) &&
+                        (!sameLine || keepsLine || IsKingSafeFromLineDiscovery(gameState, rookMove))) {
                             legalMoves.Add(rookMove);
                             ++noSafeSquares;
                             if (noUnsafeSquares > 0) { // unsafe line, so this was the only safe square
                                 ++direction; // no point in searching more safe squares on this line
+                                break; // of course, not in either direction either, since they're part of the line
                             }
                         } else {
                             ++noUnsafeSquares;
                             if (noSafeSquares > 0) { // the only safe square on this unsafe line was already found
                                 ++direction; // no point in searching more safe squares on this line
+                                break; // of course, not in either direction either, since they're part of the line
                             }
-                        }
-                        break; // this direction is blocked
-                    }
-                    // if we get here it means the rook is moving to an empty square
-                    // if 2 safe squares were already found, it means we are on a safe line
-                    if (noSafeSquares > 1 || IsKingSafeAt(kingRow, kingColumn, gameState, rookMove)) {
-                        legalMoves.Add(rookMove);
-                        ++noSafeSquares;
-                        if (noUnsafeSquares > 0) { // unsafe line, so this was the only safe square
-                            ++direction; // no point in searching more safe squares on this line
-                            break; // of course, not in either direction either, since they're part of the line
                         }
                     } else {
                         ++noUnsafeSquares;
-                        if (noSafeSquares > 0) { // the only safe square on this unsafe line was already found
-                            ++direction; // no point in searching more safe squares on this line
-                            break; // of course, not in either direction either, since they're part of the line
+                        if (noSafeSquares > 0) { // the only safe square on this unsafe diagonal was already found
+                            ++direction; // no point in searching more safe squares on this diagonal
+                            break; // of course, not on the quadrant either, since it's part of the diagonal
+                        }
+                        if (pieceOwner == opponent) {
+                            break; // rest of quadrant is blocked
                         }
                     }
                 }
             }
         }
+        stopwatch.Stop();
+        GameStateManager.Instance.numberOfTicks5 += stopwatch.ElapsedTicks;
     }
 
-    public static void AddLegalQueenMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
+    public static void AddLegalQueenMoves(GameState gameState, int old_i, int old_j, Attacker attacker, List<IndexMove> legalMoves) {
         // queen can move either as a bishop or as a rook
-        AddLegalBishopMoves(gameState, old_i, old_j, attackers, legalMoves);
-        AddLegalRookMoves(gameState, old_i, old_j, attackers, legalMoves);
+        AddLegalBishopMoves(gameState, old_i, old_j, attacker, legalMoves);
+        AddLegalRookMoves(gameState, old_i, old_j, attacker, legalMoves);
     }
-    public static void AddLegalKingMoves(GameState gameState, int old_i, int old_j, List<int> attackers, List<IndexMove> legalMoves) {
+    public static void AddLegalKingMoves(GameState gameState, int old_i, int old_j, Attacker attacker1, Attacker attacker2, List<IndexMove> legalMoves) {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+
         char[,] boardConfiguration = gameState.boardConfiguration;
 
         // The following arrays contain row and column increments for one-square king-movement
@@ -477,17 +596,35 @@ public static class MoveGenerator {
             // in bounds
             if (new_i >= 0 && new_i <= 7 && new_j >= 0 && new_j <= 7) {
                 char pieceOwner = GetPieceOwner(boardConfiguration[new_i, new_j]);
-                // not trying to capture own piece
-                if (pieceOwner != gameState.whoMoves) {
-                    // king not in check
-                    if (IsKingSafeAt(new_i, new_j, gameState)) {
-                        legalMoves.Add(new IndexMove(old_i, old_j, new_i, new_j));
+                // king is blocked by own piece
+                if (pieceOwner == gameState.whoMoves) {
+                    continue;
+                }
+                IndexMove kingMove = new(old_i, old_j, new_i, new_j);
+                bool resolvesFirstAttacker = false, resolvesSecondAttacker = false;
+                switch (attacker1.type) {
+                    case -1: resolvesFirstAttacker = true; break;
+                    case 0: resolvesFirstAttacker = true; break; // king can't move into the same pawn's check
+                    case 1: resolvesFirstAttacker = IsKingSafeFromBishop(new_i, new_j, attacker1.row, attacker1.column); break;
+                    case 2: resolvesFirstAttacker = IsKingSafeFromRook(new_i, new_j, attacker1.row, attacker1.column); break;
+                    case 3: resolvesFirstAttacker = IsKingSafeFromKnight(new_i, new_j, attacker1.row, attacker1.column); break;
+                }
+                if (resolvesFirstAttacker) {
+                    switch (attacker2.type) {
+                        case -1: resolvesSecondAttacker = true; break;
+                        case 0: resolvesSecondAttacker = true; break; // king can't move into the same pawn's check
+                        case 1: resolvesSecondAttacker = IsKingSafeFromBishop(new_i, new_j, attacker2.row, attacker2.column); break;
+                        case 2: resolvesSecondAttacker = IsKingSafeFromRook(new_i, new_j, attacker2.row, attacker2.column); break;
+                        case 3: resolvesSecondAttacker = IsKingSafeFromKnight(new_i, new_j, attacker1.row, attacker1.column); break;
                     }
+                }
+                if (resolvesFirstAttacker && resolvesSecondAttacker && IsKingSafeAt(new_i, new_j, gameState)) {
+                    legalMoves.Add(kingMove);
                 }
             }
         }
         // if king is in check we cannot castle
-        if (!IsKingSafeAt(old_i, old_j, gameState)) {
+        if (attacker1.type != -1) {
             return;
         }
         // try to short castle
@@ -512,6 +649,8 @@ public static class MoveGenerator {
                 }
             }
         }
+        stopwatch.Stop();
+        GameStateManager.Instance.numberOfTicks7 += stopwatch.ElapsedTicks;
     }
 
     private static char GetPieceOwner(char pieceChar) {

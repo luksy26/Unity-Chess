@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -165,6 +166,10 @@ public static class KingSafety {
             if (Math.Abs(king_i - bishop_i) != Math.Abs(king_j - bishop_j)) {
                 return true;
             }
+            // king captured the bishop
+            if (king_i == bishop_i && king_j == bishop_j) {
+                return true;
+            }
             return false;
         }
         int piece_i = indexMove.newRow, piece_j = indexMove.newColumn;
@@ -183,6 +188,10 @@ public static class KingSafety {
         if (indexMove == null) {
             // king and rook are not even on the same file
             if (king_i != rook_i && king_j != rook_j) {
+                return true;
+            }
+            // king captured the rook
+            if (king_i == rook_i && king_j == rook_j) {
                 return true;
             }
             return false;
@@ -208,7 +217,7 @@ public static class KingSafety {
     }
 
     public static bool IsKingSafeFromKnight(int king_i, int king_j, int knight_i, int knight_j) {
-        // king and knight are on the same file or rank
+        // king captured the knight
         if (king_i == knight_i || king_j == knight_j) {
             return true;
         }
@@ -235,16 +244,24 @@ public static class KingSafety {
         return true;
     }
 
-    public static bool IsKingSafeFromDiagonalDiscovery(int king_i, int king_j, GameState gameState, IndexMove indexMove) {
+    public static bool IsKingSafeFromDiagonalDiscovery(GameState gameState, IndexMove indexMove) {
+        int king_i, king_j;
+        if (gameState.whoMoves == 'w') {
+            king_i = gameState.whiteKingRow;
+            king_j = gameState.whiteKingColumn;
 
+        } else {
+            king_i = gameState.blackKingRow;
+            king_j = gameState.blackKingColumn;
+        }
         char[,] boardConfiguration = gameState.boardConfiguration;
 
-        bool restoreBoard = false;
+        bool restoreBoard = false, restorePiece = false;
         bool targetingEnPassant = false;
         char oldSquare = '-', newSquare = '-', enPassantSquare = '-';
 
         // a piece is moving so we need to check king safety on a new configuration
-        if (indexMove != null) {
+        if (indexMove.newRow != -1) {
             int old_i, new_i, old_j, new_j;
 
             old_i = indexMove.oldRow;
@@ -267,6 +284,14 @@ public static class KingSafety {
             }
             boardConfiguration[old_i, old_j] = '-';
             boardConfiguration[new_i, new_j] = oldSquare;
+        } else { // we need to make a piece dissapear
+            int old_i, old_j;
+            old_i = indexMove.oldRow;
+            old_j = indexMove.oldColumn;
+
+            restorePiece = true;
+            oldSquare = boardConfiguration[old_i, old_j];
+            boardConfiguration[old_i, old_j] = '-';
         }
 
         int diagonalXIncrement = king_j > indexMove.oldColumn ? -1 : 1;
@@ -285,6 +310,8 @@ public static class KingSafety {
             if (potentialPiece == enemyQueen || potentialPiece == enemyBishop) {
                 if (restoreBoard) {
                     RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
+                } else if (restorePiece) {
+                    boardConfiguration[indexMove.oldRow, indexMove.oldColumn] = oldSquare;
                 }
                 return false;
             } else if (potentialPiece != '-') {
@@ -295,22 +322,32 @@ public static class KingSafety {
 
         if (restoreBoard) {
             RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
+        } else if (restorePiece) {
+            boardConfiguration[indexMove.oldRow, indexMove.oldColumn] = oldSquare;
         }
 
         // the discovered diagonal is safe
         return true;
     }
 
-    public static bool IsKingSafeFromLineDiscovery(int king_i, int king_j, GameState gameState, IndexMove indexMove) {
+    public static bool IsKingSafeFromLineDiscovery(GameState gameState, IndexMove indexMove) {
+        int king_i, king_j;
+        if (gameState.whoMoves == 'w') {
+            king_i = gameState.whiteKingRow;
+            king_j = gameState.whiteKingColumn;
 
+        } else {
+            king_i = gameState.blackKingRow;
+            king_j = gameState.blackKingColumn;
+        }
         char[,] boardConfiguration = gameState.boardConfiguration;
 
-        bool restoreBoard = false;
+        bool restoreBoard = false, restorePiece = false;
         bool targetingEnPassant = false;
         char oldSquare = '-', newSquare = '-', enPassantSquare = '-';
 
         // a piece is moving so we need to check king safety on a new configuration
-        if (indexMove != null) {
+        if (indexMove.newRow != -1) {
             int old_i, new_i, old_j, new_j;
 
             old_i = indexMove.oldRow;
@@ -333,6 +370,14 @@ public static class KingSafety {
             }
             boardConfiguration[old_i, old_j] = '-';
             boardConfiguration[new_i, new_j] = oldSquare;
+        } else { // we need to make a piece dissapear
+            int old_i, old_j;
+            old_i = indexMove.oldRow;
+            old_j = indexMove.oldColumn;
+
+            restorePiece = true;
+            oldSquare = boardConfiguration[old_i, old_j];
+            boardConfiguration[old_i, old_j] = '-';
         }
 
         int lineXIncrement = king_j > indexMove.oldColumn ? -1 : (king_j == indexMove.oldColumn ? 0 : 1);
@@ -351,6 +396,8 @@ public static class KingSafety {
             if (potentialPiece == enemyQueen || potentialPiece == enemyRook) {
                 if (restoreBoard) {
                     RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
+                } else if (restorePiece) {
+                    boardConfiguration[indexMove.oldRow, indexMove.oldColumn] = oldSquare;
                 }
                 return false;
             } else if (potentialPiece != '-') {
@@ -361,6 +408,8 @@ public static class KingSafety {
 
         if (restoreBoard) {
             RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
+        } else if (restorePiece) {
+            boardConfiguration[indexMove.oldRow, indexMove.oldColumn] = oldSquare;
         }
 
         // the discovered line is safe
@@ -368,6 +417,8 @@ public static class KingSafety {
     }
 
     public static bool IsKingSafeAt(int king_i, int king_j, GameState gameState, IndexMove indexMove = null) {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
 
         char[,] boardConfiguration = gameState.boardConfiguration;
 
@@ -417,6 +468,8 @@ public static class KingSafety {
                         if (restoreBoard) {
                             RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                         }
+                        stopwatch.Stop();
+                        GameStateManager.Instance.numberOfTicks6 += stopwatch.ElapsedTicks;
                         return false;
                     }
                 }
@@ -434,6 +487,8 @@ public static class KingSafety {
                 if (restoreBoard) {
                     RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                 }
+                stopwatch.Stop();
+                GameStateManager.Instance.numberOfTicks6 += stopwatch.ElapsedTicks;
                 return false;
             }
         }
@@ -454,6 +509,8 @@ public static class KingSafety {
                         if (restoreBoard) {
                             RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                         }
+                        stopwatch.Stop();
+                        GameStateManager.Instance.numberOfTicks6 += stopwatch.ElapsedTicks;
                         return false;
                     }
                 }
@@ -482,6 +539,8 @@ public static class KingSafety {
                     if (restoreBoard) {
                         RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                     }
+                    stopwatch.Stop();
+                    GameStateManager.Instance.numberOfTicks6 += stopwatch.ElapsedTicks;
                     return false;
                 } else if (potentialPiece != '-' && potentialPiece != kingChar) {
                     // this means we found a piece that would block the check
@@ -507,6 +566,8 @@ public static class KingSafety {
                     if (restoreBoard) {
                         RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
                     }
+                    stopwatch.Stop();
+                    GameStateManager.Instance.numberOfTicks6 += stopwatch.ElapsedTicks;
                     return false;
                 } else if (potentialPiece != '-' && potentialPiece != kingChar) {
                     // this means we found a piece that would block the check
@@ -519,6 +580,8 @@ public static class KingSafety {
             RestoreBoard(boardConfiguration, targetingEnPassant, gameState.whoMoves, indexMove, oldSquare, newSquare, enPassantSquare);
         }
 
+        stopwatch.Stop();
+        GameStateManager.Instance.numberOfTicks6 += stopwatch.ElapsedTicks;
         // we have checked all possible enemy pieces attacks
         return true;
     }

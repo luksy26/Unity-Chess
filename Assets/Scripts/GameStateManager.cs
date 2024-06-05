@@ -12,6 +12,7 @@ public class GameStateManager : MonoBehaviour {
     // very important structure, will be used across multiple game components
     public GameState globalGameState;
     public bool IsEngineRunning, isPromotionMenuDisplayed;
+    public long numberOfTicks1, numberOfTicks2, numberOfTicks3, numberOfTicks4, numberOfTicks5, numberOfTicks6, numberOfTicks7;
 
     // default starting position
     public string defaultFEN;
@@ -30,6 +31,13 @@ public class GameStateManager : MonoBehaviour {
         globalGameState = new();
         IsEngineRunning = false;
         isPromotionMenuDisplayed = false;
+        numberOfTicks1 = 0;
+        numberOfTicks2 = 0;
+        numberOfTicks3 = 0;
+        numberOfTicks4 = 0;
+        numberOfTicks5 = 0;
+        numberOfTicks6 = 0;
+        numberOfTicks7 = 0;
     }
 
     public void GenerateGameState(string inputFEN) {
@@ -115,7 +123,7 @@ public class GameStateManager : MonoBehaviour {
         }
         ++index;
 
-        if (index > inputFEN_sb.Length) {
+        if (index >= inputFEN_sb.Length) {
             globalGameState.moveCounter50Move = 0;
             globalGameState.moveCounterFull = 1;
         } else {
@@ -193,10 +201,10 @@ public class GameStateManager : MonoBehaviour {
         }
         List<IndexMove> moves = GetLegalMoves(gameState);
 
-        Debug.Log("found " + moves.Count + " legal moves:");
-        foreach(IndexMove move in moves) {
-            Debug.Log(new Move(move));
-        }
+        // Debug.Log("found " + moves.Count + " legal moves:");
+        // foreach(IndexMove move in moves) {
+        //     Debug.Log(new Move(move));
+        // }
 
         if (moves.Count == 0) {
             int kingRow = gameState.whoMoves == 'w' ? gameState.whiteKingRow : gameState.blackKingRow;

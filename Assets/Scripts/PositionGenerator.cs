@@ -1,9 +1,6 @@
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using UnityEditor;
-using UnityEditor.Build.Content;
 using UnityEngine;
 using UnityEngine.UI;
 using static PositionCounter;
@@ -20,6 +17,7 @@ public class PositionGenerator : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
+            Game.Instance.AIPlayer = '-';
             Game.Instance.CancelMovePiece();
             GameStateManager.Instance.GenerateGameState(inputFEN);
             Game.Instance.DestroyPosition();
@@ -38,7 +36,7 @@ public class PositionGenerator : MonoBehaviour {
             string line;
             int idx = 0;
             while ((line = reader.ReadLine()) != null) {
-                if (idx % 30 != 0) {
+                if (idx % 40 != 0) {
                     ++idx;
                     continue; // only process one portion of the data
                 }
@@ -68,9 +66,7 @@ public class PositionGenerator : MonoBehaviour {
                     ok = false;
                     writer.WriteLine("Incorrect results for depth 3: FEN: " + fen + " ; expected " + legalMovesDepth3 + " got " + result);
                 }
-                if (ok) {
-                    UnityEngine.Debug.Log(fen + "was checked, it is" + (ok ? "" : " not") + " ok");
-                }
+                UnityEngine.Debug.Log(fen + "was checked, it is" + (ok ? "" : " not") + " ok");
                 ++idx;
             }
             stopwatch.Stop();

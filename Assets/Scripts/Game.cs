@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
+using static AIv1;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -15,6 +16,7 @@ public class Game : MonoBehaviour {
     public GameObject chessPiecePrefab;
     public char currentPlayer;
     public string playerPerspective;
+    public char AIPlayer;
     Hashtable gameStates;
 
     public void Start() {
@@ -61,8 +63,16 @@ public class Game : MonoBehaviour {
 
         HandleGameState(globalGameState, gameStates);
 
+        if (currentPlayer == AIPlayer) {
+            GameStateManager.Instance.IsEngineRunning = true;
+            Move moveToMake = null;
+            await Task.Run(() => moveToMake = GetBestMove(globalGameState));
+            await Task.Delay(1000);
+            MovePiece(moveToMake);
+            GameStateManager.Instance.IsEngineRunning = false;
+        }
         await Task.Yield();
-        await Task.Run(() => RunEngine(globalGameState));
+        await Task.Run(() => RunPerft(globalGameState));
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -80,11 +90,13 @@ public class Game : MonoBehaviour {
     }
 
     public async void MovePiece(Move move) {
+        if (currentPlayer == '-') {
+            return;
+        }
         GameState gameState = GameStateManager.Instance.globalGameState;
         IndexMove indexMove = new(move);
         bool promoting = false;
         string movedPieceName = currentPieces[indexMove.oldRow, indexMove.oldColumn].name;
-
         // check if a pawn moved
         if (movedPieceName.Contains("pawn")) {
             // check if the pawn reached the last rank
@@ -187,9 +199,18 @@ public class Game : MonoBehaviour {
 
         HandleGameState(gameState, gameStates);
 
-        // wait for next frame
         await Task.Yield();
-        await Task.Run(() => RunEngine(gameState));
+
+        // get the move for the AI
+        if (currentPlayer == AIPlayer && currentPlayer != '-') {
+            GameStateManager.Instance.IsEngineRunning = true;
+            Move moveToMake = null;
+            await Task.Run(() => moveToMake = GetBestMove(gameState));
+            await Task.Delay(1000);
+            MovePiece(moveToMake);
+            GameStateManager.Instance.IsEngineRunning = false;
+        }
+        await Task.Run(() => RunPerft(gameState));
     }
 
     public void CancelMovePiece() {
@@ -207,7 +228,7 @@ public class Game : MonoBehaviour {
         }
     }
 
-    public void RunEngine(GameState gameState) {
+    public void RunPerft(GameState gameState) {
         GameStateManager.Instance.IsEngineRunning = true;
         string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
         using StreamWriter writer = new(outPath, false);
@@ -218,6 +239,20 @@ public class Game : MonoBehaviour {
             UnityEngine.Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0, writer));
             stopwatch.Stop();
             UnityEngine.Debug.Log("For depth " + depth + " time is " + stopwatch.ElapsedMilliseconds + "ms");
+            UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks1 / Stopwatch.Frequency * 1000 + "ms spent getting legal moves");
+            GameStateManager.Instance.numberOfTicks1 = 0;
+            UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks2 / Stopwatch.Frequency * 1000 + "ms spent getting legal pawn moves");
+            GameStateManager.Instance.numberOfTicks2 = 0;
+            UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks3 / Stopwatch.Frequency * 1000 + "ms spent getting legal bishop moves");
+            GameStateManager.Instance.numberOfTicks3 = 0;
+            UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks4 / Stopwatch.Frequency * 1000 + "ms spent getting legal knight moves");
+            GameStateManager.Instance.numberOfTicks4 = 0;
+            UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks5 / Stopwatch.Frequency * 1000 + "ms spent getting legal rook moves");
+            GameStateManager.Instance.numberOfTicks5 = 0;
+            UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks7 / Stopwatch.Frequency * 1000 + "ms spent getting legal king moves");
+            GameStateManager.Instance.numberOfTicks7 = 0;
+            UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks6 / Stopwatch.Frequency * 1000 + "ms spent in isKingSafeAt");
+            GameStateManager.Instance.numberOfTicks6 = 0;
         }
         GameStateManager.Instance.IsEngineRunning = false;
     }
