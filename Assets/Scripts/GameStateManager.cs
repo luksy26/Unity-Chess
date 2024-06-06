@@ -137,7 +137,7 @@ public class GameStateManager : MonoBehaviour {
         Debug.Log(globalGameState);
     }
 
-    public GameConclusion GetGameConclusion(GameState gameState, Hashtable gameStates) {
+    public GameConclusion GetGameConclusion(GameState gameState, Hashtable gameStates = null) {
         if (gameState.moveCounter50Move == 100) {
             return GameConclusion.DrawBy50MoveRule;
         }

@@ -17,6 +17,7 @@ public class Game : MonoBehaviour {
     public char currentPlayer;
     public string playerPerspective;
     public char AIPlayer;
+    public int movesAhead;
     Hashtable gameStates;
 
     public void Start() {
@@ -44,8 +45,8 @@ public class Game : MonoBehaviour {
         char[,] boardConfiguration = globalGameState.boardConfiguration;
         currentPlayer = globalGameState.whoMoves;
 
-        for (int i = 0; i < boardConfiguration.GetLength(0); ++i) {
-            for (int j = 0; j < boardConfiguration.GetLength(1); ++j) {
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
                 char potentialPiece = boardConfiguration[i, j];
                 char file = (char)(j + 'a');
                 int rank = 8 - i;
@@ -66,13 +67,12 @@ public class Game : MonoBehaviour {
         if (currentPlayer == AIPlayer) {
             GameStateManager.Instance.IsEngineRunning = true;
             Move moveToMake = null;
-            await Task.Run(() => moveToMake = GetBestMove(globalGameState));
-            await Task.Delay(1000);
+            await Task.Run(() => moveToMake = new Move(GetBestMove(globalGameState).move));
             MovePiece(moveToMake);
             GameStateManager.Instance.IsEngineRunning = false;
         }
         await Task.Yield();
-        await Task.Run(() => RunPerft(globalGameState));
+        //await Task.Run(() => RunPerft(globalGameState));
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -201,16 +201,19 @@ public class Game : MonoBehaviour {
 
         await Task.Yield();
 
+        //await Task.Run(() => RunPerft(gameState));
+
+        //UnityEngine.Debug.Log("score " + PositionEvaluator(gameState));
+
         // get the move for the AI
         if (currentPlayer == AIPlayer && currentPlayer != '-') {
             GameStateManager.Instance.IsEngineRunning = true;
-            Move moveToMake = null;
+            MoveEval moveToMake = new();
             await Task.Run(() => moveToMake = GetBestMove(gameState));
-            await Task.Delay(1000);
-            MovePiece(moveToMake);
+            UnityEngine.Debug.Log("best move " + new Move(moveToMake.move) + " score " + moveToMake.score);
+            MovePiece(new Move(moveToMake.move));
             GameStateManager.Instance.IsEngineRunning = false;
         }
-        await Task.Run(() => RunPerft(gameState));
     }
 
     public void CancelMovePiece() {
@@ -231,8 +234,8 @@ public class Game : MonoBehaviour {
     public void RunPerft(GameState gameState) {
         GameStateManager.Instance.IsEngineRunning = true;
         string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
-        using StreamWriter writer = new(outPath, false);
-        for (int depth = 1; depth < 6; ++depth) {
+        using StreamWriter writer = File.CreateText(outPath);
+        for (int depth = 1; depth <= movesAhead; ++depth) {
             maxDepth = depth;
             Stopwatch stopwatch = new();
             stopwatch.Start();
@@ -293,6 +296,20 @@ public class Game : MonoBehaviour {
             currentPlayer = 'b';
         } else if (currentPlayer == 'b') {
             currentPlayer = 'w';
+        }
+    }
+
+    public void SwapPerspectives() {
+        if (playerPerspective.Equals("white")) {
+            playerPerspective = "black";
+        } else {
+            playerPerspective = "white";
+        }
+        for (int i = 0; i < blackPieces.Count; ++i) {
+            blackPieces[i].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
+        }
+        for (int i = 0; i < whitePieces.Count; ++i) {
+            whitePieces[i].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
         }
     }
 

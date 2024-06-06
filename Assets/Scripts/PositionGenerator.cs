@@ -7,17 +7,20 @@ using static PositionCounter;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
-    public Button generateButton, runTests;
+    public Button generateButton, runTests, swapPerspective;
 
     void Start() {
         generateButton.onClick.AddListener(OnGenerateButtonClicked);
         runTests.onClick.AddListener(OnRunTestsButtonClicked);
+        swapPerspective.onClick.AddListener(OnSwapPerspectiveClicked);
     }
 
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = '-';
+            Game.Instance.AIPlayer = 'b';
+            Game.Instance.playerPerspective = "white";
+            Game.Instance.movesAhead = 2;
             Game.Instance.CancelMovePiece();
             GameStateManager.Instance.GenerateGameState(inputFEN);
             Game.Instance.DestroyPosition();
@@ -74,5 +77,9 @@ public class PositionGenerator : MonoBehaviour {
         } else {
             UnityEngine.Debug.Log("file not found");
         }
+    }
+
+    void OnSwapPerspectiveClicked() {
+        Game.Instance.SwapPerspectives();
     }
 }
