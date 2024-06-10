@@ -58,32 +58,41 @@ public static class AIv1 {
     }
     public static MoveEval GetBestMove(GameState gameState) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
-        MoveEval maxMoveEval = new() {
-            score = -10000f,
-        }, minMoveEval = new() {
-            score = 10000f
+        MoveEval bestMoveEval = new() {
+            score = gameState.whoMoves == 'w' ? -10000f : 10000f
         };
-        maximumDepth = 3;
+        maximumDepth = 5;
+        float alpha = -10000f, beta = 10000f;
         foreach (IndexMove move in legalMoves) {
             gameState.MakeMoveNoHashtable(move);
-            float score = MiniMax(gameState, 1);
+            float score = MiniMax(gameState, 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
-            if (gameState.whoMoves == 'w' && score > maxMoveEval.score) {
-                maxMoveEval.score = score;
-                maxMoveEval.move = move;
+            if (gameState.whoMoves == 'w') {
+                if (score > bestMoveEval.score) {
+                    bestMoveEval.score = score;
+                    bestMoveEval.move = move;
+                }
+                alpha = System.Math.Max(alpha, score);
             }
-            if (gameState.whoMoves == 'b' && score < minMoveEval.score) {
-                minMoveEval.score = score;
-                minMoveEval.move = move;
+            else {
+                if (score < bestMoveEval.score) {
+                    bestMoveEval.score = score;
+                    bestMoveEval.move = move;
+                }
+                beta = System.Math.Min(beta, score);
+            }
+            // prune the branch
+            if (beta <= alpha) {
+                break;
             }
         }
         if (gameState.whoMoves == 'w') {
-            return maxMoveEval;
+            return bestMoveEval;
         }
-        return minMoveEval;
+        return bestMoveEval;
     }
 
-    public static float MiniMax(GameState gameState, int depth) {
+    public static float MiniMax(GameState gameState, int depth, float alpha, float beta) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         if (depth == maximumDepth) {
             return PositionEvaluator(gameState, depth, legalMoves);
@@ -102,24 +111,26 @@ public static class AIv1 {
         if (conclusion == GameConclusion.Stalemate) {
             return 0;
         }
-        
+
         // we have at least one legal move
-        float maxScore = -10000f, minScore = 10000f;
+        float bestScore = gameState.whoMoves == 'w' ? -10000f : 10000f;
 
         foreach (IndexMove move in legalMoves) {
             gameState.MakeMoveNoHashtable(move);
-            float score = MiniMax(gameState, depth + 1);
+            float score = MiniMax(gameState, depth + 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
-            if (gameState.whoMoves == 'w' && score > maxScore) {
-                maxScore = score;
+            if (gameState.whoMoves == 'w') {
+                bestScore = System.Math.Max(bestScore, score);
+                alpha = System.Math.Max(alpha, score);
+            } else {
+                bestScore = System.Math.Min(bestScore, score);
+                beta = System.Math.Min(beta, score);
             }
-            if (gameState.whoMoves == 'b' && score < minScore) {
-                minScore = score;
+            // prune the branch
+            if (beta <= alpha) {
+                break;
             }
         }
-        if (gameState.whoMoves == 'w') {
-            return maxScore;
-        }
-        return minScore;
+        return bestScore;
     }
 }

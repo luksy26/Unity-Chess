@@ -220,6 +220,10 @@ public class Game : MonoBehaviour {
     }
 
     public async void GetPositionEval() {
+        if (currentPlayer == '-') {
+            UnityEngine.Debug.Log("Game is over");
+            return;
+        }
         GameStateManager.Instance.IsEngineRunning = true;
         MoveEval moveToMake = new();
         await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState));
