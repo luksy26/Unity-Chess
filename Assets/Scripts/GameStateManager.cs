@@ -137,7 +137,7 @@ public class GameStateManager : MonoBehaviour {
         Debug.Log(globalGameState);
     }
 
-    public GameConclusion GetGameConclusion(GameState gameState, Hashtable gameStates = null) {
+    public GameConclusion GetDrawConclusion(GameState gameState, Hashtable gameStates = null) {
         if (gameState.moveCounter50Move == 100) {
             return GameConclusion.DrawBy50MoveRule;
         }
@@ -199,12 +199,11 @@ public class GameStateManager : MonoBehaviour {
                 }
             }
         }
-        List<IndexMove> moves = GetLegalMoves(gameState);
+        return GameConclusion.NotOver;
+    }
 
-        // Debug.Log("found " + moves.Count + " legal moves:");
-        // foreach(IndexMove move in moves) {
-        //     Debug.Log(new Move(move));
-        // }
+    public GameConclusion GetMateConclusion(GameState gameState, List<IndexMove> moves = null) {
+        moves ??= GetLegalMoves(gameState);
 
         if (moves.Count == 0) {
             int kingRow = gameState.whoMoves == 'w' ? gameState.whiteKingRow : gameState.blackKingRow;

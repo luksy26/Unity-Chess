@@ -203,14 +203,13 @@ public class Game : MonoBehaviour {
 
         //await Task.Run(() => RunPerft(gameState));
 
-        //UnityEngine.Debug.Log("score " + PositionEvaluator(gameState));
-
         // get the move for the AI
         if (currentPlayer == AIPlayer && currentPlayer != '-') {
             GameStateManager.Instance.IsEngineRunning = true;
             MoveEval moveToMake = new();
             await Task.Run(() => moveToMake = GetBestMove(gameState));
-            UnityEngine.Debug.Log("best move " + new Move(moveToMake.move) + " score " + moveToMake.score);
+            UnityEngine.Debug.Log("best move " + new Move(moveToMake.move) +
+            " score: " + (Math.Abs(moveToMake.score) > 950 ? "Mate in " + (Math.Abs(moveToMake.score - 1000) + moveToMake.score % 2) / 2 : moveToMake.score));
             MovePiece(new Move(moveToMake.move));
             GameStateManager.Instance.IsEngineRunning = false;
         }
@@ -218,6 +217,15 @@ public class Game : MonoBehaviour {
 
     public void CancelMovePiece() {
         promotionManager.CancelPromotionMenu();
+    }
+
+    public async void GetPositionEval() {
+        GameStateManager.Instance.IsEngineRunning = true;
+        MoveEval moveToMake = new();
+        await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState));
+        UnityEngine.Debug.Log("best move " + new Move(moveToMake.move) +
+        " score: " + (Math.Abs(moveToMake.score) > 950 ? "Mate in " + (Math.Abs(moveToMake.score - 1000) + moveToMake.score % 2) / 2 : moveToMake.score));
+        GameStateManager.Instance.IsEngineRunning = false;
     }
 
     public void DestroyPieceAt(int row, int column) {
@@ -261,7 +269,7 @@ public class Game : MonoBehaviour {
     }
 
     public void HandleGameState(GameState gameState, Hashtable gameStates) {
-        switch (GameStateManager.Instance.GetGameConclusion(gameState, gameStates)) {
+        switch (GameStateManager.Instance.GetDrawConclusion(gameState, gameStates)) {
             case GameConclusion.DrawBy50MoveRule: {
                     currentPlayer = '-';
                     UnityEngine.Debug.Log("Draw by 50 move rule");
@@ -277,17 +285,20 @@ public class Game : MonoBehaviour {
                     UnityEngine.Debug.Log("Draw by insufficient material");
                     break;
                 }
-            case GameConclusion.Checkmate: {
-                    UnityEngine.Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
-                    currentPlayer = '-';
-                    break;
+            default:
+                switch (GameStateManager.Instance.GetMateConclusion(gameState)) {
+                    case GameConclusion.Checkmate: {
+                            UnityEngine.Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
+                            currentPlayer = '-';
+                            break;
+                        }
+                    case GameConclusion.Stalemate: {
+                            UnityEngine.Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
+                            currentPlayer = '-';
+                            break;
+                        }
                 }
-            case GameConclusion.Stalemate: {
-                    UnityEngine.Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
-                    currentPlayer = '-';
-                    break;
-                }
-            default: break;
+                break;
         }
     }
 

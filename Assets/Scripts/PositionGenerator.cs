@@ -7,12 +7,13 @@ using static PositionCounter;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
-    public Button generateButton, runTests, swapPerspective;
+    public Button generateButton, runTests, swapPerspective, getPositionEval;
 
     void Start() {
         generateButton.onClick.AddListener(OnGenerateButtonClicked);
         runTests.onClick.AddListener(OnRunTestsButtonClicked);
         swapPerspective.onClick.AddListener(OnSwapPerspectiveClicked);
+        getPositionEval.onClick.AddListener(OnGetPositionEvalClicked);
     }
 
     void OnGenerateButtonClicked() {
@@ -81,5 +82,9 @@ public class PositionGenerator : MonoBehaviour {
 
     void OnSwapPerspectiveClicked() {
         Game.Instance.SwapPerspectives();
+    }
+
+    void OnGetPositionEvalClicked() {
+        Game.Instance.GetPositionEval();
     }
 }

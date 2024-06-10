@@ -1,26 +1,26 @@
-using System;
 using System.Collections.Generic;
-using UnityEngine;
 using static MoveGenerator;
-public static class AIv1
-{   
+public static class AIv1 {
     public static int maximumDepth;
-    static int[] pieceValues = {100, 300, 300, 500, 900};
+    static readonly int[] pieceValues = { 100, 300, 300, 500, 900 };
     public struct MoveEval {
         public IndexMove move;
-        public int score;
+        public float score;
     }
-    public static int PositionEvaluator(GameState gameState) {
-        GameConclusion conclusion = GameStateManager.Instance.GetGameConclusion(gameState);
-        if (conclusion == GameConclusion.Stalemate || conclusion == GameConclusion.DrawByInsufficientMaterial ||
-        conclusion == GameConclusion.DrawBy50MoveRule) {
+    public static float PositionEvaluator(GameState gameState, int depth, List<IndexMove> legalMoves) {
+        GameConclusion conclusion = GameStateManager.Instance.GetDrawConclusion(gameState);
+        if (conclusion == GameConclusion.DrawByInsufficientMaterial || conclusion == GameConclusion.DrawBy50MoveRule) {
             return 0;
         }
+        conclusion = GameStateManager.Instance.GetMateConclusion(gameState, legalMoves);
         if (conclusion == GameConclusion.Checkmate) {
             if (gameState.whoMoves == 'w') {
-                return -100000;
+                return -1000f + depth;
             }
-            return 100000;
+            return 1000f - depth;
+        }
+        if (conclusion == GameConclusion.Stalemate) {
+            return 0;
         }
 
         int scoreWhite = 0, scoreBlack = 0;
@@ -34,7 +34,7 @@ public static class AIv1
                     case 'b': index = 2; break;
                     case 'r': index = 3; break;
                     case 'q': index = 4; break;
-                    default : break;
+                    default: break;
                 }
                 int pieceValue = 0;
                 if (index != -1) {
@@ -54,20 +54,20 @@ public static class AIv1
         } else {
             scoreBlack += 30;
         }
-        return scoreWhite - scoreBlack;
+        return (scoreWhite - scoreBlack) / 100f;
     }
     public static MoveEval GetBestMove(GameState gameState) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         MoveEval maxMoveEval = new() {
-            score = -1000000,
+            score = -10000f,
         }, minMoveEval = new() {
-            score = 1000000
+            score = 10000f
         };
         maximumDepth = 3;
         foreach (IndexMove move in legalMoves) {
-            gameState.MakeMove(move);
-            int score = MiniMax(gameState, 1);
-            gameState.UnmakeMove(move);
+            gameState.MakeMoveNoHashtable(move);
+            float score = MiniMax(gameState, 1);
+            gameState.UnmakeMoveNoHashtable(move);
             if (gameState.whoMoves == 'w' && score > maxMoveEval.score) {
                 maxMoveEval.score = score;
                 maxMoveEval.move = move;
@@ -83,18 +83,33 @@ public static class AIv1
         return minMoveEval;
     }
 
-    public static int MiniMax(GameState gameState, int depth) {
+    public static float MiniMax(GameState gameState, int depth) {
+        List<IndexMove> legalMoves = GetLegalMoves(gameState);
         if (depth == maximumDepth) {
-            return PositionEvaluator(gameState);
+            return PositionEvaluator(gameState, depth, legalMoves);
+        }
+        GameConclusion conclusion = GameStateManager.Instance.GetDrawConclusion(gameState);
+        if (conclusion == GameConclusion.DrawByInsufficientMaterial || conclusion == GameConclusion.DrawBy50MoveRule) {
+            return 0;
+        }
+        conclusion = GameStateManager.Instance.GetMateConclusion(gameState, legalMoves);
+        if (conclusion == GameConclusion.Checkmate) {
+            if (gameState.whoMoves == 'w') {
+                return -1000f + depth;
+            }
+            return 1000f - depth;
+        }
+        if (conclusion == GameConclusion.Stalemate) {
+            return 0;
         }
         
-        List<IndexMove> legalMoves = GetLegalMoves(gameState);
-        int maxScore = -1000000, minScore = 1000000;
+        // we have at least one legal move
+        float maxScore = -10000f, minScore = 10000f;
 
         foreach (IndexMove move in legalMoves) {
-            gameState.MakeMove(move);
-            int score = MiniMax(gameState, depth + 1);
-            gameState.UnmakeMove(move);
+            gameState.MakeMoveNoHashtable(move);
+            float score = MiniMax(gameState, depth + 1);
+            gameState.UnmakeMoveNoHashtable(move);
             if (gameState.whoMoves == 'w' && score > maxScore) {
                 maxScore = score;
             }
