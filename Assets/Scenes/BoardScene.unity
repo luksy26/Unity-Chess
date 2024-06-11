@@ -1232,6 +1232,7 @@ GameObject:
   - component: {fileID: 1480655575}
   - component: {fileID: 1480655577}
   - component: {fileID: 1480655578}
+  - component: {fileID: 1480655579}
   m_Layer: 0
   m_Name: GameController
   m_TagString: GameController
@@ -1249,7 +1250,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.8763628, y: -0.046662107, z: 0.02029301}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 4, y: 4, z: 4}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1274,6 +1275,8 @@ MonoBehaviour:
   playerPerspective: black
   AIPlayer: 46
   movesAhead: 0
+  timeToMove: 0
+  timeNotExpired: 0
 --- !u!114 &1480655577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1323,6 +1326,20 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 2501edfe6a125a040b0a06037ae2f7ee, type: 3}
   - {fileID: 21300000, guid: bb4f7d927ff2c6b4ea10477650237796, type: 3}
   - {fileID: 21300000, guid: fcdcf8591ef3b854eb867415115d3f5c, type: 3}
+--- !u!114 &1480655579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1480655573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26e4db62df1fb464ca28c3a2cc321aa1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textPrefab: {fileID: 8163425756821884067, guid: 0f6e1120ca59d8148b54e9a795658f1f, type: 3}
+  canvas: {fileID: 1238640591}
 --- !u!1 &1502214221
 GameObject:
   m_ObjectHideFlags: 0

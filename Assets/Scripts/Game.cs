@@ -39,6 +39,7 @@ public class Game : MonoBehaviour {
     }
 
     public async void GeneratePosition() {
+        GetComponent<SquareCoordinatesUI>().GenerateFilesAndRanks(playerPerspective);
         GameState globalGameState = GameStateManager.Instance.globalGameState;
 
         // add the gameState in the hashtable
@@ -384,6 +385,7 @@ public class Game : MonoBehaviour {
         for (int i = 0; i < whitePieces.Count; ++i) {
             whitePieces[i].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
         }
+        GetComponent<SquareCoordinatesUI>().SwapPerspectivesForPieceCoordinates();
     }
 
     public void DestroyPosition() {
