@@ -7,19 +7,20 @@ using static PositionCounter;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
-    public Button generateButton, runTests, swapPerspective, getPositionEval;
+    public Button generateButton, runTests, swapPerspective, getPositionEval, getStaticPositionEval;
 
     void Start() {
         generateButton.onClick.AddListener(OnGenerateButtonClicked);
         runTests.onClick.AddListener(OnRunTestsButtonClicked);
         swapPerspective.onClick.AddListener(OnSwapPerspectiveClicked);
         getPositionEval.onClick.AddListener(OnGetPositionEvalClicked);
+        getStaticPositionEval.onClick.AddListener(OnGetStaticPositionEvalClicked);
     }
 
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = '-';
+            Game.Instance.AIPlayer = 'b';
             Game.Instance.playerPerspective = "white";
             Game.Instance.movesAhead = 2;
             Game.Instance.timeToMove = 5f;
@@ -88,5 +89,9 @@ public class PositionGenerator : MonoBehaviour {
 
     void OnGetPositionEvalClicked() {
         Game.Instance.GetPositionEval();
+    }
+
+    void OnGetStaticPositionEvalClicked() {
+        Game.Instance.GetStaticPositionEval();
     }
 }

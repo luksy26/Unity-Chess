@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv1;
+using static AIv2;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -256,6 +256,11 @@ public class Game : MonoBehaviour {
 
     public void CancelMovePiece() {
         promotionManager.CancelPromotionMenu();
+    }
+
+    public void GetStaticPositionEval() {
+        GameState gameState = GameStateManager.Instance.globalGameState;
+        UnityEngine.Debug.Log("Static position evaluation:" + PositionEvaluator(gameState, 0, MoveGenerator.GetLegalMoves(gameState)));
     }
 
     public async void GetPositionEval() {
