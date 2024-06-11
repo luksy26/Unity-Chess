@@ -18,6 +18,8 @@ public class Game : MonoBehaviour {
     public string playerPerspective;
     public char AIPlayer;
     public int movesAhead;
+    public float timeToMove;
+    public bool timeNotExpired;
     Hashtable gameStates;
 
     public void Start() {
@@ -64,11 +66,30 @@ public class Game : MonoBehaviour {
 
         HandleGameState(globalGameState, gameStates);
 
-        if (currentPlayer == AIPlayer) {
+        if (currentPlayer == AIPlayer && currentPlayer != '-') {
             GameStateManager.Instance.IsEngineRunning = true;
-            Move moveToMake = null;
-            await Task.Run(() => moveToMake = new Move(GetBestMove(globalGameState).move));
-            MovePiece(moveToMake);
+            // start the timer to move
+            StartCoroutine(MoveTimerCoroutine(timeToMove));
+            timeNotExpired = true;
+            MoveEval moveToMakeFound = new();
+            int searchDepth = 1;
+            while (true) {
+                MoveEval moveToMake = new();
+                await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth));
+                if (timeNotExpired) {
+                    moveToMakeFound = moveToMake;
+                    UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+                } else {
+                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
+                    break;
+                }
+                // now search deeper
+                ++searchDepth;
+            }
+            UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+            MovePiece(new Move(moveToMakeFound.move));
             GameStateManager.Instance.IsEngineRunning = false;
         }
         await Task.Yield();
@@ -206,11 +227,28 @@ public class Game : MonoBehaviour {
         // get the move for the AI
         if (currentPlayer == AIPlayer && currentPlayer != '-') {
             GameStateManager.Instance.IsEngineRunning = true;
-            MoveEval moveToMake = new();
-            await Task.Run(() => moveToMake = GetBestMove(gameState));
-            UnityEngine.Debug.Log("best move " + new Move(moveToMake.move) +
-            " score: " + (Math.Abs(moveToMake.score) > 950 ? "Mate in " + (Math.Abs(moveToMake.score - 1000) + moveToMake.score % 2) / 2 : moveToMake.score));
-            MovePiece(new Move(moveToMake.move));
+            // start the timer to move
+            StartCoroutine(MoveTimerCoroutine(timeToMove));
+            timeNotExpired = true;
+            MoveEval moveToMakeFound = new();
+            int searchDepth = 1;
+            while (true) {
+                MoveEval moveToMake = new();
+                await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth));
+                if (timeNotExpired) {
+                    moveToMakeFound = moveToMake;
+                    UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+                } else {
+                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
+                    break;
+                }
+                // now search deeper
+                ++searchDepth;
+            }
+            UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+            MovePiece(new Move(moveToMakeFound.move));
             GameStateManager.Instance.IsEngineRunning = false;
         }
     }
@@ -225,11 +263,31 @@ public class Game : MonoBehaviour {
             return;
         }
         GameStateManager.Instance.IsEngineRunning = true;
-        MoveEval moveToMake = new();
-        await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState));
-        UnityEngine.Debug.Log("best move " + new Move(moveToMake.move) +
-        " score: " + (Math.Abs(moveToMake.score) > 950 ? "Mate in " + (Math.Abs(moveToMake.score - 1000) + moveToMake.score % 2) / 2 : moveToMake.score));
+        StartCoroutine(MoveTimerCoroutine(timeToMove));
+        timeNotExpired = true;
+        MoveEval moveToMakeFound = new();
+        int searchDepth = 1;
+        while (true) {
+            MoveEval moveToMake = new();
+            await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth));
+            if (timeNotExpired) {
+                moveToMakeFound = moveToMake;
+                UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
+            " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+            } else {
+                UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
+                break;
+            }
+            ++searchDepth;
+        }
+        UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
+            " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
         GameStateManager.Instance.IsEngineRunning = false;
+    }
+
+    IEnumerator MoveTimerCoroutine(float duration) {
+        yield return new WaitForSeconds(duration);
+        timeNotExpired = false;
     }
 
     public void DestroyPieceAt(int row, int column) {

@@ -56,14 +56,17 @@ public static class AIv1 {
         }
         return (scoreWhite - scoreBlack) / 100f;
     }
-    public static MoveEval GetBestMove(GameState gameState) {
+    public static MoveEval GetBestMove(GameState gameState, int maxLevel) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         MoveEval bestMoveEval = new() {
             score = gameState.whoMoves == 'w' ? -10000f : 10000f
         };
-        maximumDepth = 5;
+        maximumDepth = maxLevel;
         float alpha = -10000f, beta = 10000f;
         foreach (IndexMove move in legalMoves) {
+            if (!Game.Instance.timeNotExpired) {
+                break;
+            }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
@@ -116,6 +119,9 @@ public static class AIv1 {
         float bestScore = gameState.whoMoves == 'w' ? -10000f : 10000f;
 
         foreach (IndexMove move in legalMoves) {
+            if (!Game.Instance.timeNotExpired) {
+                break;
+            }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, depth + 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);

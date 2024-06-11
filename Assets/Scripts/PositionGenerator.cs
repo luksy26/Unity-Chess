@@ -19,9 +19,11 @@ public class PositionGenerator : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = 'b';
+            Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
             Game.Instance.movesAhead = 2;
+            Game.Instance.timeToMove = 5f;
+            Game.Instance.timeNotExpired = true;
             Game.Instance.CancelMovePiece();
             GameStateManager.Instance.GenerateGameState(inputFEN);
             Game.Instance.DestroyPosition();
