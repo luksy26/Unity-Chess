@@ -80,7 +80,8 @@ public class Game : MonoBehaviour {
                 if (timeNotExpired) {
                     moveToMakeFound = moveToMake;
                     UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
                 } else {
                     UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
                     break;
@@ -89,8 +90,8 @@ public class Game : MonoBehaviour {
                 ++searchDepth;
             }
             UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
-            MovePiece(new Move(moveToMakeFound.move));
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
             GameStateManager.Instance.IsEngineRunning = false;
         }
         await Task.Yield();
@@ -239,7 +240,8 @@ public class Game : MonoBehaviour {
                 if (timeNotExpired) {
                     moveToMakeFound = moveToMake;
                     UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
                 } else {
                     UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
                     break;
@@ -248,8 +250,8 @@ public class Game : MonoBehaviour {
                 ++searchDepth;
             }
             UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
-            MovePiece(new Move(moveToMakeFound.move));
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
             GameStateManager.Instance.IsEngineRunning = false;
         }
     }
@@ -279,15 +281,18 @@ public class Game : MonoBehaviour {
             if (timeNotExpired) {
                 moveToMakeFound = moveToMake;
                 UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
-            " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+            " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+            (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
             } else {
                 UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
                 break;
             }
+            // now search deeper
             ++searchDepth;
         }
         UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
-            " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " + (Math.Abs(moveToMakeFound.score - 1000) + moveToMakeFound.score % 2) / 2 : moveToMakeFound.score));
+            " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+            (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
         GameStateManager.Instance.IsEngineRunning = false;
     }
 

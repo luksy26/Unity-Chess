@@ -2,16 +2,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using static MoveGenerator;
 public static class AIv2 {
-    public const int MOVE_FIRST_ADVANTAGE = 30;
-    public const int SQUARE_CONTROL_BONUS = 4;
+    public const int MOVE_FIRST_ADVANTAGE = 20;
+    public const int SQUARE_CONTROL_BONUS = 1;
     public const int SQUARE_DEFEND_ATTACK_BONUS = 10;
     public const int SQUARE_DEFEND_ATTACK_EQUAL_BONUS = 5;
-    public const int SQUARE_DEFEND_ATTACK_HIGHER_BONUS = 25;
+    public const int SQUARE_DEFEND_ATTACK_HIGHER_BONUS = 15;
     public const int SQUARE_DEFEND_ATTACK_KING = 10;
     public const int PAWN_CHAIN_BONUS = 15;
     public const int ENDGAME_TRANSITION = 10;
     public const int PUNISH_REWARD_FACTOR = 5;
-    static readonly int[] pieceValues = { 100, 300, 300, 500, 900, 0 };
+    static readonly int[] pieceValues = { 100, 320, 330, 500, 900, 0 };
 
     public static int maximumDepth;
     public struct MoveEval {
@@ -75,12 +75,12 @@ public static class AIv2 {
 
     public static float GetPieceSquareControlScore(int row, int column, int pieceIndex, GameState gameState) {
         return pieceIndex switch {
-            //0 => GetPawnSquareControlScore(row, column, pieceValues[0], gameState),
-            //1 => GetKnightControlScore(row, column, pieceValues[1], gameState),
-            //2 => GetBishopSquareControlScore(row, column, pieceValues[2], gameState),
-            //3 => GetRookSquareControlScore(row, column, pieceValues[3], gameState),
+            0 => GetPawnSquareControlScore(row, column, pieceValues[0], gameState),
+            1 => GetKnightControlScore(row, column, pieceValues[1], gameState),
+            2 => GetBishopSquareControlScore(row, column, pieceValues[2], gameState),
+            3 => GetRookSquareControlScore(row, column, pieceValues[3], gameState),
             4 => GetQueenSquareControlScore(row, column, pieceValues[4], gameState),
-            //5 => GetKingSquareControlScore(row, column, gameState),
+            5 => GetKingSquareControlScore(row, column, gameState),
             _ => 0,
         };
     }
@@ -115,7 +115,7 @@ public static class AIv2 {
                 if (pieceChar == friendlyPawn) {
                     pawnScore += PAWN_CHAIN_BONUS;
                 } else if (pawnValue < pieceValues[pieceIndex] || pieceChar == enemyKing) {
-                    pawnScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS;
+                    pawnScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS * (pieceValues[pieceIndex] - pawnValue) / 100;
                 }
             }
         }
@@ -140,7 +140,7 @@ public static class AIv2 {
                 if (pieceChar == friendlyPawn) {
                     pawnScore += PAWN_CHAIN_BONUS;
                 } else if (pawnValue < pieceValues[pieceIndex] || pieceChar == enemyKing) {
-                    pawnScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS;
+                    pawnScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS * (pieceValues[pieceIndex] - pawnValue) / 100f;
                 }
             }
         }
@@ -168,7 +168,7 @@ public static class AIv2 {
                     if (knightValue == pieceValues[pieceIndex]) {
                         knightScore += SQUARE_DEFEND_ATTACK_EQUAL_BONUS;
                     } else if (knightValue < pieceValues[pieceIndex] || pieceChar == enemyKing) {
-                        knightScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS;
+                        knightScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS * (pieceValues[pieceIndex] - knightValue) / 100f;
                     }
                 }
             }
@@ -197,7 +197,7 @@ public static class AIv2 {
                         if (bishopValue == pieceValues[pieceIndex]) {
                             bishopScore += SQUARE_DEFEND_ATTACK_EQUAL_BONUS;
                         } else if (bishopValue < pieceValues[pieceIndex] || pieceChar == enemyKing) {
-                            bishopScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS;
+                            bishopScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS * (pieceValues[pieceIndex] - bishopValue) / 100f;
                         }
                         break;
                     }
@@ -228,7 +228,7 @@ public static class AIv2 {
                         if (rookValue == pieceValues[pieceIndex]) {
                             rookScore += SQUARE_DEFEND_ATTACK_EQUAL_BONUS;
                         } else if (rookValue < pieceValues[pieceIndex] || pieceChar == enemyKing) {
-                            rookScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS;
+                            rookScore += SQUARE_DEFEND_ATTACK_HIGHER_BONUS * (pieceValues[pieceIndex] - rookValue) / 100f;
                         }
                         break;
                     }
