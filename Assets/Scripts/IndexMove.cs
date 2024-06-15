@@ -1,5 +1,9 @@
 using System;
 
+public class MoveEval {
+    public IndexMove move;
+    public float score;
+}
 public class IndexMove {
     public int oldRow, oldColumn, newRow, newColumn;
     public char promotesInto;

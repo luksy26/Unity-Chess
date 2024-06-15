@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv2;
+using static AIv3;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -250,21 +250,22 @@ public class Game : MonoBehaviour {
 
     public MoveEval SolvePosition() {
         timeNotExpired = true;
-        MoveEval moveToMakeFound = new();
+        MoveEval moveToMakeFound = null;
+        MoveEval mandatoryMove = null;
         int searchDepth = 1;
         while (true) {
-            MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth);
+            MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound);
             if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
                 moveToMakeFound = moveToMake;
                 UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
                 " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
                 (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
                 if (!timeNotExpired) {
-                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", but we salvaged a move");
+                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", but we salvaged the best move");
                     break;
                 }
             } else {
-                UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", and can't salvage a move");
+                UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", and can't salvage the best move");
                 break;
             }
             // now search deeper

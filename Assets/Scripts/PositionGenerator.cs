@@ -4,8 +4,9 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using static PositionCounter;
-using static AIv2;
+using static AIv3;
 using System;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
@@ -20,7 +21,7 @@ public class PositionGenerator : MonoBehaviour {
         getStaticPositionEval.onClick.AddListener(OnGetStaticPositionEvalClicked);
         evaluateEngine.onClick.AddListener(OnEvaluateEngineButtonClicked);
         getSizeOfGameTree.onClick.AddListener(OnGetSizeOfGameTreeButtonClicked);
-        Game.Instance.salvageMove = false;
+        Game.Instance.salvageMove = true;
     }
 
     void OnGenerateButtonClicked() {
@@ -80,28 +81,29 @@ public class PositionGenerator : MonoBehaviour {
                 GameStateManager.Instance.IsEngineRunning = true;
                 StartCoroutine(Game.Instance.MoveTimerCoroutine(Game.Instance.timeToMove));
                 Game.Instance.timeNotExpired = true;
-                MoveEval moveToMakeFound = new();
-                MoveEval mandatoryMoveFound = new() { move = new IndexMove(new Move(bestMove)) };
+                MoveEval moveToMakeFound = null;
+                MoveEval mandatoryMoveFound = null;
                 int searchDepth = 1;
                 while (true) {
                     MoveEval moveToMake = new();
-                    MoveEval mandatoryMove = new() { move = new IndexMove(new Move(bestMove)) };
-                    await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove));
-                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(moveToMake.score) != 10000)) {
-                        moveToMakeFound = moveToMake;
-                        if (mandatoryMove.score != 10000) {
-                            mandatoryMoveFound = mandatoryMove;
+                    MoveEval mandatoryMove = new() { move = new IndexMove(new Move(bestMove)), score = 10000 };
+                    await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound));
+                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
+                        mandatoryMoveFound = mandatoryMove;
+                        if (Game.Instance.timeNotExpired || new Move(moveToMake.move).ToString().Equals(bestMove)) {
+                            moveToMakeFound = moveToMake; // our new guaranteed best move 
+                            // either time is not expired (whole tree was generated), or it's the same as the mandatory move
                         }
                         UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
                         " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
                         (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
 
                         if (!Game.Instance.timeNotExpired) {
-                            UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", but we salvaged a move");
+                            UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", but we salvaged the mandatory move");
                             break;
                         }
                     } else {
-                        UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", and can't salvage a move");
+                        UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", and can't salvage a mandatory move");
                         break;
                     }
                     // now search deeper
