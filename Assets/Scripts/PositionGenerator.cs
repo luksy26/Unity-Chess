@@ -11,7 +11,6 @@ public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
     public Button generateButton, runTests, swapPerspective, getPositionEval, getStaticPositionEval, evaluateEngine,
     getSizeOfGameTree;
-    bool salvageMove;
 
     void Start() {
         generateButton.onClick.AddListener(OnGenerateButtonClicked);
@@ -21,13 +20,13 @@ public class PositionGenerator : MonoBehaviour {
         getStaticPositionEval.onClick.AddListener(OnGetStaticPositionEvalClicked);
         evaluateEngine.onClick.AddListener(OnEvaluateEngineButtonClicked);
         getSizeOfGameTree.onClick.AddListener(OnGetSizeOfGameTreeButtonClicked);
-        salvageMove = true;
+        Game.Instance.salvageMove = false;
     }
 
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = 'b';
+            Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
             Game.Instance.gameTreeMaxDepth = 4;
             Game.Instance.timeToMove = 5f;
@@ -88,7 +87,7 @@ public class PositionGenerator : MonoBehaviour {
                     MoveEval moveToMake = new();
                     MoveEval mandatoryMove = new() { move = new IndexMove(new Move(bestMove)) };
                     await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove));
-                    if (Game.Instance.timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
+                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(moveToMake.score) != 10000)) {
                         moveToMakeFound = moveToMake;
                         if (mandatoryMove.score != 10000) {
                             mandatoryMoveFound = mandatoryMove;
@@ -98,11 +97,11 @@ public class PositionGenerator : MonoBehaviour {
                         (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
 
                         if (!Game.Instance.timeNotExpired) {
-                            UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + " , but we salvaged a move");
+                            UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", but we salvaged a move");
                             break;
                         }
                     } else {
-                        UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + " and can't salvage a move");
+                        UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", and can't salvage a move");
                         break;
                     }
                     // now search deeper
