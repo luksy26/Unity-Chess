@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv3;
+using static AIv5;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -20,6 +20,7 @@ public class Game : MonoBehaviour {
     public int gameTreeMaxDepth;
     public float timeToMove;
     public bool timeNotExpired;
+    Coroutine moveTimerCoroutine;
     public bool salvageMove;
     Hashtable gameStates;
 
@@ -239,7 +240,10 @@ public class Game : MonoBehaviour {
         }
         GameStateManager.Instance.IsEngineRunning = true;
         MoveEval bestMove;
-        StartCoroutine(MoveTimerCoroutine(timeToMove));
+        if (moveTimerCoroutine != null) {
+            StopCoroutine(moveTimerCoroutine);
+        }
+        moveTimerCoroutine = StartCoroutine(MoveTimerCoroutine(timeToMove));
         await Task.Run(() => bestMove = SolvePosition());
         GameStateManager.Instance.IsEngineRunning = false;
     }
@@ -249,11 +253,13 @@ public class Game : MonoBehaviour {
     }
 
     public MoveEval SolvePosition() {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
         timeNotExpired = true;
         MoveEval moveToMakeFound = null;
         MoveEval mandatoryMove = null;
         int searchDepth = 1;
-        while (true) {
+        while (searchDepth <= 4) {
             MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound);
             if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
                 moveToMakeFound = moveToMake;
@@ -271,9 +277,17 @@ public class Game : MonoBehaviour {
             // now search deeper
             ++searchDepth;
         }
-        UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
+        stopwatch.Stop();
+        if (searchDepth <= 4) {
+            UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+        } else {
+            UnityEngine.Debug.Log("move found at depth 4 " + new Move(moveToMakeFound.move) +
             " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
-            (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+            (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score) +
+            " in " + stopwatch.ElapsedMilliseconds + "ms");
+        }
         return moveToMakeFound;
     }
 

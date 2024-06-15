@@ -6,7 +6,6 @@ using UnityEngine.UI;
 using static PositionCounter;
 using static AIv3;
 using System;
-using UnityEngine.SocialPlatforms.Impl;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
@@ -57,7 +56,7 @@ public class PositionGenerator : MonoBehaviour {
             int nr = 0;
             float maxDiff = 0;
             while ((line = reader.ReadLine()) != null) {
-                if (idx % 1 != 0) {
+                if (idx % 30 != 0) {
                     ++idx;
                     continue; // only process one portion of the data
                 }
