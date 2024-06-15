@@ -146,12 +146,12 @@ public class PositionGenerator : MonoBehaviour {
                         evaluationScore /= 100f;
                     }
                     float diff = Math.Abs(foundEvaluationScore - evaluationScore);
-                    if (Math.Abs(evaluationScore) <= 1 || Math.Abs(foundEvaluationScore) <= 1) {
+                    if (Math.Abs(evaluationScore) <= 1 || Math.Abs(foundEvaluationScore) <= 1 || evaluationScore * foundEvaluationScore < 0) {
+                        // one of the values is in [-1, 1] or they are on opposite sides (eg. -2, 4)
                         trueDiff = diff;
-                    } else if (evaluationScore * foundEvaluationScore > 0) { // same side, need smaller diff
-                        trueDiff = diff * 2 / Math.Abs(evaluationScore + foundEvaluationScore);
-                    } else { //opposite sides 
-                        trueDiff = diff; // still just the difference
+                    } else { // same side, need to scale the diff down depending on how far the smaller value is from 0
+                        trueDiff = diff / Math.Min(Math.Abs(evaluationScore), Math.Abs(foundEvaluationScore));
+                        // when the value closer to -1 or 1 approaches them, we are basically dividing by 1, which makes our function continuous
                     }
                 }
                 sum += trueDiff * trueDiff;
