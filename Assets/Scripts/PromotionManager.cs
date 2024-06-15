@@ -33,7 +33,7 @@ public class PromotionManager : MonoBehaviour {
             firstButtonX += file - 'a';
         } else {
             // h is file 0, g is file 1 etc (if playing from black's perspective)
-            firstButtonX += 8 - (file - 'a');
+            firstButtonX += 7 - (file - 'a');
         }
         // this Task will tell us which piece was chosen for promotion
         tcs = new TaskCompletionSource<string>();

@@ -48,4 +48,13 @@ public class SquareCoordinatesUI : MonoBehaviour {
             textComponent.text = ((char)('8' - textComponent.text[0] + '1')).ToString();
         }
     }
+
+    public void DestroyFilesAndRanks() {
+        for (int i = 0; i < files.Count; ++i) {
+            Destroy(files[i]);
+            Destroy(ranks[i]);
+        }
+        files.Clear();
+        ranks.Clear();
+    }
 }

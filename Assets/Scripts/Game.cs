@@ -145,32 +145,33 @@ public class Game : MonoBehaviour {
         if (promoting) {
             string new_name;
             if (move.promotesInto == '-') {
-            // make the promoted pawn temporarily invisible
-            currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = false;
-            GameStateManager.Instance.isPromotionMenuDisplayed = true;
-            new_name = await promotionManager.GeneratePromotionMenu(playerPerspective, currentPlayer, move.newFile);
-            // promotion is cancelled due to reset position button
-            if (new_name == null) {
+                // make the promoted pawn temporarily invisible
+                currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = false;
+                GameStateManager.Instance.isPromotionMenuDisplayed = true;
+                new_name = await promotionManager.GeneratePromotionMenu(playerPerspective, currentPlayer, move.newFile);
+                // promotion is cancelled due to reset position/swap perspectives button
+                if (new_name == null) {
+                    GameStateManager.Instance.isPromotionMenuDisplayed = false;
+                    currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = true;
+                    return;
+                }
                 GameStateManager.Instance.isPromotionMenuDisplayed = false;
-                return;
-            }
-            GameStateManager.Instance.isPromotionMenuDisplayed = false;
-            // promotion was cancelled, but game does not reset
-            if (new_name.Equals("")) {
-                // make the piece visible and put it back
-                currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = true;
-                currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
-                return;
-            }
-            // set the piece selected for promotion
-            move.promotesInto = new_name[0];
-            if (move.promotesInto == 'k') {
-                move.promotesInto = 'n';
-            }
-            if (currentPlayer == 'w') {
-                move.promotesInto = char.ToUpper(move.promotesInto);
-            }
-            indexMove.promotesInto = move.promotesInto;
+                // promotion was cancelled, but game does not reset
+                if (new_name.Equals("")) {
+                    // make the piece visible and put it back
+                    currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = true;
+                    currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
+                    return;
+                }
+                // set the piece selected for promotion
+                move.promotesInto = new_name[0];
+                if (move.promotesInto == 'k') {
+                    move.promotesInto = 'n';
+                }
+                if (currentPlayer == 'w') {
+                    move.promotesInto = char.ToUpper(move.promotesInto);
+                }
+                indexMove.promotesInto = move.promotesInto;
             }
 
             // get the name for the new sprite
@@ -363,6 +364,7 @@ public class Game : MonoBehaviour {
     }
 
     public void SwapPerspectives() {
+        promotionManager.CancelPromotionMenu();
         if (playerPerspective.Equals("white")) {
             playerPerspective = "black";
         } else {
@@ -391,6 +393,8 @@ public class Game : MonoBehaviour {
         }
         // Reset the positions hashtable
         gameStates.Clear();
+        // Destroy the notation for files and ranks
+        GetComponent<SquareCoordinatesUI>().DestroyFilesAndRanks();
     }
     private string GetPieceName(char x) {
         return x switch {
