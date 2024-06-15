@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 public class GameState {
     public char[,] boardConfiguration;
@@ -193,7 +192,7 @@ public class GameState {
         // a pawn was moved
         if (pawnMoved) {
             if (new_i == 0 || new_i == 7) { // pawn is promoting
-                boardConfiguration[new_i, new_j] = indexMove.promotesInto;
+                boardConfiguration[new_i, new_j] = whoMoves == 'w' ? char.ToUpper(indexMove.promotesInto): char.ToLower(indexMove.promotesInto);
             } else if (Math.Abs(new_j - old_j) == 1 && movingToEmptySquare) { // changed files and moved to an empty square
                 // remove the pawn that was captured en-passant (its rank depends on who moves)
                 if (whoMoves == 'w') {

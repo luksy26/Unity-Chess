@@ -4,10 +4,14 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using static PositionCounter;
+using static AIv2;
+using System;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
-    public Button generateButton, runTests, swapPerspective, getPositionEval, getStaticPositionEval;
+    public Button generateButton, runTests, swapPerspective, getPositionEval, getStaticPositionEval, evaluateEngine,
+    getSizeOfGameTree;
+    bool salvageMove;
 
     void Start() {
         generateButton.onClick.AddListener(OnGenerateButtonClicked);
@@ -15,20 +19,157 @@ public class PositionGenerator : MonoBehaviour {
         swapPerspective.onClick.AddListener(OnSwapPerspectiveClicked);
         getPositionEval.onClick.AddListener(OnGetPositionEvalClicked);
         getStaticPositionEval.onClick.AddListener(OnGetStaticPositionEvalClicked);
+        evaluateEngine.onClick.AddListener(OnEvaluateEngineButtonClicked);
+        getSizeOfGameTree.onClick.AddListener(OnGetSizeOfGameTreeButtonClicked);
+        salvageMove = true;
     }
 
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = '-';
+            Game.Instance.AIPlayer = 'b';
             Game.Instance.playerPerspective = "white";
-            Game.Instance.movesAhead = 2;
+            Game.Instance.gameTreeMaxDepth = 4;
             Game.Instance.timeToMove = 5f;
             Game.Instance.timeNotExpired = true;
             Game.Instance.CancelMovePiece();
             GameStateManager.Instance.GenerateGameState(inputFEN);
             Game.Instance.DestroyPosition();
             Game.Instance.GeneratePosition();
+        }
+    }
+
+    void OnGetSizeOfGameTreeButtonClicked() {
+        Game.Instance.GetSizeOfGameTree();
+    }
+
+    async void OnEvaluateEngineButtonClicked() {
+        Game.Instance.timeToMove = 5f;
+        string filePath = Path.Combine(Application.streamingAssetsPath, "REF_Values.txt");
+        string outPath = Path.Combine(Application.streamingAssetsPath, "engineEvaluation.txt");
+        if (File.Exists(filePath)) {
+            using StreamReader reader = new(filePath);
+            using StreamWriter writer = new(outPath, false);
+            string line;
+            int idx = 0;
+            line = reader.ReadLine(); // skip the header
+            float sum = 0;
+            int nr = 0;
+            float maxDiff = 0;
+            while ((line = reader.ReadLine()) != null) {
+                if (idx % 1 != 0) {
+                    ++idx;
+                    continue; // only process one portion of the data
+                }
+                string[] parts = line.Split(',');
+                string fen = parts[0];
+                string bestMove = parts[1];
+                string evaluation = parts[2];
+
+                int mateValue = 0;
+                float evaluationScore = 0;
+
+                string[] partsEvaluation = evaluation.Split(" ");
+                if (partsEvaluation.Length > 1) {
+                    mateValue = int.Parse(partsEvaluation[1]);
+                } else {
+                    evaluationScore = int.Parse(evaluation);
+                }
+
+                UnityEngine.Debug.Log("processing FEN " + fen);
+                GameStateManager.Instance.GenerateGameState(fen);
+                GameStateManager.Instance.IsEngineRunning = true;
+                StartCoroutine(Game.Instance.MoveTimerCoroutine(Game.Instance.timeToMove));
+                Game.Instance.timeNotExpired = true;
+                MoveEval moveToMakeFound = new();
+                MoveEval mandatoryMoveFound = new() { move = new IndexMove(new Move(bestMove)) };
+                int searchDepth = 1;
+                while (true) {
+                    MoveEval moveToMake = new();
+                    MoveEval mandatoryMove = new() { move = new IndexMove(new Move(bestMove)) };
+                    await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove));
+                    if (Game.Instance.timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
+                        moveToMakeFound = moveToMake;
+                        if (mandatoryMove.score != 10000) {
+                            mandatoryMoveFound = mandatoryMove;
+                        }
+                        UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
+                        " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                        (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+
+                        if (!Game.Instance.timeNotExpired) {
+                            UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + " , but we salvaged a move");
+                            break;
+                        }
+                    } else {
+                        UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + " and can't salvage a move");
+                        break;
+                    }
+                    // now search deeper
+                    ++searchDepth;
+                }
+                UnityEngine.Debug.Log("best move found in " + Game.Instance.timeToMove + "s " + new Move(moveToMakeFound.move) +
+                    " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                    (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+                int foundMateValue = 0;
+                float foundEvaluationScore = mandatoryMoveFound.score;
+                if (Math.Abs(mandatoryMoveFound.score) > 950) {
+                    foundMateValue = (int)((Math.Abs(Math.Abs(mandatoryMoveFound.score) - 1000) + Math.Abs(mandatoryMoveFound.score) % 2) / 2);
+                }
+                if (foundMateValue != 0) {
+                    if (mandatoryMoveFound.score < 0) {
+                        foundMateValue *= -1;
+                    }
+                }
+
+                UnityEngine.Debug.Log("mandatory move found in " + Game.Instance.timeToMove + "s " + new Move(mandatoryMoveFound.move) +
+                    " score: " + (Math.Abs(mandatoryMoveFound.score) > 950 ? "Mate in " +
+                    (Math.Abs(Math.Abs(mandatoryMoveFound.score) - 1000) + Math.Abs(mandatoryMoveFound.score) % 2) / 2 : mandatoryMoveFound.score));
+                GameStateManager.Instance.IsEngineRunning = false;
+                if (GameStateManager.Instance.globalGameState.whoMoves == 'b') {
+                    if (mateValue != 0) {
+                        mateValue *= -1;
+                    } else {
+                        evaluationScore *= -1;
+                    }
+                }
+                float trueDiff;
+                if (mateValue != 0 && foundMateValue != 0) { // found the mate, it's fine if it's longer
+                    trueDiff = 0;
+                } else {
+                    if (mateValue != 0) { // didn't find the mate, just assign a large enough advantage to diff with
+                        if (mateValue < 0) {
+                            evaluationScore = -15;
+                        } else {
+                            evaluationScore = 15;
+                        }
+                    } else {
+                        evaluationScore /= 100f;
+                    }
+                    float diff = Math.Abs(foundEvaluationScore - evaluationScore);
+                    if (Math.Abs(evaluationScore) <= 1 || Math.Abs(foundEvaluationScore) <= 1) {
+                        trueDiff = diff;
+                    } else if (evaluationScore * foundEvaluationScore > 0) { // same side, need smaller diff
+                        trueDiff = diff * 2 / Math.Abs(evaluationScore + foundEvaluationScore);
+                    } else { //opposite sides 
+                        trueDiff = diff; // still just the difference
+                    }
+                }
+                sum += trueDiff * trueDiff;
+                ++nr;
+                if (trueDiff > maxDiff) {
+                    maxDiff = trueDiff;
+                }
+                writer.WriteLine("got " + new Move(mandatoryMoveFound.move) + " " + (foundMateValue != 0 ? "mate in " + foundMateValue : foundEvaluationScore) +
+                    ", expected " + bestMove + " " + (mateValue != 0 ? "mate in " + mateValue : evaluationScore) +
+                    " Diff is " + trueDiff);
+                ++idx;
+            }
+            writer.WriteLine("Engine deviation: " + Math.Sqrt(sum / nr).ToString("F2"));
+            writer.WriteLine("Max Diff " + maxDiff);
+            UnityEngine.Debug.Log("Engine deviation: " + Math.Sqrt(sum / nr).ToString("F2"));
+        } else {
+            UnityEngine.Debug.Log("file not found");
         }
     }
 

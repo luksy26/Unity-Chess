@@ -17,7 +17,7 @@ public class Game : MonoBehaviour {
     public char currentPlayer;
     public string playerPerspective;
     public char AIPlayer;
-    public int movesAhead;
+    public int gameTreeMaxDepth;
     public float timeToMove;
     public bool timeNotExpired;
     Hashtable gameStates;
@@ -69,33 +69,14 @@ public class Game : MonoBehaviour {
 
         if (currentPlayer == AIPlayer && currentPlayer != '-') {
             GameStateManager.Instance.IsEngineRunning = true;
+            MoveEval bestMove = new();
             // start the timer to move
             StartCoroutine(MoveTimerCoroutine(timeToMove));
-            timeNotExpired = true;
-            MoveEval moveToMakeFound = new();
-            int searchDepth = 1;
-            while (true) {
-                MoveEval moveToMake = new();
-                await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth));
-                if (timeNotExpired) {
-                    moveToMakeFound = moveToMake;
-                    UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
-                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
-                } else {
-                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
-                    break;
-                }
-                // now search deeper
-                ++searchDepth;
-            }
-            UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
-                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+            await Task.Run(() => bestMove = SolvePosition());
+            MovePiece(new Move(bestMove.move));
             GameStateManager.Instance.IsEngineRunning = false;
+            await Task.Yield();
         }
-        await Task.Yield();
-        //await Task.Run(() => RunPerft(globalGameState));
     }
 
     public GameObject CreatePieceSprite(string name, char file, int rank) {
@@ -161,10 +142,12 @@ public class Game : MonoBehaviour {
         }
 
         if (promoting) {
+            string new_name;
+            if (move.promotesInto == '-') {
             // make the promoted pawn temporarily invisible
             currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = false;
             GameStateManager.Instance.isPromotionMenuDisplayed = true;
-            string new_name = await promotionManager.GeneratePromotionMenu(playerPerspective, currentPlayer, move.newFile);
+            new_name = await promotionManager.GeneratePromotionMenu(playerPerspective, currentPlayer, move.newFile);
             // promotion is cancelled due to reset position button
             if (new_name == null) {
                 GameStateManager.Instance.isPromotionMenuDisplayed = false;
@@ -187,8 +170,10 @@ public class Game : MonoBehaviour {
                 move.promotesInto = char.ToUpper(move.promotesInto);
             }
             indexMove.promotesInto = move.promotesInto;
+            }
+
             // get the name for the new sprite
-            new_name = (currentPlayer == 'w' ? "white" : "black") + "_" + new_name;
+            new_name = GetPieceName(indexMove.promotesInto);
             currentPieces[indexMove.oldRow, indexMove.oldColumn].name = new_name;
             currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().sprite =
                 GetComponent<SpriteFactory>().GetSprite(new_name);
@@ -224,34 +209,14 @@ public class Game : MonoBehaviour {
 
         await Task.Yield();
 
-        //await Task.Run(() => RunPerft(gameState));
-
         // get the move for the AI
         if (currentPlayer == AIPlayer && currentPlayer != '-') {
             GameStateManager.Instance.IsEngineRunning = true;
+            MoveEval bestMove = new();
             // start the timer to move
             StartCoroutine(MoveTimerCoroutine(timeToMove));
-            timeNotExpired = true;
-            MoveEval moveToMakeFound = new();
-            int searchDepth = 1;
-            while (true) {
-                MoveEval moveToMake = new();
-                await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth));
-                if (timeNotExpired) {
-                    moveToMakeFound = moveToMake;
-                    UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
-                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
-                } else {
-                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth);
-                    break;
-                }
-                // now search deeper
-                ++searchDepth;
-            }
-            UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
-                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
-                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+            await Task.Run(() => bestMove = SolvePosition());
+            MovePiece(new Move(bestMove.move));
             GameStateManager.Instance.IsEngineRunning = false;
         }
     }
@@ -271,13 +236,22 @@ public class Game : MonoBehaviour {
             return;
         }
         GameStateManager.Instance.IsEngineRunning = true;
+        MoveEval bestMove;
         StartCoroutine(MoveTimerCoroutine(timeToMove));
+        await Task.Run(() => bestMove = SolvePosition());
+        GameStateManager.Instance.IsEngineRunning = false;
+    }
+
+    public async void GetSizeOfGameTree() {
+        await Task.Run(() => RunPerft(GameStateManager.Instance.globalGameState));
+    }
+
+    public MoveEval SolvePosition() {
         timeNotExpired = true;
         MoveEval moveToMakeFound = new();
         int searchDepth = 1;
         while (true) {
-            MoveEval moveToMake = new();
-            await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth));
+            MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth);
             if (timeNotExpired) {
                 moveToMakeFound = moveToMake;
                 UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
@@ -293,10 +267,10 @@ public class Game : MonoBehaviour {
         UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
             " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
             (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
-        GameStateManager.Instance.IsEngineRunning = false;
+        return moveToMakeFound;
     }
 
-    IEnumerator MoveTimerCoroutine(float duration) {
+    public IEnumerator MoveTimerCoroutine(float duration) {
         yield return new WaitForSeconds(duration);
         timeNotExpired = false;
     }
@@ -316,7 +290,7 @@ public class Game : MonoBehaviour {
         GameStateManager.Instance.IsEngineRunning = true;
         string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
         using StreamWriter writer = File.CreateText(outPath);
-        for (int depth = 1; depth <= movesAhead; ++depth) {
+        for (int depth = 1; depth <= gameTreeMaxDepth; ++depth) {
             maxDepth = depth;
             Stopwatch stopwatch = new();
             stopwatch.Start();

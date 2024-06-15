@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using static MoveGenerator;
 using System.IO;
-using UnityEngine;
 using System.Diagnostics;
 
 public static class PositionCounter {

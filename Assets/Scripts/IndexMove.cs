@@ -35,4 +35,17 @@ public class IndexMove {
         newColumn = indexMove.newColumn;
         promotesInto = indexMove.promotesInto;
     }
+
+    public override bool Equals(object obj) {
+        if (obj is not IndexMove) {
+            return false;
+        }
+        IndexMove other = (IndexMove)obj;
+        return newRow == other.newRow && newColumn == other.newColumn && oldRow == other.oldRow && 
+            oldColumn == other.oldColumn && promotesInto == other.promotesInto;
+    }
+
+    public override int GetHashCode() {
+        return HashCode.Combine(oldRow, oldColumn, newRow, newColumn, promotesInto);
+    }
 }

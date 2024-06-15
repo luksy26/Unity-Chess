@@ -17,6 +17,17 @@ public class Move {
         newFile = (char)(indexMove.newColumn + 'a');
         promotesInto = indexMove.promotesInto;
     }
+    public Move(string move) {
+        oldFile = move[0];
+        oldRank = move[1] - '0';
+        newFile = move[2];
+        newRank = move[3] - '0';
+        if (move.Length > 4) {
+            promotesInto = move[4];
+        } else {
+            promotesInto = '-';
+        }
+    }
     public override string ToString() {
         return oldFile.ToString() + oldRank.ToString() + newFile + newRank + (promotesInto != '-' ? promotesInto : "");
     }

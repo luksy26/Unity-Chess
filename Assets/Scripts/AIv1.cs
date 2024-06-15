@@ -3,10 +3,11 @@ using static MoveGenerator;
 public static class AIv1 {
     public static int maximumDepth;
     static readonly int[] pieceValues = { 100, 300, 300, 500, 900 };
-    public struct MoveEval {
+    public class MoveEval {
         public IndexMove move;
         public float score;
     }
+
     public static float PositionEvaluator(GameState gameState, int depth, List<IndexMove> legalMoves) {
         GameConclusion conclusion = GameStateManager.Instance.GetDrawConclusion(gameState);
         if (conclusion == GameConclusion.DrawByInsufficientMaterial || conclusion == GameConclusion.DrawBy50MoveRule) {
@@ -56,14 +57,21 @@ public static class AIv1 {
         }
         return (scoreWhite - scoreBlack) / 100f;
     }
-    public static MoveEval GetBestMove(GameState gameState, int maxLevel) {
+    public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
+        if (mandatoryMove != null) {
+            int index = legalMoves.IndexOf(mandatoryMove.move);
+            // put the mandatory move first so its branch is not pruned
+            legalMoves.RemoveAt(index);
+            legalMoves.Insert(0, mandatoryMove.move);
+        }
         MoveEval bestMoveEval = new() {
             score = gameState.whoMoves == 'w' ? -10000f : 10000f
         };
         maximumDepth = maxLevel;
         float alpha = -10000f, beta = 10000f;
-        foreach (IndexMove move in legalMoves) {
+        for (int i = 0; i < legalMoves.Count; ++i) {
+            IndexMove move = legalMoves[i];
             if (!Game.Instance.timeNotExpired) {
                 break;
             }
@@ -76,21 +84,20 @@ public static class AIv1 {
                     bestMoveEval.move = move;
                 }
                 alpha = System.Math.Max(alpha, score);
-            }
-            else {
+            } else {
                 if (score < bestMoveEval.score) {
                     bestMoveEval.score = score;
                     bestMoveEval.move = move;
                 }
                 beta = System.Math.Min(beta, score);
             }
+            if (i == 0) {
+                mandatoryMove.score = score;
+            }
             // prune the branch
             if (beta <= alpha) {
                 break;
             }
-        }
-        if (gameState.whoMoves == 'w') {
-            return bestMoveEval;
         }
         return bestMoveEval;
     }
