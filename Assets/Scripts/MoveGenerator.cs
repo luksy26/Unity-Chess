@@ -326,7 +326,7 @@ public static class MoveGenerator {
                     // if a potential attacker has been blocked/captured
                     if (resolvesAttacker) {
                         bool keepsDiagonal = Math.Abs(kingRow - new_i) == Math.Abs(kingColumn - new_j);
-                        bool keepsLine = (sameRank && kingRow == new_i) || (sameFile && kingColumn == new_j);
+                        bool keepsLine = false; // a bishop can never keep the same line as the king
 
                         // capturing an enemy piece
                         if (pieceOwner == opponent) {
@@ -518,7 +518,7 @@ public static class MoveGenerator {
 
                     // if a potential attacker has been blocked/captured
                     if (resolvesAttacker) {
-                        bool keepsDiagonal = Math.Abs(kingRow - new_i) == Math.Abs(kingColumn - new_j);
+                        bool keepsDiagonal = false; // rook can never keep the same diagonal with the king 
                         bool keepsLine = (sameRank && kingRow == new_i) || (sameFile && kingColumn == new_j);
                         // capturing an enemy piece
                         if (pieceOwner == opponent) {

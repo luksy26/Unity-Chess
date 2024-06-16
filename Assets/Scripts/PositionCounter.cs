@@ -18,7 +18,7 @@ public static class PositionCounter {
         foreach (IndexMove move in legalMoves) {
             gameState.MakeMoveNoHashtable(move);
             int numberPositions = SearchPositions(gameState, depth + 1, writer);
-            if (depth == 0 && maxDepth == 2) {
+            if (depth == 0 && maxDepth == 1) {
                 writer?.WriteLine(new Move(move) + ": " + numberPositions);
             }
             sum += numberPositions;

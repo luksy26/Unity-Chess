@@ -260,7 +260,7 @@ public class Game : MonoBehaviour {
         MoveEval moveToMakeFound = null;
         MoveEval mandatoryMove = null;
         int searchDepth = 1;
-        int maxSearchDepth = 4;
+        int maxSearchDepth = 7;
         while (searchDepth <= maxSearchDepth) {
             MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates);
             if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) < 10000)) {

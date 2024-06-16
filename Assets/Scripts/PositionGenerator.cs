@@ -35,7 +35,7 @@ public class PositionGenerator : MonoBehaviour {
         if (!GameStateManager.Instance.IsEngineRunning) {
             Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
-            Game.Instance.gameTreeMaxDepth = 4;
+            Game.Instance.gameTreeMaxDepth = 3;
             Game.Instance.timeToMove = 5f;
             Game.Instance.timeNotExpired = true;
             Game.Instance.CancelMovePiece();
@@ -206,8 +206,9 @@ public class PositionGenerator : MonoBehaviour {
             stopwatch.Start();
             string line;
             int idx = 0;
+            FENskipChunk = 1;
             while ((line = reader.ReadLine()) != null) {
-                if (idx % 40 != 0) {
+                if (idx % FENskipChunk != 0) {
                     ++idx;
                     continue; // only process one portion of the data
                 }
