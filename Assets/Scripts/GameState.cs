@@ -53,6 +53,25 @@ public class GameState {
         return hash;
     }
 
+    public int GetHashCodeTranspo() {
+        int hash = whoMoves.GetHashCode();
+        hash = (hash * PRIME) ^ enPassantFile.GetHashCode();
+        hash = (hash * PRIME) ^ enPassantRank;
+        hash = (hash * PRIME) ^ moveCounterFull; // small thing to not need to check if key is in hashtable
+        hash = (hash * PRIME) ^ canWhite_O_O.GetHashCode();
+        hash = (hash * PRIME) ^ canWhite_O_O_O.GetHashCode();
+        hash = (hash * PRIME) ^ canBlack_O_O.GetHashCode();
+        hash = (hash * PRIME) ^ canBlack_O_O_O.GetHashCode();
+
+        // Efficiently hash the board configuration
+        for (int i = 0; i < boardConfiguration.GetLength(0); i++) {
+            for (int j = 0; j < boardConfiguration.GetLength(1); j++) {
+                hash = (hash * PRIME) ^ boardConfiguration[i, j].GetHashCode();
+            }
+        }
+        return hash;
+    }
+
     // also need to define the "Equals" method in case of (hopefully not) hash collisions
     public override bool Equals(object obj) {
         if (obj is GameState other) {
@@ -809,7 +828,7 @@ public class GameState {
         sb.AppendLine("White can" + (canWhite_O_O_O ? " " : "\'t ") + "long castle");
         sb.AppendLine("Black can" + (canBlack_O_O ? " " : "\'t ") + "short castle");
         sb.AppendLine("Black can" + (canBlack_O_O_O ? " " : "\'t ") + "long castle");
-        sb.AppendLine(enPassantRank == 0 ? "no en-passant available" : "en-passant at " + enPassantFile + enPassantRank);
+        sb.AppendLine(enPassantRank == -1 ? "no en-passant available" : "en-passant at " + enPassantFile + enPassantRank);
         sb.AppendLine("50 move counter " + moveCounter50Move + " fullmove counter " + moveCounterFull);
 
         char whiteKingFile = (char)(whiteKingColumn + 'a');

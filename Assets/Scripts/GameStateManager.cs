@@ -115,7 +115,7 @@ public class GameStateManager : MonoBehaviour {
         ++index;
         if (inputFEN_sb[index] == '-') {
             globalGameState.enPassantFile = '*';
-            globalGameState.enPassantRank = 0;
+            globalGameState.enPassantRank = -1;
             ++index;
         } else {
             globalGameState.enPassantFile = inputFEN_sb[index++];

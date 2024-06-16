@@ -1,26 +1,18 @@
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
+using UnityEngine;
 using static MoveGenerator;
 
 /*
     minimax with alpha beta, partial search at max depth, evaluation function piece square tables,
-    3fold detection, move ordering, transposition table
+    3fold detection, transposition table, move ordering
 */
 public static class AIv6 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
-    public const int SQUARE_CONTROL_BONUS = 1;
-    public const int SQUARE_DEFEND_ATTACK_BONUS = 10;
-    public const int SQUARE_DEFEND_ATTACK_EQUAL_BONUS = 5;
-    public const int SQUARE_DEFEND_ATTACK_HIGHER_BONUS = 15;
-    public const int SQUARE_DEFEND_ATTACK_KING = 10;
-    public const int PAWN_CHAIN_BONUS = 15;
     public const int ENDGAME_TRANSITION = 6;
-    public const int PUNISH_REWARD_FACTOR = 5;
     static readonly int[] pieceValues = { 100, 320, 330, 500, 900, 0 };
-    public static readonly ConcurrentDictionary<GameState,float> transpositionTable = new();
+    public static Hashtable transpositionTable = new();
     public static int tableHits;
 
     static readonly int[,] pawnST = {
@@ -347,33 +339,38 @@ public static class AIv6 {
     }
 
     public static float MiniMax(GameState gameState, int depth, float alpha, float beta, Hashtable gameStates = null) {
-        if (transpositionTable.ContainsKey(gameState)) {
+        int hashcode = gameState.GetHashCodeTranspo();
+        if (transpositionTable.ContainsKey(hashcode)) {
             ++tableHits;
-            return (float)transpositionTable[gameState];
+            return (float)transpositionTable[hashcode];
         }
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         OrderMoves(legalMoves, gameState);
         if (depth == maximumDepth) {
             float score = PositionEvaluator(gameState, depth, legalMoves);
-            transpositionTable.AddOrUpdate(gameState, score, (key, oldValue) => score);
+            transpositionTable.Add(hashcode, score);
             return score;
         }
         GameConclusion conclusion = GameStateManager.Instance.GetDrawConclusion(gameState, gameStates);
         if (conclusion == GameConclusion.DrawByInsufficientMaterial || conclusion == GameConclusion.DrawBy50MoveRule) {
-            transpositionTable.AddOrUpdate(gameState, 0f, (key, oldValue) => 0f);
+            transpositionTable.Add(hashcode, 0f);
             return 0;
         }
         conclusion = GameStateManager.Instance.GetMateConclusion(gameState, legalMoves);
         if (conclusion == GameConclusion.Checkmate) {
             if (gameState.whoMoves == 'w') {
-                transpositionTable.AddOrUpdate(gameState, -1000f + depth, (key, oldValue) => -1000f + depth);
+                transpositionTable.Add(hashcode, -1000f + depth);
                 return -1000f + depth;
             }
-            transpositionTable.AddOrUpdate(gameState, 1000f - depth, (key, oldValue) => 1000f - depth);
+            transpositionTable.Add(hashcode, 1000f - depth);
             return 1000f - depth;
+            /*  
+                We don't add mates to the tranposition table since we won't be able to tell the mate value, since
+                there's no distinction to return values from MiniMax that are newly added or taken from the transposition table.
+            */
         }
         if (conclusion == GameConclusion.Stalemate) {
-            transpositionTable.AddOrUpdate(gameState, 0f, (key, oldValue) => 0f);
+            transpositionTable.Add(hashcode, 0f);
             return 0;
         }
         if (gameStates != null) {
@@ -381,7 +378,7 @@ public static class AIv6 {
                 // making this move may cause a 3-fold repetition
                 // if we're winning we don't mind waiting until the last possible moment
                 // if we're losing we want to "believe" this can be a draw
-                transpositionTable.AddOrUpdate(gameState, 0f, (key, oldValue) => 0f);
+                transpositionTable.Add(hashcode, 0f);
                 return 0;
             }
         }
@@ -391,13 +388,12 @@ public static class AIv6 {
 
         foreach (IndexMove move in legalMoves) {
             if (!Game.Instance.timeNotExpired) {
-                if (gameState.whoMoves == 'w') {
-                    bestScore = -10000;
-                } else {
-                    bestScore = 10000;
-                }
                 // propagate 10000 to the top so we know time expired on this branch
-                break;
+                if (gameState.whoMoves == 'w') {
+                    return -10000;
+                } else {
+                    return 10000;
+                }
             }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, depth + 1, alpha, beta);
@@ -414,7 +410,10 @@ public static class AIv6 {
                 break;
             }
         }
-        transpositionTable.AddOrUpdate(gameState, bestScore, (key, oldValue) => bestScore);
+        // We only add leaf node mates to the tranposition table ,since they are more likely to be transposed into
+        if (Math.Abs(bestScore) < 950) {
+            transpositionTable.Add(hashcode, bestScore);
+        }
         return bestScore;
     }
 
