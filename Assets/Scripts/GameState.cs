@@ -1,9 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 public class GameState {
+    private const int PRIME = 37;
     public char[,] boardConfiguration;
     public Hashtable whitePiecesPositions, blackPiecesPositions;
     public int noBlackPieces;
@@ -22,17 +24,9 @@ public class GameState {
     public GameState(GameState other) {
         boardConfiguration = new char[8, 8];
         Array.Copy(other.boardConfiguration, boardConfiguration, 64);
-        noBlackPieces = other.noBlackPieces;
-        noWhitePieces = other.noWhitePieces;
         whoMoves = other.whoMoves;
-        moveCounter50Move = other.moveCounter50Move;
-        moveCounterFull = other.moveCounterFull;
         enPassantFile = other.enPassantFile;
         enPassantRank = other.enPassantRank;
-        blackKingRow = other.blackKingRow;
-        blackKingColumn = other.blackKingColumn;
-        whiteKingRow = other.whiteKingRow;
-        whiteKingColumn = other.whiteKingColumn;
         canWhite_O_O = other.canWhite_O_O;
         canWhite_O_O_O = other.canWhite_O_O_O;
         canBlack_O_O = other.canBlack_O_O;
@@ -43,17 +37,17 @@ public class GameState {
     // we need to define the hashing function in order to store the gameState in a hashtable
     public override int GetHashCode() {
         int hash = whoMoves.GetHashCode();
-        hash = (hash * 37) ^ enPassantFile.GetHashCode();
-        hash = (hash * 37) ^ enPassantRank;
-        hash = (hash * 37) ^ canWhite_O_O.GetHashCode();
-        hash = (hash * 37) ^ canWhite_O_O_O.GetHashCode();
-        hash = (hash * 37) ^ canBlack_O_O.GetHashCode();
-        hash = (hash * 37) ^ canBlack_O_O_O.GetHashCode();
+        hash = (hash * PRIME) ^ enPassantFile.GetHashCode();
+        hash = (hash * PRIME) ^ enPassantRank;
+        hash = (hash * PRIME) ^ canWhite_O_O.GetHashCode();
+        hash = (hash * PRIME) ^ canWhite_O_O_O.GetHashCode();
+        hash = (hash * PRIME) ^ canBlack_O_O.GetHashCode();
+        hash = (hash * PRIME) ^ canBlack_O_O_O.GetHashCode();
 
         // Efficiently hash the board configuration
         for (int i = 0; i < boardConfiguration.GetLength(0); i++) {
             for (int j = 0; j < boardConfiguration.GetLength(1); j++) {
-                hash = (hash * 37) ^ boardConfiguration[i, j].GetHashCode();
+                hash = (hash * PRIME) ^ boardConfiguration[i, j].GetHashCode();
             }
         }
         return hash;
@@ -83,8 +77,8 @@ public class GameState {
         }
 
         // Compare each square
-        for (int i = 0; i < board1.GetLength(0); i++) {
-            for (int j = 0; j < board1.GetLength(1); j++) {
+        for (int i = 0; i < 8; ++i) {
+            for (int j = 0; j < 8; ++j) {
                 if (board1[i, j] != board2[i, j]) {
                     return false;
                 }

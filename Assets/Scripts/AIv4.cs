@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using static MoveGenerator;
-
+// AI v3 + move ordering
 public static class AIv4 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
     public const int SQUARE_CONTROL_BONUS = 1;

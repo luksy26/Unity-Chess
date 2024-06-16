@@ -142,7 +142,7 @@ public class GameStateManager : MonoBehaviour {
             return GameConclusion.DrawBy50MoveRule;
         }
         if (gameStates != null) {
-            if ((int)gameStates[gameState] >= 3) {
+            if (gameStates.ContainsKey(gameState) && (int)gameStates[gameState] >= 3) {
                 return GameConclusion.DrawByRepetition;
             }
         }

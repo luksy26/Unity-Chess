@@ -1,13 +1,15 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using static MoveGenerator;
 
-/* 
+/*
     minimax with alpha beta, partial search at max depth, evaluation function piece square tables,
-    3fold detection, move ordering
+    3fold detection, move ordering, transposition table
 */
-public static class AIv5 {
+public static class AIv6 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
     public const int SQUARE_CONTROL_BONUS = 1;
     public const int SQUARE_DEFEND_ATTACK_BONUS = 10;
@@ -18,6 +20,8 @@ public static class AIv5 {
     public const int ENDGAME_TRANSITION = 6;
     public const int PUNISH_REWARD_FACTOR = 5;
     static readonly int[] pieceValues = { 100, 320, 330, 500, 900, 0 };
+    public static readonly ConcurrentDictionary<GameState,float> transpositionTable = new();
+    public static int tableHits;
 
     static readonly int[,] pawnST = {
         {0,  0,  0,  0,  0,  0,  0,  0},
@@ -208,7 +212,7 @@ public static class AIv5 {
 
     public static float GetKingSquareControlScore(int row, int column, char owner, GameState gameState) {
         int piecesLeft = 32 - gameState.noBlackPieces - gameState.noWhitePieces;
-        float endgameStage = 1.0f * Math.Max(0, piecesLeft - ENDGAME_TRANSITION) /  (32 - ENDGAME_TRANSITION);
+        float endgameStage = 1.0f * Math.Max(0, piecesLeft - ENDGAME_TRANSITION) / (32 - ENDGAME_TRANSITION);
         if (owner == 'w') {
             return kingOpeningST[row, column] * (1 - endgameStage) + kingEndgameST[row, column] * endgameStage;
         }
@@ -286,6 +290,8 @@ public static class AIv5 {
 
     public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null,
         MoveEval prevBestMove = null, Hashtable gameStates = null) {
+        transpositionTable.Clear();
+        tableHits = 0;
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         OrderMoves(legalMoves, gameState);
         if (prevBestMove != null) {
@@ -341,23 +347,33 @@ public static class AIv5 {
     }
 
     public static float MiniMax(GameState gameState, int depth, float alpha, float beta, Hashtable gameStates = null) {
+        if (transpositionTable.ContainsKey(gameState)) {
+            ++tableHits;
+            return (float)transpositionTable[gameState];
+        }
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         OrderMoves(legalMoves, gameState);
         if (depth == maximumDepth) {
-            return PositionEvaluator(gameState, depth, legalMoves);
+            float score = PositionEvaluator(gameState, depth, legalMoves);
+            transpositionTable.AddOrUpdate(gameState, score, (key, oldValue) => score);
+            return score;
         }
         GameConclusion conclusion = GameStateManager.Instance.GetDrawConclusion(gameState, gameStates);
         if (conclusion == GameConclusion.DrawByInsufficientMaterial || conclusion == GameConclusion.DrawBy50MoveRule) {
+            transpositionTable.AddOrUpdate(gameState, 0f, (key, oldValue) => 0f);
             return 0;
         }
         conclusion = GameStateManager.Instance.GetMateConclusion(gameState, legalMoves);
         if (conclusion == GameConclusion.Checkmate) {
             if (gameState.whoMoves == 'w') {
+                transpositionTable.AddOrUpdate(gameState, -1000f + depth, (key, oldValue) => -1000f + depth);
                 return -1000f + depth;
             }
+            transpositionTable.AddOrUpdate(gameState, 1000f - depth, (key, oldValue) => 1000f - depth);
             return 1000f - depth;
         }
         if (conclusion == GameConclusion.Stalemate) {
+            transpositionTable.AddOrUpdate(gameState, 0f, (key, oldValue) => 0f);
             return 0;
         }
         if (gameStates != null) {
@@ -365,6 +381,7 @@ public static class AIv5 {
                 // making this move may cause a 3-fold repetition
                 // if we're winning we don't mind waiting until the last possible moment
                 // if we're losing we want to "believe" this can be a draw
+                transpositionTable.AddOrUpdate(gameState, 0f, (key, oldValue) => 0f);
                 return 0;
             }
         }
@@ -397,6 +414,7 @@ public static class AIv5 {
                 break;
             }
         }
+        transpositionTable.AddOrUpdate(gameState, bestScore, (key, oldValue) => bestScore);
         return bestScore;
     }
 

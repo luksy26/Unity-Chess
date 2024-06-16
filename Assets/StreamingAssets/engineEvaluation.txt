@@ -1,8 +1,7 @@
-got d2d4 0.71, expected d2d4 0.27 Diff is 0.44
-got c2c3 -0.39, expected c2c3 0.36 Diff is 0.75
-got g3f4 mate in -2, expected g3f4 mate in -2 Diff is 0
-got b2c2 -1.065, expected b2c2 -2.59 Diff is 1.431925
-got h7g6 -1, expected h7g6 0.13 Diff is 1.13
-got h3h4 -8.61, expected h3h4 -10.07 Diff is 0.1695703
-Engine deviation: 0.83
-Max Diff 1.431925
+got d2d4 0.4809131, expected d2d4 0.27 Diff is 0.2109131
+got c2c3 0.6899292, expected c2c3 0.2 Diff is 0.4899292
+got d4c6 4.845483, expected d4c6 -0.35 Diff is 5.195483
+got h7g6 -1.13686, expected h7g6 0.13 Diff is 1.26686
+got d4d5 1.194, expected d4d5 2.96 Diff is 1.479061
+Engine deviation: 2.49
+Max Diff 5.195483

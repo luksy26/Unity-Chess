@@ -4,13 +4,20 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using static PositionCounter;
+using static AIv1;
+using static AIv2;
 using static AIv3;
+using static AIv4;
+using static AIv5;
+using static AIv6;
+using static AIv7;
 using System;
 
 public class PositionGenerator : MonoBehaviour {
     public InputField inputField;
     public Button generateButton, runTests, swapPerspective, getPositionEval, getStaticPositionEval, evaluateEngine,
     getSizeOfGameTree;
+    public int FENskipChunk;
 
     void Start() {
         generateButton.onClick.AddListener(OnGenerateButtonClicked);
@@ -26,7 +33,7 @@ public class PositionGenerator : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = '-';
+            Game.Instance.AIPlayer = 'b';
             Game.Instance.playerPerspective = "white";
             Game.Instance.gameTreeMaxDepth = 4;
             Game.Instance.timeToMove = 5f;
@@ -43,9 +50,16 @@ public class PositionGenerator : MonoBehaviour {
     }
 
     async void OnEvaluateEngineButtonClicked() {
+        FENskipChunk = 1;
+        for (int i = 1; i <= 7; ++i) {
+            await EvaluateEngine("engineEvaluation" + i + ".txt", i);
+        }
+    }
+
+    async Task EvaluateEngine(string outputFile, int AI) {
         Game.Instance.timeToMove = 5f;
         string filePath = Path.Combine(Application.streamingAssetsPath, "REF_Values.txt");
-        string outPath = Path.Combine(Application.streamingAssetsPath, "engineEvaluation.txt");
+        string outPath = Path.Combine(Application.streamingAssetsPath, outputFile);
         if (File.Exists(filePath)) {
             using StreamReader reader = new(filePath);
             using StreamWriter writer = new(outPath, false);
@@ -56,7 +70,7 @@ public class PositionGenerator : MonoBehaviour {
             int nr = 0;
             float maxDiff = 0;
             while ((line = reader.ReadLine()) != null) {
-                if (idx % 30 != 0) {
+                if (idx % FENskipChunk != 0) {
                     ++idx;
                     continue; // only process one portion of the data
                 }
@@ -86,8 +100,17 @@ public class PositionGenerator : MonoBehaviour {
                 while (true) {
                     MoveEval moveToMake = new();
                     MoveEval mandatoryMove = new() { move = new IndexMove(new Move(bestMove)), score = 10000 };
-                    await Task.Run(() => moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound));
-                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
+                    switch(AI) {
+                        case 1: await Task.Run(() => moveToMake = AIv1.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove)); break;
+                        case 2: await Task.Run(() => moveToMake = AIv2.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove)); break;
+                        case 3: await Task.Run(() => moveToMake = AIv3.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
+                        case 4: await Task.Run(() => moveToMake = AIv4.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound)); break;
+                        case 5: await Task.Run(() => moveToMake = AIv5.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
+                        case 6: await Task.Run(() => moveToMake = AIv6.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
+                        case 7: await Task.Run(() => moveToMake = AIv7.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
+                        default: break;
+                    }
+                    if (Game.Instance.timeNotExpired || (AI >= 3 && Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
                         mandatoryMoveFound = mandatoryMove;
                         if (Game.Instance.timeNotExpired || new Move(moveToMake.move).ToString().Equals(bestMove)) {
                             moveToMakeFound = moveToMake; // our new guaranteed best move 

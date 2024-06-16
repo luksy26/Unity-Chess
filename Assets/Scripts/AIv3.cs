@@ -1,7 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using static MoveGenerator;
 
+/* 
+    minimax with alpha beta, evaluation based on controlled squares, 
+    partial searches can be done at max depth, 3fold detection
+*/
 public static class AIv3 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
     public const int SQUARE_CONTROL_BONUS = 1;
@@ -281,7 +286,8 @@ public static class AIv3 {
         };
     }
 
-    public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null, MoveEval prevBestMove = null) {
+    public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null,
+        MoveEval prevBestMove = null, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         if (prevBestMove != null) {
             int index = legalMoves.IndexOf(prevBestMove.move);
@@ -335,7 +341,7 @@ public static class AIv3 {
         return bestMoveEval;
     }
 
-    public static float MiniMax(GameState gameState, int depth, float alpha, float beta) {
+    public static float MiniMax(GameState gameState, int depth, float alpha, float beta, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         if (depth == maximumDepth) {
             return PositionEvaluator(gameState, depth, legalMoves);
@@ -353,6 +359,14 @@ public static class AIv3 {
         }
         if (conclusion == GameConclusion.Stalemate) {
             return 0;
+        }
+        if (gameStates != null) {
+            if (gameStates.ContainsKey(gameState)) {
+                // making this move may cause a 3-fold repetition
+                // if we're winning we don't mind waiting until the last possible moment
+                // if we're losing we want to "believe" this can be a draw
+                return 0;
+            }
         }
 
         // we have at least one legal move

@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv5;
+using static AIv7;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -22,7 +22,7 @@ public class Game : MonoBehaviour {
     public bool timeNotExpired;
     Coroutine moveTimerCoroutine;
     public bool salvageMove;
-    Hashtable gameStates;
+    public Hashtable gameStates;
 
     public void Start() {
         currentPieces = new GameObject[8, 8];
@@ -195,7 +195,7 @@ public class Game : MonoBehaviour {
 
         SwapPlayer();
         // make the move to update the gameState
-        gameState.MakeMove(indexMove);
+        gameState.MakeMoveNoHashtable(indexMove);
         UnityEngine.Debug.Log("GameState changed:");
         UnityEngine.Debug.Log(GameStateManager.Instance.globalGameState);
 
@@ -245,6 +245,7 @@ public class Game : MonoBehaviour {
         }
         moveTimerCoroutine = StartCoroutine(MoveTimerCoroutine(timeToMove));
         await Task.Run(() => bestMove = SolvePosition());
+        //UnityEngine.Debug.Log("Transposition table has " + transpositionTable.Count + " game states and it was accessed " + tableHits + " times");
         GameStateManager.Instance.IsEngineRunning = false;
     }
 
@@ -259,8 +260,9 @@ public class Game : MonoBehaviour {
         MoveEval moveToMakeFound = null;
         MoveEval mandatoryMove = null;
         int searchDepth = 1;
-        while (searchDepth <= 4) {
-            MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound);
+        int maxSearchDepth = 4;
+        while (searchDepth <= maxSearchDepth) {
+            MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates);
             if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
                 moveToMakeFound = moveToMake;
                 UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
@@ -278,12 +280,12 @@ public class Game : MonoBehaviour {
             ++searchDepth;
         }
         stopwatch.Stop();
-        if (searchDepth <= 4) {
+        if (searchDepth <= maxSearchDepth) {
             UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
                 " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
                 (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
         } else {
-            UnityEngine.Debug.Log("move found at depth 4 " + new Move(moveToMakeFound.move) +
+            UnityEngine.Debug.Log("move found at depth " + maxSearchDepth + " " + new Move(moveToMakeFound.move) +
             " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
             (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score) +
             " in " + stopwatch.ElapsedMilliseconds + "ms");
