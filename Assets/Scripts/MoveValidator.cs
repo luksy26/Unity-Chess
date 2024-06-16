@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 using static KingSafety;
 
 public static class MoveValidator {
