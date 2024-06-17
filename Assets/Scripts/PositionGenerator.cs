@@ -217,6 +217,7 @@ public class PositionGenerator : MonoBehaviour {
                 int legalMovesDepth1 = int.Parse(parts[1]);
                 int legalMovesDepth2 = int.Parse(parts[2]);
                 int legalMovesDepth3 = int.Parse(parts[3]);
+                int legalMovesDepth4 = int.Parse(parts[4]);
                 bool ok = true;
                 GameStateManager.Instance.GenerateGameState(fen);
                 maxDepth = 1;
@@ -225,18 +226,28 @@ public class PositionGenerator : MonoBehaviour {
                 if (result != legalMovesDepth1) {
                     ok = false;
                     writer.WriteLine("Incorrect results for depth 1: FEN: " + fen + " ; expected " + legalMovesDepth1 + " got " + result);
+                    UnityEngine.Debug.Log("Incorrect results for depth 1: FEN: " + fen + " ; expected " + legalMovesDepth1 + " got " + result);
                 }
                 maxDepth = 2;
                 await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
                 if (result != legalMovesDepth2) {
                     ok = false;
                     writer.WriteLine("Incorrect results for depth 2: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
+                    UnityEngine.Debug.Log("Incorrect results for depth 2: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
                 }
                 maxDepth = 3;
                 await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
                 if (result != legalMovesDepth3) {
                     ok = false;
                     writer.WriteLine("Incorrect results for depth 3: FEN: " + fen + " ; expected " + legalMovesDepth3 + " got " + result);
+                    UnityEngine.Debug.Log("Incorrect results for depth 3: FEN: " + fen + " ; expected " + legalMovesDepth3 + " got " + result);
+                }
+                maxDepth = 4;
+                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
+                if (result != legalMovesDepth4) {
+                    ok = false;
+                    writer.WriteLine("Incorrect results for depth 4: FEN: " + fen + " ; expected " + legalMovesDepth4 + " got " + result);
+                    UnityEngine.Debug.Log("Incorrect results for depth 4: FEN: " + fen + " ; expected " + legalMovesDepth4 + " got " + result);
                 }
                 UnityEngine.Debug.Log(fen + "was checked, it is" + (ok ? "" : " not") + " ok");
                 ++idx;
