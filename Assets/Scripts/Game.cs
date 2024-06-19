@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv6;
+using static AIv3;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -260,7 +260,7 @@ public class Game : MonoBehaviour {
         MoveEval moveToMakeFound = null;
         MoveEval mandatoryMove = null;
         int searchDepth = 1;
-        int maxSearchDepth = 7;
+        int maxSearchDepth = 10;
         while (searchDepth <= maxSearchDepth) {
             MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates);
             if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) < 10000)) {

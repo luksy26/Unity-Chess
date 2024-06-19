@@ -412,7 +412,7 @@ public static class AIv7 {
                 break;
             }
             gameState.MakeMoveNoHashtable(move);
-            float score = MiniMax(gameState, 1, alpha, beta);
+            float score = MiniMax(gameState, 1, alpha, beta, gameStates);
             gameState.UnmakeMoveNoHashtable(move);
             if (Math.Abs(score) == 10000) {
                 break; // time expired down the branch, we can't consider this move
@@ -484,7 +484,7 @@ public static class AIv7 {
                 break;
             }
             gameState.MakeMoveNoHashtable(move);
-            float score = MiniMax(gameState, depth + 1, alpha, beta);
+            float score = MiniMax(gameState, depth + 1, alpha, beta, gameStates);
             gameState.UnmakeMoveNoHashtable(move);
             if (gameState.whoMoves == 'w') {
                 bestScore = Math.Max(bestScore, score);

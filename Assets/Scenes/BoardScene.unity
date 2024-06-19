@@ -1601,6 +1601,7 @@ MonoBehaviour:
   gameTreeMaxDepth: 0
   timeToMove: 0
   timeNotExpired: 0
+  salvageMove: 0
 --- !u!114 &1480655577
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2150,7 +2151,7 @@ GameObject:
   - component: {fileID: 2009996625}
   - component: {fileID: 2009996624}
   m_Layer: 0
-  m_Name: PositionGeneratorController
+  m_Name: ButtonController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2176,6 +2177,7 @@ MonoBehaviour:
   getStaticPositionEval: {fileID: 1165601758}
   evaluateEngine: {fileID: 1713199571}
   getSizeOfGameTree: {fileID: 1406933679}
+  FENskipChunk: 0
 --- !u!4 &2009996625
 Transform:
   m_ObjectHideFlags: 0

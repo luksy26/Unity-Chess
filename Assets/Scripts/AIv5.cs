@@ -383,7 +383,7 @@ public static class AIv5 {
                 break;
             }
             gameState.MakeMoveNoHashtable(move);
-            float score = MiniMax(gameState, depth + 1, alpha, beta);
+            float score = MiniMax(gameState, depth + 1, alpha, beta, gameStates);
             gameState.UnmakeMoveNoHashtable(move);
             if (gameState.whoMoves == 'w') {
                 bestScore = Math.Max(bestScore, score);

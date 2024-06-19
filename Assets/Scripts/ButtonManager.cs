@@ -13,7 +13,7 @@ using static AIv6;
 using static AIv7;
 using System;
 
-public class PositionGenerator : MonoBehaviour {
+public class ButtonManager : MonoBehaviour {
     public InputField inputField;
     public Button generateButton, runTests, swapPerspective, getPositionEval, getStaticPositionEval, evaluateEngine,
     getSizeOfGameTree;
@@ -33,7 +33,7 @@ public class PositionGenerator : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = '-';
+            Game.Instance.AIPlayer = 'w';
             Game.Instance.playerPerspective = "white";
             Game.Instance.gameTreeMaxDepth = 3;
             Game.Instance.timeToMove = 5f;
