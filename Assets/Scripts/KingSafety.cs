@@ -183,7 +183,7 @@ public static class KingSafety {
     }
 
     public static bool IsKingSafeFromRook(int king_i, int king_j, int rook_i, int rook_j, IndexMove indexMove = null) {
-        if (indexMove == null) {
+        if (indexMove == null) { // a move that would resolve the check was not provided
             // king and rook are not even on the same file
             if (king_i != rook_i && king_j != rook_j) {
                 return true;
@@ -202,13 +202,15 @@ public static class KingSafety {
         // if king and rook are on the same rank
         if (king_i == rook_i) {
             // if rook is blocked or captured
-            if ((king_j < rook_j && piece_j > king_j && piece_j <= rook_j) || (king_j > rook_j && piece_j < king_j && piece_j >= rook_j)) {
+            if ((king_j < rook_j && piece_j > king_j && piece_j <= rook_j)
+                || (king_j > rook_j && piece_j < king_j && piece_j >= rook_j)) {
                 return true;
             }
             return false;
         }
         // here king and rook are on the same file, we check if rook is blocked or captured again
-        if ((king_i < rook_i && piece_i > king_i && piece_i <= rook_i) || (king_i > rook_i && piece_i < king_i && piece_i >= rook_i)) {
+        if ((king_i < rook_i && piece_i > king_i && piece_i <= rook_i)
+            || (king_i > rook_i && piece_i < king_i && piece_i >= rook_i)) {
             return true;
         }
         return false;
@@ -256,8 +258,8 @@ public static class KingSafety {
 
         bool restoreBoard = false, restorePiece = false;
         bool targetingEnPassant = false;
-        char oldSquare = '-', newSquare = '-', enPassantSquare = '-';
-
+        char newSquare = '-', enPassantSquare = '-';
+        char oldSquare;
         // a piece is moving so we need to check king safety on a new configuration
         if (indexMove.newRow != -1) {
             int old_i, new_i, old_j, new_j;
@@ -342,8 +344,8 @@ public static class KingSafety {
 
         bool restoreBoard = false, restorePiece = false;
         bool targetingEnPassant = false;
-        char oldSquare = '-', newSquare = '-', enPassantSquare = '-';
-
+        char newSquare = '-', enPassantSquare = '-';
+        char oldSquare;
         // a piece is moving so we need to check king safety on a new configuration
         if (indexMove.newRow != -1) {
             int old_i, new_i, old_j, new_j;

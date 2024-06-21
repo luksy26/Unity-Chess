@@ -33,9 +33,9 @@ public class ButtonManager : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = 'w';
+            Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
-            Game.Instance.gameTreeMaxDepth = 3;
+            Game.Instance.gameTreeMaxDepth = 4;
             Game.Instance.timeToMove = 5f;
             Game.Instance.timeNotExpired = true;
             Game.Instance.CancelMovePiece();
@@ -100,7 +100,7 @@ public class ButtonManager : MonoBehaviour {
                 while (true) {
                     MoveEval moveToMake = new();
                     MoveEval mandatoryMove = new() { move = new IndexMove(new Move(bestMove)), score = 10000 };
-                    switch(AI) {
+                    switch (AI) {
                         case 1: await Task.Run(() => moveToMake = AIv1.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove)); break;
                         case 2: await Task.Run(() => moveToMake = AIv2.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove)); break;
                         case 3: await Task.Run(() => moveToMake = AIv3.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
@@ -206,7 +206,7 @@ public class ButtonManager : MonoBehaviour {
             stopwatch.Start();
             string line;
             int idx = 0;
-            FENskipChunk = 1;
+            FENskipChunk = 50; // make this larger to process less data (2 is 50% of the data, 10 is 10% of the data etc.)
             while ((line = reader.ReadLine()) != null) {
                 if (idx % FENskipChunk != 0) {
                     ++idx;
@@ -214,40 +214,23 @@ public class ButtonManager : MonoBehaviour {
                 }
                 string[] parts = line.Split(',');
                 string fen = parts[0];
-                int legalMovesDepth1 = int.Parse(parts[1]);
-                int legalMovesDepth2 = int.Parse(parts[2]);
-                int legalMovesDepth3 = int.Parse(parts[3]);
-                int legalMovesDepth4 = int.Parse(parts[4]);
-                bool ok = true;
                 GameStateManager.Instance.GenerateGameState(fen);
-                maxDepth = 1;
-                int result = 0;
-                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
-                if (result != legalMovesDepth1) {
-                    ok = false;
-                    writer.WriteLine("Incorrect results for depth 1: FEN: " + fen + " ; expected " + legalMovesDepth1 + " got " + result);
-                    UnityEngine.Debug.Log("Incorrect results for depth 1: FEN: " + fen + " ; expected " + legalMovesDepth1 + " got " + result);
+                long[] legalMovesDepth = new long[7];
+                for (int i = 1; i <= 6; ++i) {
+                    legalMovesDepth[i] = long.Parse(parts[i]);
                 }
-                maxDepth = 2;
-                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
-                if (result != legalMovesDepth2) {
-                    ok = false;
-                    writer.WriteLine("Incorrect results for depth 2: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
-                    UnityEngine.Debug.Log("Incorrect results for depth 2: FEN: " + fen + " ; expected " + legalMovesDepth2 + " got " + result);
-                }
-                maxDepth = 3;
-                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
-                if (result != legalMovesDepth3) {
-                    ok = false;
-                    writer.WriteLine("Incorrect results for depth 3: FEN: " + fen + " ; expected " + legalMovesDepth3 + " got " + result);
-                    UnityEngine.Debug.Log("Incorrect results for depth 3: FEN: " + fen + " ; expected " + legalMovesDepth3 + " got " + result);
-                }
-                maxDepth = 4;
-                await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
-                if (result != legalMovesDepth4) {
-                    ok = false;
-                    writer.WriteLine("Incorrect results for depth 4: FEN: " + fen + " ; expected " + legalMovesDepth4 + " got " + result);
-                    UnityEngine.Debug.Log("Incorrect results for depth 4: FEN: " + fen + " ; expected " + legalMovesDepth4 + " got " + result);
+                bool ok = true;
+                for (int perftDepth = 1; perftDepth <= 5; ++perftDepth) { // increase upper limit for deeper searches
+                    maxDepth = perftDepth;
+                    long result = 0;
+                    await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));
+                    if (result != legalMovesDepth[perftDepth]) {
+                        ok = false;
+                        writer.WriteLine("Incorrect results for depth 1: FEN: " + fen +
+                            " ; expected " + legalMovesDepth[perftDepth] + " got " + result);
+                        UnityEngine.Debug.Log("Incorrect results for depth 1: FEN: " + fen +
+                            " ; expected " + legalMovesDepth[perftDepth] + " got " + result);
+                    }
                 }
                 UnityEngine.Debug.Log(fen + "was checked, it is" + (ok ? "" : " not") + " ok");
                 ++idx;
