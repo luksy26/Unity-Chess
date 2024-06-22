@@ -1,7 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using static MoveGenerator;
-// AI v3 + move ordering (minus 3 fold detection)
+// AI v3 + move ordering
 public static class AIv4 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
     public const int SQUARE_CONTROL_BONUS = 1;
@@ -335,7 +336,8 @@ public static class AIv4 {
         }
     }
 
-    public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null, MoveEval prevBestMove = null) {
+    public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null, 
+        MoveEval prevBestMove = null, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         OrderMoves(legalMoves, gameState);
         if (prevBestMove != null) {
@@ -361,7 +363,7 @@ public static class AIv4 {
                 break;
             }
             gameState.MakeMoveNoHashtable(move);
-            float score = MiniMax(gameState, 1, alpha, beta);
+            float score = MiniMax(gameState, 1, alpha, beta, gameStates);
             gameState.UnmakeMoveNoHashtable(move);
             if (Math.Abs(score) == 10000) {
                 break; // time expired down the branch, we can't consider this move
@@ -390,7 +392,7 @@ public static class AIv4 {
         return bestMoveEval;
     }
 
-    public static float MiniMax(GameState gameState, int depth, float alpha, float beta) {
+    public static float MiniMax(GameState gameState, int depth, float alpha, float beta, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         OrderMoves(legalMoves, gameState);
         if (depth == maximumDepth) {
@@ -410,6 +412,14 @@ public static class AIv4 {
         if (conclusion == GameConclusion.Stalemate) {
             return 0;
         }
+        if (gameStates != null) {
+            if (gameStates.ContainsKey(gameState)) {
+                // making this move may cause a 3-fold repetition
+                // if we're winning we don't mind waiting until the last possible moment
+                // if we're losing we want to "believe" this can be a draw
+                return 0;
+            }
+        }
 
         // we have at least one legal move
         float bestScore = gameState.whoMoves == 'w' ? -10000f : 10000f;
@@ -425,7 +435,7 @@ public static class AIv4 {
                 break;
             }
             gameState.MakeMoveNoHashtable(move);
-            float score = MiniMax(gameState, depth + 1, alpha, beta);
+            float score = MiniMax(gameState, depth + 1, alpha, beta, gameStates);
             gameState.UnmakeMoveNoHashtable(move);
             if (gameState.whoMoves == 'w') {
                 bestScore = Math.Max(bestScore, score);

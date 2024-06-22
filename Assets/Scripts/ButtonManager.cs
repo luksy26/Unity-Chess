@@ -33,7 +33,7 @@ public class ButtonManager : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = '-';
+            Game.Instance.AIPlayer = 'b';
             Game.Instance.playerPerspective = "white";
             Game.Instance.gameTreeMaxDepth = 4;
             Game.Instance.timeToMove = 5f;
@@ -110,9 +110,9 @@ public class ButtonManager : MonoBehaviour {
                         case 7: await Task.Run(() => moveToMake = AIv7.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
                         default: break;
                     }
-                    if (Game.Instance.timeNotExpired || (AI >= 3 && Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
+                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
                         mandatoryMoveFound = mandatoryMove;
-                        if (Game.Instance.timeNotExpired || new Move(moveToMake.move).ToString().Equals(bestMove)) {
+                        if (Game.Instance.timeNotExpired || (AI >= 3 && new Move(moveToMake.move).ToString().Equals(bestMove))) {
                             moveToMakeFound = moveToMake; // our new guaranteed best move 
                             // either time is not expired (whole tree was generated), or it's the same as the mandatory move
                         }

@@ -5,8 +5,8 @@ using Unity.Mathematics;
 using static MoveGenerator;
 
 /* 
-    minimax with alpha beta, partial searches can be done at max depth, 3fold detection, move ordering,
-    distance from center, distance from king
+    minimax with alpha beta, evaluation based on controlled squares (+ distance from center, distance from king),
+    partial searches can be done at max depth, 3fold detection, move ordering
 */
 public static class AIv7 {
     public const int MOVE_FIRST_ADVANTAGE = 20;

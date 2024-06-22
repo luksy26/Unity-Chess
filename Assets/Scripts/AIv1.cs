@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using static MoveGenerator;
 
@@ -55,7 +57,8 @@ public static class AIv1 {
         }
         return (scoreWhite - scoreBlack) / 100f;
     }
-    public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null) {
+    public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null,
+        MoveEval dummyPrevBestMove = null, Hashtable dummyGameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
         if (mandatoryMove != null) {
             int index = legalMoves.IndexOf(mandatoryMove.move);
@@ -71,25 +74,34 @@ public static class AIv1 {
         for (int i = 0; i < legalMoves.Count; ++i) {
             IndexMove move = legalMoves[i];
             if (!Game.Instance.timeNotExpired) {
+                if (gameState.whoMoves == 'w') {
+                    bestMoveEval.score = -10000;
+                } else {
+                    bestMoveEval.score = 10000;
+                }
                 break;
             }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
+            if (Math.Abs(score) == 10000) {
+                bestMoveEval.score = -score;
+                break; // time expired down the branch, we can't consider this move
+            }
             if (gameState.whoMoves == 'w') {
                 if (score > bestMoveEval.score) {
                     bestMoveEval.score = score;
                     bestMoveEval.move = move;
                 }
-                alpha = System.Math.Max(alpha, score);
+                alpha = Math.Max(alpha, score);
             } else {
                 if (score < bestMoveEval.score) {
                     bestMoveEval.score = score;
                     bestMoveEval.move = move;
                 }
-                beta = System.Math.Min(beta, score);
+                beta = Math.Min(beta, score);
             }
-            if (i == 0) {
+            if (i == 0 && mandatoryMove != null) { // evaluation for our mandatory move
                 mandatoryMove.score = score;
             }
             // prune the branch
@@ -125,17 +137,23 @@ public static class AIv1 {
 
         foreach (IndexMove move in legalMoves) {
             if (!Game.Instance.timeNotExpired) {
+                if (gameState.whoMoves == 'w') {
+                    bestScore = -10000;
+                } else {
+                    bestScore = 10000;
+                }
+                // propagate 10000 to the top so we know time expired on this branch
                 break;
             }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, depth + 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
             if (gameState.whoMoves == 'w') {
-                bestScore = System.Math.Max(bestScore, score);
-                alpha = System.Math.Max(alpha, score);
+                bestScore = Math.Max(bestScore, score);
+                alpha = Math.Max(alpha, score);
             } else {
-                bestScore = System.Math.Min(bestScore, score);
-                beta = System.Math.Min(beta, score);
+                bestScore = Math.Min(bestScore, score);
+                beta = Math.Min(beta, score);
             }
             // prune the branch
             if (beta <= alpha) {

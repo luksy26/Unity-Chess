@@ -4,19 +4,12 @@ using System.Collections.Generic;
 using static MoveGenerator;
 
 /* 
-    minimax with alpha beta, partial search at max depth, evaluation function piece square tables,
-    3fold detection, move ordering
+    minimax with alpha beta, evaluation function piece square tables,
+    partial search at max depth, 3fold detection, move ordering
 */
 public static class AIv5 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
-    public const int SQUARE_CONTROL_BONUS = 1;
-    public const int SQUARE_DEFEND_ATTACK_BONUS = 10;
-    public const int SQUARE_DEFEND_ATTACK_EQUAL_BONUS = 5;
-    public const int SQUARE_DEFEND_ATTACK_HIGHER_BONUS = 15;
-    public const int SQUARE_DEFEND_ATTACK_KING = 10;
-    public const int PAWN_CHAIN_BONUS = 15;
     public const int ENDGAME_TRANSITION = 6;
-    public const int PUNISH_REWARD_FACTOR = 5;
     static readonly int[] pieceValues = { 100, 320, 330, 500, 900, 0 };
 
     static readonly int[,] pawnST = {
