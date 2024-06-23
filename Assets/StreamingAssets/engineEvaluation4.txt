@@ -14,7 +14,7 @@ got f8c5 -0.31, expected f8c5 0.09 Diff is 0.4
 got e4e5 1.455, expected e4e5 1.35 Diff is 0.07777779
 got f6e4 2.04, expected f6e4 0 Diff is 2.04
 got e8g8 0.54, expected e8g8 0.02 Diff is 0.52
-got d5f6 0.39, expected d5f6 -0.21 Diff is 0.6
+got d5f6 -1.27, expected d5f6 -0.21 Diff is 1.06
 got e4d5 0.29, expected e4d5 0.75 Diff is 0.46
 got b1c3 0.065, expected b1c3 0.63 Diff is 0.565
 got g1f3 -0.7, expected g1f3 0.6 Diff is 1.3
@@ -73,7 +73,7 @@ got d1f1 -1.21, expected d1f1 -0.27 Diff is 0.9400001
 got f6f1 -4.02, expected f6f1 -5.55 Diff is 0.3805971
 got c1b1 -1.41, expected c1b1 -1.48 Diff is 0.04964543
 got b5b4 -2.34, expected b5b4 -0.84 Diff is 1.5
-got a4b3 -3.318001, expected a4b3 mate in -10 Diff is 3.520795
+got a4b3 -3.61, expected a4b3 mate in -10 Diff is 3.155125
 got c1d1 -12.24, expected c1d1 mate in -8 Diff is 0.2254902
 got c8a8 -7.842, expected c8a8 mate in -5 Diff is 0.9127775
 got c8a8 mate in -3, expected c8a8 mate in -3 Diff is 0
@@ -88,7 +88,7 @@ got f7e6 2.47, expected f7e6 3.46 Diff is 0.4008097
 got e6f5 mate in 1, expected e6f5 mate in 1 Diff is 0
 got e8g8 0.525, expected e8g8 0 Diff is 0.525
 got b6b2 0.585, expected b6b2 -2.05 Diff is 2.635
-got b2c2 -4.235, expected b2c2 -2.59 Diff is 0.6351352
+got b2c2 -1.065, expected b2c2 -2.59 Diff is 1.431925
 got g5e5 -0.785, expected g5e5 -1.58 Diff is 0.795
 got e5e2 -5.29, expected e5e2 -5 Diff is 0.05799999
 got c2c4 -4.58, expected c2c4 -5.04 Diff is 0.1004367
@@ -99,7 +99,7 @@ got a4c2 2.135, expected a4c2 1.6 Diff is 0.334375
 got e4e5 3.198, expected e4e5 2.01 Diff is 0.591045
 got d1d3 -0.912998, expected d1d3 2.87 Diff is 3.782998
 got c3d5 -1.015, expected c3d5 2.75 Diff is 3.765
-got f8f4 -2.425, expected f8f4 -3.77 Diff is 0.5546392
+got f8f4 0.65, expected f8f4 -3.77 Diff is 4.42
 got g2g3 -4.458999, expected g2g3 -3.93 Diff is 0.1346054
 got d1h5 -2.55, expected d1h5 -4.08 Diff is 0.6
 got h5f7 -5.781001, expected h5f7 -4.23 Diff is 0.3666669
@@ -123,14 +123,14 @@ got e5d4 -2.235, expected e5d4 -1.71 Diff is 0.3070174
 got f5g3 -0.32, expected f5g3 -0.95 Diff is 0.63
 got g6f5 -2.84, expected g6f5 -2.27 Diff is 0.2511013
 got e8e1 -2.375, expected e8e1 -2.29 Diff is 0.03711792
-got a8e8 -0.8219995, expected a8e8 -2.33 Diff is 1.508
+got a8e8 -3.485, expected a8e8 -2.33 Diff is 0.4957082
 got e8e1 -5.335, expected e8e1 -4.77 Diff is 0.1184487
-got e8e1 -2.685, expected e8e1 -6.46 Diff is 1.405959
+got e8e1 -7.541001, expected e8e1 -6.46 Diff is 0.1673376
 got d4e5 -7.395, expected d4e5 -6.42 Diff is 0.1518691
 got f5e4 -10.485, expected f5e4 -7.25 Diff is 0.4462068
 got f3e4 -9.579, expected f3e4 -6.82 Diff is 0.4045455
 got c4b5 1.41, expected c4b5 1.9 Diff is 0.3475178
-got e2c4 0.33, expected e2c4 -0.19 Diff is 0.52
+got e2c4 -0.87, expected e2c4 -0.19 Diff is 0.68
 got c6d5 -0.89, expected c6d5 -0.01 Diff is 0.88
 got b8c6 4.34, expected b8c6 -0.15 Diff is 4.49
 got a1d1 -0.52, expected a1d1 -0.14 Diff is 0.38
@@ -156,7 +156,7 @@ got f7f3 -7.105, expected f7f3 mate in -20 Diff is 1.111189
 got h4f3 -8.660001, expected h4f3 mate in -18 Diff is 0.7321014
 got e3f3 mate in -3, expected e3f3 mate in -3 Diff is 0
 got f3g3 mate in -2, expected f3g3 mate in -2 Diff is 0
-got f1f7 -10.79, expected f1f7 -8.06 Diff is 0.3387096
+got f1f7 -10.297, expected f1f7 -8.06 Diff is 0.2775433
 got g2g4 1.24, expected g2g4 1.53 Diff is 0.2338709
 got d4d5 2.38, expected d4d5 2.96 Diff is 0.2436974
 got f5f4 2.13, expected f5f4 1.46 Diff is 0.4589041
@@ -173,10 +173,10 @@ got h7g6 -0.09, expected h7g6 -2.98 Diff is 2.89
 got e1f1 -0.09, expected e1f1 -2.17 Diff is 2.08
 got h2h3 -0.08800049, expected h2h3 -1.95 Diff is 1.862
 got a2a1 -0.9980005, expected a2a1 -2.7 Diff is 1.702
-got d8d7 -1.11, expected d8d7 -2 Diff is 0.8018018
+got d8d7 -1.43, expected d8d7 -2 Diff is 0.3986014
 got d8g8 -1.88, expected d8g8 -3.34 Diff is 0.7765957
 got d6d1 -2.11, expected d6d1 -3.65 Diff is 0.7298579
 got d6d1 -2.264, expected d6d1 -4.27 Diff is 0.8860422
 got b3b1 mate in -2, expected b3b1 mate in -2 Diff is 0
-Engine deviation: 1.43
+Engine deviation: 1.46
 Max Diff 5.89
