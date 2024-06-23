@@ -306,12 +306,12 @@ public static class AIv6 {
         for (int i = 0; i < legalMoves.Count; ++i) {
             IndexMove move = legalMoves[i];
             if (!Game.Instance.timeNotExpired) {
-                break;
+                break; // only got a partial result for this iteration
             }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, 1, alpha, beta, gameStates);
             gameState.UnmakeMoveNoHashtable(move);
-            if (Math.Abs(score) == 10000) {
+            if (score == 10000) {
                 break; // time expired down the branch, we can't consider this move
             }
             if (gameState.whoMoves == 'w') {
@@ -388,16 +388,15 @@ public static class AIv6 {
 
         foreach (IndexMove move in legalMoves) {
             if (!Game.Instance.timeNotExpired) {
-                // propagate 10000 to the top so we know time expired on this branch
-                if (gameState.whoMoves == 'w') {
-                    return -10000;
-                } else {
-                    return 10000;
-                }
+                // this is where propagating 10000 to the top begins so we know time expired on this branch
+                return 10000;
             }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, depth + 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
+            if (score == 10000) {
+                return score; // time expired down the branch, propagate 10000 to the top
+            }
             if (gameState.whoMoves == 'w') {
                 bestScore = Math.Max(bestScore, score);
                 alpha = Math.Max(alpha, score);
