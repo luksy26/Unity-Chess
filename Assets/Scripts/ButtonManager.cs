@@ -26,7 +26,7 @@ public class ButtonManager : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = 'b';
+            Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
             Game.Instance.gameTreeMaxDepth = 4;
             Game.Instance.timeToMove = 5f;
@@ -44,7 +44,7 @@ public class ButtonManager : MonoBehaviour {
 
     async void OnEvaluateEngineButtonClicked() {
         FENskipChunk = 1;
-        for (int i = 1; i <= 7; ++i) {
+        for (int i = 1; i <= 1; ++i) {
             await EvaluateEngine("engineEvaluation" + i + ".txt", i);
         }
     }
@@ -63,7 +63,7 @@ public class ButtonManager : MonoBehaviour {
             int nr = 0;
             float maxDiff = 0;
             while ((line = reader.ReadLine()) != null) {
-                if (idx % FENskipChunk != 0) {
+                if (idx != 561 || idx % FENskipChunk != 0) {
                     ++idx;
                     continue; // only process one portion of the data
                 }
@@ -199,7 +199,7 @@ public class ButtonManager : MonoBehaviour {
             stopwatch.Start();
             string line;
             int idx = 0;
-            FENskipChunk = 50; // make this larger to process less data (2 is 50% of the data, 10 is 10% of the data etc.)
+            FENskipChunk = 1; // make this larger to process less data (2 is 50% of the data, 10 is 10% of the data etc.)
             while ((line = reader.ReadLine()) != null) {
                 if (idx % FENskipChunk != 0) {
                     ++idx;
@@ -213,7 +213,7 @@ public class ButtonManager : MonoBehaviour {
                     legalMovesDepth[i] = long.Parse(parts[i]);
                 }
                 bool ok = true;
-                for (int perftDepth = 1; perftDepth <= 5; ++perftDepth) { // increase upper limit for deeper searches
+                for (int perftDepth = 1; perftDepth <= 4; ++perftDepth) { // increase upper limit for deeper searches
                     maxDepth = perftDepth;
                     long result = 0;
                     await Task.Run(() => result = SearchPositions(GameStateManager.Instance.globalGameState, 0));

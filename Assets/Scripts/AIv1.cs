@@ -74,19 +74,15 @@ public static class AIv1 {
         for (int i = 0; i < legalMoves.Count; ++i) {
             IndexMove move = legalMoves[i];
             if (!Game.Instance.timeNotExpired) {
-                if (gameState.whoMoves == 'w') {
-                    bestMoveEval.score = -10000;
-                } else {
-                    bestMoveEval.score = 10000;
-                }
-                break;
+                bestMoveEval.score = 10000;
+                return bestMoveEval; // time expired before evaluating all moves, disregard whole tree
             }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
-            if (Math.Abs(score) == 10000) {
-                bestMoveEval.score = -score;
-                break; // time expired down the branch, we can't consider this move
+            if (score == 10000) {
+                bestMoveEval.score = score;
+                return bestMoveEval; // time expired down the branch, disregard whole tree
             }
             if (gameState.whoMoves == 'w') {
                 if (score > bestMoveEval.score) {
@@ -137,17 +133,15 @@ public static class AIv1 {
 
         foreach (IndexMove move in legalMoves) {
             if (!Game.Instance.timeNotExpired) {
-                if (gameState.whoMoves == 'w') {
-                    bestScore = -10000;
-                } else {
-                    bestScore = 10000;
-                }
-                // propagate 10000 to the top so we know time expired on this branch
-                break;
+                // this is where propagating 10000 to the top begins so we know time expired on this branch
+                return 10000;
             }
             gameState.MakeMoveNoHashtable(move);
             float score = MiniMax(gameState, depth + 1, alpha, beta);
             gameState.UnmakeMoveNoHashtable(move);
+            if (score == 10000) {
+                return score; // time expired down the branch, propagate 10000 to the top
+            }
             if (gameState.whoMoves == 'w') {
                 bestScore = Math.Max(bestScore, score);
                 alpha = Math.Max(alpha, score);

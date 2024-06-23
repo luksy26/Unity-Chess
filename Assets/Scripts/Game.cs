@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv7;
+using static AIv1;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
