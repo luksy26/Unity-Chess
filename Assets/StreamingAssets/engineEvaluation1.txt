@@ -1,3 +1,4 @@
-got b4d3 -5.7, expected b4d3 -5.76 Diff is 0.01052639
-Engine deviation: 0.01
-Max Diff 0.01052639
+got d6d1 mate in -3, expected d6d1 mate in -3 Diff is 0
+got e4e5 0.3, expected e4e5 5.35 Diff is 5.05
+Engine deviation: 3.57
+Max Diff 5.05

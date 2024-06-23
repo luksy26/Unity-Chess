@@ -6,7 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv1;
+using static AIv6;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -263,7 +263,7 @@ public class Game : MonoBehaviour {
         int maxSearchDepth = 10;
         while (searchDepth <= maxSearchDepth) {
             MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates);
-            if (timeNotExpired || (salvageMove && moveToMake.score != 10000)) {
+            if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
                 moveToMakeFound = moveToMake;
                 UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
                 " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +

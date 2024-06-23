@@ -43,7 +43,7 @@ public class ButtonManager : MonoBehaviour {
     }
 
     async void OnEvaluateEngineButtonClicked() {
-        FENskipChunk = 1;
+        FENskipChunk = 400;
         for (int i = 1; i <= 7; ++i) {
             await EvaluateEngine("engineEvaluation" + i + ".txt", i);
         }
@@ -63,7 +63,7 @@ public class ButtonManager : MonoBehaviour {
             int nr = 0;
             float maxDiff = 0;
             while ((line = reader.ReadLine()) != null) {
-                if (idx != 561 || idx % FENskipChunk != 0) {
+                if (idx % FENskipChunk != 0) {
                     ++idx;
                     continue; // only process one portion of the data
                 }
@@ -103,7 +103,7 @@ public class ButtonManager : MonoBehaviour {
                         case 7: await Task.Run(() => moveToMake = AIv7.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
                         default: break;
                     }
-                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && mandatoryMove.score != 10000)) {
+                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
                         mandatoryMoveFound = mandatoryMove;
                         if (Game.Instance.timeNotExpired || (AI >= 3 && new Move(moveToMake.move).ToString().Equals(bestMove))) {
                             moveToMakeFound = moveToMake; // our new guaranteed best move 
