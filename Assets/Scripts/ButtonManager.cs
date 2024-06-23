@@ -44,7 +44,7 @@ public class ButtonManager : MonoBehaviour {
 
     async void OnEvaluateEngineButtonClicked() {
         FENskipChunk = 1;
-        for (int i = 1; i <= 1; ++i) {
+        for (int i = 1; i <= 7; ++i) {
             await EvaluateEngine("engineEvaluation" + i + ".txt", i);
         }
     }
@@ -103,11 +103,15 @@ public class ButtonManager : MonoBehaviour {
                         case 7: await Task.Run(() => moveToMake = AIv7.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
                         default: break;
                     }
-                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
+                    if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && mandatoryMove.score != 10000)) {
                         mandatoryMoveFound = mandatoryMove;
                         if (Game.Instance.timeNotExpired || (AI >= 3 && new Move(moveToMake.move).ToString().Equals(bestMove))) {
                             moveToMakeFound = moveToMake; // our new guaranteed best move 
-                            // either time is not expired (whole tree was generated), or it's the same as the mandatory move
+                            /* 
+                            either time is not expired (whole tree was generated), 
+                            or it's the same as the mandatory move
+                            (only for AIv3+, since AIv1 and AIv2 can't salvage moves for partial searches)
+                            */
                         }
                         UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
                         " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
