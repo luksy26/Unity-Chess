@@ -4,8 +4,11 @@ using System.Collections.Generic;
 using static MoveGenerator;
 
 /* 
-    minimax with alpha beta, evaluation function piece square tables,
-    partial search at max depth, 3fold detection, move ordering
+    minimax with alpha beta
+    evaluation based on piece square tables,
+    partial search at max depth
+    3fold detection
+    move ordering
 */
 public static class AIv5 {
     public const int MOVE_FIRST_ADVANTAGE = 20;

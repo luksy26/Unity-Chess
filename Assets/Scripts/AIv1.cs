@@ -3,7 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using static MoveGenerator;
 
-// simple minimax with alpha beta, evaluation based on material count
+/*
+    minimax with alpha beta
+    evaluation based on absolute value
+*/
 public static class AIv1 {
     public static int maximumDepth;
     static readonly int[] pieceValues = { 100, 300, 300, 500, 900 };

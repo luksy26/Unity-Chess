@@ -3,7 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using static MoveGenerator;
 
-// minimax with alpha beta, evaluation based on controlled squares
+/* 
+    minimax with alpha beta
+    evaluation based on controlled squares
+*/
 public static class AIv2 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
     public const int SQUARE_CONTROL_BONUS = 1;
