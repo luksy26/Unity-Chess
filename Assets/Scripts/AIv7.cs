@@ -391,7 +391,7 @@ public static class AIv7 {
     public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null,
         MoveEval prevBestMove = null, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
-        //OrderMoves(legalMoves, gameState);
+        OrderMoves(legalMoves, gameState);
         if (prevBestMove != null) {
             int index = legalMoves.IndexOf(prevBestMove.move);
             // put the previously best move first (or second if we also have a mandatory move) to maximize pruning
@@ -446,7 +446,7 @@ public static class AIv7 {
 
     public static float MiniMax(GameState gameState, int depth, float alpha, float beta, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
-        //OrderMoves(legalMoves, gameState);
+        OrderMoves(legalMoves, gameState);
         if (depth == maximumDepth) {
             return PositionEvaluator(gameState, depth, legalMoves);
         }

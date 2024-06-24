@@ -2,7 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using static MoveGenerator;
-// AI v3 + move ordering
+/* 
+    minimax with alpha beta
+    evaluation based on controlled squares
+    partial search at max depth
+    3fold detection
+    move ordering
+*/
 public static class AIv4 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
     public const int SQUARE_CONTROL_BONUS = 1;

@@ -9,7 +9,7 @@ using static MoveGenerator;
 */
 public static class AIv1 {
     public static int maximumDepth;
-    static readonly int[] pieceValues = { 100, 300, 300, 500, 900 };
+    static readonly int[] pieceValues = { 100, 320, 330, 500, 900, 0 };
 
     public static float PositionEvaluator(GameState gameState, int depth, List<IndexMove> legalMoves) {
         GameConclusion conclusion = GameStateManager.Instance.GetDrawConclusion(gameState);
