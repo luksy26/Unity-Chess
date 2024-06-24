@@ -43,7 +43,7 @@ public class ButtonManager : MonoBehaviour {
     }
 
     async void OnEvaluateEngineButtonClicked() {
-        FENskipChunk = 400;
+        FENskipChunk = 1;
         for (int i = 1; i <= 7; ++i) {
             await EvaluateEngine("engineEvaluation" + i + ".txt", i);
         }
