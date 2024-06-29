@@ -11,6 +11,7 @@ public class GameStateManager : MonoBehaviour {
 
     // very important structure, will be used across multiple game components
     public GameState globalGameState;
+    public List<IndexMove> globalLegalMoves;
     public bool IsEngineRunning, isPromotionMenuDisplayed;
     public long numberOfTicks1, numberOfTicks2, numberOfTicks3, numberOfTicks4, numberOfTicks5, numberOfTicks6, numberOfTicks7;
 

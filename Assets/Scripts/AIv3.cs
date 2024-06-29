@@ -399,11 +399,4 @@ public static class AIv3 {
         }
         return bestScore;
     }
-
-    public static char ColumnToFile(int j) {
-        return (char)(j + 'a');
-    }
-    public static int RowToRank(int i) {
-        return 8 - i;
-    }
 }

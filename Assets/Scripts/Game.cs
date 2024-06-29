@@ -6,14 +6,16 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
-using static AIv7;
+using static MoveGenerator;
+using static AIv3;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
     public PromotionManager promotionManager;
     public GameObject[,] currentPieces;
     public List<GameObject> blackPieces, whitePieces;
-    public GameObject chessPiecePrefab;
+    public List<GameObject> highlightedSquares;
+    public GameObject chessPiecePrefab, highlightedEmptySquarePrefab, highlightedOccupiedSquarePrefab;
     public char currentPlayer;
     public string playerPerspective;
     public char AIPlayer;
@@ -129,12 +131,14 @@ public class Game : MonoBehaviour {
             PiecePlacer rookPlacer;
             // short castle
             if (indexMove.newColumn > indexMove.oldColumn) {
+                currentPieces[indexMove.newRow, 7].GetComponent<PieceMover>().isDragging = false;
                 rookPlacer = currentPieces[indexMove.newRow, 7].GetComponent<PiecePlacer>();
                 rookPlacer.SetFile((char)(move.newFile - 1));
                 rookPlacer.SetGlobalCoords(playerPerspective);
                 currentPieces[indexMove.newRow, 5] = currentPieces[indexMove.newRow, 7];
                 currentPieces[indexMove.newRow, 7] = null;
             } else { // long castle
+                currentPieces[indexMove.newRow, 0].GetComponent<PieceMover>().isDragging = false;
                 rookPlacer = currentPieces[indexMove.newRow, 0].GetComponent<PiecePlacer>();
                 rookPlacer.SetFile((char)(move.newFile + 1));
                 rookPlacer.SetGlobalCoords(playerPerspective);
@@ -189,6 +193,7 @@ public class Game : MonoBehaviour {
         currentPieces[indexMove.newRow, indexMove.newColumn] = currentPieces[indexMove.oldRow, indexMove.oldColumn];
         currentPieces[indexMove.oldRow, indexMove.oldColumn] = null;
         PiecePlacer placer = currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<PiecePlacer>();
+        currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<PieceMover>().isDragging = false;
         placer.SetFile(move.newFile);
         placer.SetRank(move.newRank);
         placer.SetGlobalCoords(playerPerspective);
@@ -356,7 +361,8 @@ public class Game : MonoBehaviour {
                     break;
                 }
             default:
-                switch (GameStateManager.Instance.GetMateConclusion(gameState)) {
+                GameStateManager.Instance.globalLegalMoves = GetLegalMoves(gameState);
+                switch (GameStateManager.Instance.GetMateConclusion(gameState, GameStateManager.Instance.globalLegalMoves)) {
                     case GameConclusion.Checkmate: {
                             UnityEngine.Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
                             currentPlayer = '-';
@@ -429,5 +435,45 @@ public class Game : MonoBehaviour {
             'P' => "white_pawn",
             _ => "",
         };
+    }
+    public void CreateHighlightedSquares(char file, int rank) {
+        if (currentPlayer == AIPlayer) {
+            return;
+        } 
+        foreach (IndexMove move in GameStateManager.Instance.globalLegalMoves) {
+            Move move2 = new(move);
+            if (move2.oldFile == file && move2.oldRank == rank) {
+                GameObject obj;
+                if (currentPieces[move.newRow, move.newColumn] != null || 
+                    EnPassant(move.newRow, move.newColumn)) { // square has a piece in it
+                    obj = Instantiate(highlightedOccupiedSquarePrefab, new Vector3(0, 0, -0.019f), Quaternion.identity);
+                } else { // square is empty
+                    obj = Instantiate(highlightedEmptySquarePrefab, new Vector3(0, 0, -0.019f), Quaternion.identity);
+                }
+                float global_x = move2.newFile - 'a';
+                float global_y = move2.newRank - 1;
+                if (playerPerspective.Equals("black")) {
+                    global_x = 7 - global_x;
+                    global_y = 7 - global_y;
+                }
+                global_x -= 3.5f;
+                global_y -= 3.5f;
+                obj.transform.position = new Vector3(global_x, global_y, -0.019f);
+                highlightedSquares.Add(obj);
+            }
+        }
+    }
+    public void DestroyHighLightedSquares() {
+        foreach(GameObject obj in highlightedSquares) {
+            Destroy(obj);
+        }
+        highlightedSquares.Clear();
+    }
+    public bool EnPassant(int row, int column) {
+        GameState gameState = GameStateManager.Instance.globalGameState;
+        if (ColumnToFile(column) == gameState.enPassantFile && RowToRank(row) == gameState.enPassantRank) {
+            return true;
+        }
+        return false;
     }
 }

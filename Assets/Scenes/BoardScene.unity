@@ -1594,7 +1594,10 @@ MonoBehaviour:
   promotionManager: {fileID: 0}
   blackPieces: []
   whitePieces: []
+  highlightedSquares: []
   chessPiecePrefab: {fileID: 1349441230006070361, guid: 592ccfb394f1e5740b5e64aae3a0927c, type: 3}
+  highlightedEmptySquarePrefab: {fileID: 6616916146143851013, guid: cd605b6d60dd5de48afa8ef7be1087bc, type: 3}
+  highlightedOccupiedSquarePrefab: {fileID: 27085258330789392, guid: 588a046264fc5c049b6728c4c2ba5d01, type: 3}
   currentPlayer: 49
   playerPerspective: black
   AIPlayer: 46

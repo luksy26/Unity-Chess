@@ -13,7 +13,7 @@ public class PiecePlacer : MonoBehaviour {
 
         if (playerPerspective.Equals("black")) {
             global_x = 7 - global_x;
-            global_y = 7 - (rank - 1);
+            global_y = 7 - global_y;
         }
 
         global_x *= multiplier;

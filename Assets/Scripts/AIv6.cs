@@ -367,10 +367,6 @@ public static class AIv6 {
             }
             transpositionTable.Add(hashcode, 1000f - depth);
             return 1000f - depth;
-            /*  
-                We don't add mates to the tranposition table since we won't be able to tell the mate value, since
-                there's no distinction to return values from MiniMax that are newly added or taken from the transposition table.
-            */
         }
         if (conclusion == GameConclusion.Stalemate) {
             transpositionTable.Add(hashcode, 0f);
@@ -417,12 +413,5 @@ public static class AIv6 {
             transpositionTable.Add(hashcode, bestScore);
         }
         return bestScore;
-    }
-
-    public static char ColumnToFile(int j) {
-        return (char)(j + 'a');
-    }
-    public static int RowToRank(int i) {
-        return 8 - i;
     }
 }

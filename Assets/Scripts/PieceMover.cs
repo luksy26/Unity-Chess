@@ -2,7 +2,7 @@ using UnityEngine;
 using static MoveValidator;
 
 public class PieceMover : MonoBehaviour {
-    private bool isDragging = false;
+    public bool isDragging = false;
     private Vector3 initialPosition;
     private GameObject gameController;
     private Game currentGame;
@@ -28,6 +28,8 @@ public class PieceMover : MonoBehaviour {
             Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             isDragging = true;
             initialPosition = transform.position;
+            PiecePlacer placer = GetComponent<PiecePlacer>();
+            Game.Instance.CreateHighlightedSquares(placer.GetFile(), placer.GetRank());
             transform.position = new Vector3(mousePosition.x, mousePosition.y, -0.02f);
         }
     }
@@ -50,6 +52,7 @@ public class PieceMover : MonoBehaviour {
 
     public void OnMouseUp() {
         if (isDragging) {
+            Game.Instance.DestroyHighLightedSquares();
             Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
             isDragging = false;
