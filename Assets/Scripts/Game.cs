@@ -14,8 +14,10 @@ public class Game : MonoBehaviour {
     public PromotionManager promotionManager;
     public GameObject[,] currentPieces;
     public List<GameObject> blackPieces, whitePieces;
-    public List<GameObject> highlightedSquares;
-    public GameObject chessPiecePrefab, highlightedEmptySquarePrefab, highlightedOccupiedSquarePrefab;
+    public List<GameObject> highlightedSquares, hintSquares;
+    public GameObject chessPiecePrefab, highlightedEmptySquarePrefab,
+        highlightedOccupiedSquarePrefab, hintSquarePrefab;
+    public Move hintMove = null;
     public char currentPlayer;
     public string playerPerspective;
     public char AIPlayer;
@@ -51,6 +53,7 @@ public class Game : MonoBehaviour {
 
         char[,] boardConfiguration = globalGameState.boardConfiguration;
         currentPlayer = globalGameState.whoMoves;
+        hintMove = null;
 
         for (int i = 0; i < 8; ++i) {
             for (int j = 0; j < 8; ++j) {
@@ -98,6 +101,7 @@ public class Game : MonoBehaviour {
     }
 
     public async void MovePiece(Move move) {
+        DestroyHintSquares();
         if (currentPlayer == '-') {
             return;
         }
@@ -201,6 +205,7 @@ public class Game : MonoBehaviour {
         SwapPlayer();
         // make the move to update the gameState
         gameState.MakeMoveNoHashtable(indexMove);
+        hintMove = null;
         UnityEngine.Debug.Log("GameState changed:");
         UnityEngine.Debug.Log(GameStateManager.Instance.globalGameState);
 
@@ -256,6 +261,72 @@ public class Game : MonoBehaviour {
 
     public async void GetSizeOfGameTree() {
         await Task.Run(() => RunPerft(GameStateManager.Instance.globalGameState));
+    }
+
+    public async void ShowHint() {
+        if (hintMove != null) {
+            UnityEngine.Debug.Log("hint already " + hintMove);
+            return;
+        }
+        if (GameStateManager.Instance.IsEngineRunning) {
+            UnityEngine.Debug.Log("not your turn or already getting hint");
+            return;
+        }
+        if (moveTimerCoroutine != null) {
+            StopCoroutine(moveTimerCoroutine);
+        }
+        moveTimerCoroutine = StartCoroutine(MoveTimerCoroutine(timeToMove));
+        GameStateManager.Instance.IsEngineRunning = true;
+        hintMove = await Task.Run(() => GetHint());
+        GameStateManager.Instance.IsEngineRunning = false;
+        UnityEngine.Debug.Log("got hint " + hintMove);
+
+        GameObject obj1 = Instantiate(hintSquarePrefab, new Vector3(0, 0, -0.011f), Quaternion.identity);
+        GameObject obj2 = Instantiate(hintSquarePrefab, new Vector3(0, 0, -0.011f), Quaternion.identity);
+        SetHintSquarePosition(obj1, hintMove.oldFile, hintMove.oldRank);
+        SetHintSquarePosition(obj2, hintMove.newFile, hintMove.newRank);
+        hintSquares.Add(obj1);
+        hintSquares.Add(obj2);
+    }
+
+    public Move GetHint() {
+        Stopwatch stopwatch = new();
+        stopwatch.Start();
+        timeNotExpired = true;
+        MoveEval moveToMakeFound = null;
+        MoveEval mandatoryMove = null;
+        int searchDepth = 1;
+        int maxSearchDepth = 10;
+        while (searchDepth <= maxSearchDepth) {
+            MoveEval moveToMake = AIv6.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates);
+            if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
+                moveToMakeFound = moveToMake;
+                UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+                if (!timeNotExpired) {
+                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", but we salvaged the best move");
+                    break;
+                }
+            } else {
+                UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", and can't salvage the best move");
+                break;
+            }
+            // now search deeper
+            ++searchDepth;
+        }
+        stopwatch.Stop();
+        if (searchDepth <= maxSearchDepth) {
+            UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
+                " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+        } else {
+            UnityEngine.Debug.Log("move found at depth " + maxSearchDepth + " " + new Move(moveToMakeFound.move) +
+            " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
+            (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score) +
+            " in " + stopwatch.ElapsedMilliseconds + "ms");
+        }
+        return new Move(moveToMakeFound.move);
     }
 
     public MoveEval SolvePosition() {
@@ -400,6 +471,22 @@ public class Game : MonoBehaviour {
             whitePieces[i].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
         }
         GetComponent<SquareCoordinatesUI>().SwapPerspectivesForPieceCoordinates();
+        if (hintMove != null) {
+            SetHintSquarePosition(hintSquares[0], hintMove.oldFile, hintMove.oldRank);
+            SetHintSquarePosition(hintSquares[1], hintMove.newFile, hintMove.newRank);
+        }
+    }
+
+    public void SetHintSquarePosition(GameObject hintSquare, char file, int rank) {
+        float global_x = file - 'a';
+        float global_y = rank - 1;
+        if (playerPerspective.Equals("black")) {
+            global_x = 7 - global_x;
+            global_y = 7 - global_y;
+        }
+        global_x -= 3.5f;
+        global_y -= 3.5f;
+        hintSquare.transform.position = new Vector3(global_x, global_y, -0.011f);
     }
 
     public void DestroyPosition() {
@@ -439,12 +526,12 @@ public class Game : MonoBehaviour {
     public void CreateHighlightedSquares(char file, int rank) {
         if (currentPlayer == AIPlayer) {
             return;
-        } 
+        }
         foreach (IndexMove move in GameStateManager.Instance.globalLegalMoves) {
             Move move2 = new(move);
             if (move2.oldFile == file && move2.oldRank == rank) {
                 GameObject obj;
-                if (currentPieces[move.newRow, move.newColumn] != null || 
+                if (currentPieces[move.newRow, move.newColumn] != null ||
                     EnPassant(move.newRow, move.newColumn)) { // square has a piece in it
                     obj = Instantiate(highlightedOccupiedSquarePrefab, new Vector3(0, 0, -0.019f), Quaternion.identity);
                 } else { // square is empty
@@ -464,10 +551,16 @@ public class Game : MonoBehaviour {
         }
     }
     public void DestroyHighLightedSquares() {
-        foreach(GameObject obj in highlightedSquares) {
+        foreach (GameObject obj in highlightedSquares) {
             Destroy(obj);
         }
         highlightedSquares.Clear();
+    }
+    public void DestroyHintSquares() {
+        foreach (GameObject obj in hintSquares) {
+            Destroy(obj);
+        }
+        hintSquares.Clear();
     }
     public bool EnPassant(int row, int column) {
         GameState gameState = GameStateManager.Instance.globalGameState;

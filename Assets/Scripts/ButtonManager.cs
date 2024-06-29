@@ -8,8 +8,8 @@ using System;
 
 public class ButtonManager : MonoBehaviour {
     public InputField inputField;
-    public Button generateButton, runTests, swapPerspective, getPositionEval, getStaticPositionEval, evaluateEngine,
-    getSizeOfGameTree;
+    public Button generateButton, runTests, swapPerspective, getPositionEval, 
+        getStaticPositionEval, evaluateEngine, showHint, getSizeOfGameTree;
     public int FENskipChunk;
 
     void Start() {
@@ -20,6 +20,7 @@ public class ButtonManager : MonoBehaviour {
         getStaticPositionEval.onClick.AddListener(OnGetStaticPositionEvalClicked);
         evaluateEngine.onClick.AddListener(OnEvaluateEngineButtonClicked);
         getSizeOfGameTree.onClick.AddListener(OnGetSizeOfGameTreeButtonClicked);
+        showHint.onClick.AddListener(OnShowHintButtonClicked);
         Game.Instance.salvageMove = true;
     }
 
@@ -249,5 +250,8 @@ public class ButtonManager : MonoBehaviour {
 
     void OnGetStaticPositionEvalClicked() {
         Game.Instance.GetStaticPositionEval();
+    }
+    void OnShowHintButtonClicked() {
+        Game.Instance.ShowHint();
     }
 }
