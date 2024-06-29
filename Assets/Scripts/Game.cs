@@ -8,6 +8,7 @@ using UnityEngine;
 using static PositionCounter;
 using static MoveGenerator;
 using static AIv3;
+using TMPro;
 
 public class Game : MonoBehaviour {
     public static Game Instance { get; private set; }
@@ -17,6 +18,8 @@ public class Game : MonoBehaviour {
     public List<GameObject> highlightedSquares, hintSquares;
     public GameObject chessPiecePrefab, highlightedEmptySquarePrefab,
         highlightedOccupiedSquarePrefab, hintSquarePrefab;
+    public TMP_Text prompt;
+    public string promptText = "";
     public Move hintMove = null;
     public char currentPlayer;
     public string playerPerspective;
@@ -45,6 +48,7 @@ public class Game : MonoBehaviour {
     }
 
     public async void GeneratePosition() {
+        prompt.color = Color.white;
         GetComponent<SquareCoordinatesUI>().GenerateFilesAndRanks(playerPerspective);
         GameState globalGameState = GameStateManager.Instance.globalGameState;
 
@@ -206,6 +210,7 @@ public class Game : MonoBehaviour {
         // make the move to update the gameState
         gameState.MakeMoveNoHashtable(indexMove);
         hintMove = null;
+
         UnityEngine.Debug.Log("GameState changed:");
         UnityEngine.Debug.Log(GameStateManager.Instance.globalGameState);
 
@@ -240,11 +245,16 @@ public class Game : MonoBehaviour {
 
     public void GetStaticPositionEval() {
         GameState gameState = GameStateManager.Instance.globalGameState;
-        UnityEngine.Debug.Log("Static position evaluation:" + PositionEvaluator(gameState, 0, MoveGenerator.GetLegalMoves(gameState)));
+        float eval = PositionEvaluator(gameState, 0, GetLegalMoves(gameState));
+        UnityEngine.Debug.Log("Static position evaluation:" + eval);
+        promptText = "Static position evaluation: " + eval;
+        prompt.text = promptText;
     }
 
     public async void GetPositionEval() {
         if (currentPlayer == '-') {
+            promptText += "\nGame is over";
+            prompt.text = promptText;
             UnityEngine.Debug.Log("Game is over");
             return;
         }
@@ -255,7 +265,6 @@ public class Game : MonoBehaviour {
         }
         moveTimerCoroutine = StartCoroutine(MoveTimerCoroutine(timeToMove));
         await Task.Run(() => bestMove = SolvePosition());
-        //UnityEngine.Debug.Log("Transposition table has " + transpositionTable.Count + " game states and it was accessed " + tableHits + " times");
         GameStateManager.Instance.IsEngineRunning = false;
     }
 
@@ -264,6 +273,10 @@ public class Game : MonoBehaviour {
     }
 
     public async void ShowHint() {
+        if (currentPlayer == '-') {
+            UnityEngine.Debug.Log("game is over");
+            return;
+        }
         if (hintMove != null) {
             UnityEngine.Debug.Log("hint already " + hintMove);
             return;
@@ -275,10 +288,15 @@ public class Game : MonoBehaviour {
         if (moveTimerCoroutine != null) {
             StopCoroutine(moveTimerCoroutine);
         }
+        promptText = "Thinking...";
+        prompt.text = promptText;
+        UnityEngine.Debug.Log("Thinking...");
         moveTimerCoroutine = StartCoroutine(MoveTimerCoroutine(timeToMove));
         GameStateManager.Instance.IsEngineRunning = true;
         hintMove = await Task.Run(() => GetHint());
         GameStateManager.Instance.IsEngineRunning = false;
+        promptText += "\ngot hint " + hintMove;
+        prompt.text = promptText;
         UnityEngine.Debug.Log("got hint " + hintMove);
 
         GameObject obj1 = Instantiate(hintSquarePrefab, new Vector3(0, 0, -0.011f), Quaternion.identity);
@@ -393,7 +411,10 @@ public class Game : MonoBehaviour {
             maxDepth = depth;
             Stopwatch stopwatch = new();
             stopwatch.Start();
-            UnityEngine.Debug.Log("Number of possible positions for " + maxDepth + " moves: " + SearchPositions(gameState, 0, writer));
+            long posNumber = SearchPositions(gameState, 0, writer);
+            UnityEngine.Debug.Log("Number of possible positions for " + maxDepth + " moves: " + posNumber);
+            promptText += "\nNumber of possible positions for " + maxDepth + " moves: " + posNumber + hintMove;
+            prompt.text = promptText;
             stopwatch.Stop();
             UnityEngine.Debug.Log("For depth " + depth + " time is " + stopwatch.ElapsedMilliseconds + "ms");
             UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks1 / Stopwatch.Frequency * 1000 + "ms spent getting legal moves");
@@ -418,16 +439,25 @@ public class Game : MonoBehaviour {
         switch (GameStateManager.Instance.GetDrawConclusion(gameState, gameStates)) {
             case GameConclusion.DrawBy50MoveRule: {
                     currentPlayer = '-';
+                    promptText = "Draw by 50 move rule";
+                    prompt.text = promptText;
+                    prompt.color = Color.yellow;
                     UnityEngine.Debug.Log("Draw by 50 move rule");
                     break;
                 }
             case GameConclusion.DrawByRepetition: {
                     currentPlayer = '-';
+                    promptText = "\nDraw by 3-fold repetition";
+                    prompt.text = promptText;
+                    prompt.color = Color.yellow;
                     UnityEngine.Debug.Log("Draw by 3-fold repetition");
                     break;
                 }
             case GameConclusion.DrawByInsufficientMaterial: {
                     currentPlayer = '-';
+                    promptText += "\nDraw by insufficient material";
+                    prompt.text = promptText;
+                    prompt.color = Color.yellow;
                     UnityEngine.Debug.Log("Draw by insufficient material");
                     break;
                 }
@@ -435,11 +465,21 @@ public class Game : MonoBehaviour {
                 GameStateManager.Instance.globalLegalMoves = GetLegalMoves(gameState);
                 switch (GameStateManager.Instance.GetMateConclusion(gameState, GameStateManager.Instance.globalLegalMoves)) {
                     case GameConclusion.Checkmate: {
+                            promptText += "\nCheckmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!";
+                            prompt.text = promptText;
+                            if (currentPlayer == AIPlayer) {
+                                prompt.color = Color.green;
+                            } else {
+                                prompt.color = Color.red;
+                            }
                             UnityEngine.Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
                             currentPlayer = '-';
                             break;
                         }
                     case GameConclusion.Stalemate: {
+                            promptText += "\nStalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.";
+                            prompt.text = promptText;
+                            prompt.color = Color.yellow;
                             UnityEngine.Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
                             currentPlayer = '-';
                             break;
@@ -490,6 +530,8 @@ public class Game : MonoBehaviour {
     }
 
     public void DestroyPosition() {
+        promptText = "";
+        prompt.text = promptText;
         for (int i = 0; i < currentPieces.GetLength(0); ++i) {
             for (int j = 0; j < currentPieces.GetLength(1); ++j) {
                 if (currentPieces[i, j] != null) {

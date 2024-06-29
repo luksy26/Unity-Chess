@@ -27,7 +27,7 @@ public class ButtonManager : MonoBehaviour {
     void OnGenerateButtonClicked() {
         string inputFEN = inputField.text;
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = 'w';
+            Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
             Game.Instance.gameTreeMaxDepth = 4;
             Game.Instance.timeToMove = 5f;
