@@ -20,6 +20,8 @@ public class Game : MonoBehaviour {
         highlightedOccupiedSquarePrefab, hintSquarePrefab;
     public TMP_Text prompt;
     public string promptText = "";
+    public bool activeTutorial;
+    public Move tutorialMove;
     public Move hintMove = null;
     public char currentPlayer;
     public string playerPerspective;
@@ -48,6 +50,7 @@ public class Game : MonoBehaviour {
     }
 
     public async void GeneratePosition() {
+        activeTutorial = false;
         prompt.color = Color.white;
         GetComponent<SquareCoordinatesUI>().GenerateFilesAndRanks(playerPerspective);
         GameState globalGameState = GameStateManager.Instance.globalGameState;
@@ -106,6 +109,14 @@ public class Game : MonoBehaviour {
 
     public async void MovePiece(Move move) {
         DestroyHintSquares();
+        // not correct tutorial move
+        if (tutorialMove != null && tutorialMove.promotesInto == '-' && !move.ToString().Equals(tutorialMove.ToString())) {
+            IndexMove indexMove2 = new(move);
+            currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetFile(move.oldFile);
+            currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetRank(move.oldRank);
+            currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
+            return;
+        }
         if (currentPlayer == '-') {
             return;
         }
@@ -170,7 +181,7 @@ public class Game : MonoBehaviour {
                 }
                 GameStateManager.Instance.isPromotionMenuDisplayed = false;
                 // promotion was cancelled, but game does not reset
-                if (new_name.Equals("")) {
+                if (new_name.Equals("") || (tutorialMove != null && new_name[0] != 'k')) {
                     // make the piece visible and put it back
                     currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<SpriteRenderer>().enabled = true;
                     currentPieces[indexMove.oldRow, indexMove.oldColumn].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
@@ -237,6 +248,10 @@ public class Game : MonoBehaviour {
             MovePiece(new Move(bestMove.move));
             GameStateManager.Instance.IsEngineRunning = false;
         }
+        if (activeTutorial) {
+            GetComponent<TutorialManager>().ContinueTutorial();
+        }
+
     }
 
     public void CancelMovePiece() {
@@ -439,7 +454,7 @@ public class Game : MonoBehaviour {
         switch (GameStateManager.Instance.GetDrawConclusion(gameState, gameStates)) {
             case GameConclusion.DrawBy50MoveRule: {
                     currentPlayer = '-';
-                    promptText = "Draw by 50 move rule";
+                    promptText = prompt.text + "\n\nDraw by 50 move rule";
                     prompt.text = promptText;
                     prompt.color = Color.yellow;
                     UnityEngine.Debug.Log("Draw by 50 move rule");
@@ -447,7 +462,7 @@ public class Game : MonoBehaviour {
                 }
             case GameConclusion.DrawByRepetition: {
                     currentPlayer = '-';
-                    promptText = "\nDraw by 3-fold repetition";
+                    promptText = prompt.text + "\n\nDraw by 3-fold repetition";
                     prompt.text = promptText;
                     prompt.color = Color.yellow;
                     UnityEngine.Debug.Log("Draw by 3-fold repetition");
@@ -455,7 +470,7 @@ public class Game : MonoBehaviour {
                 }
             case GameConclusion.DrawByInsufficientMaterial: {
                     currentPlayer = '-';
-                    promptText += "\nDraw by insufficient material";
+                    promptText = prompt.text + "\n\nDraw by insufficient material";
                     prompt.text = promptText;
                     prompt.color = Color.yellow;
                     UnityEngine.Debug.Log("Draw by insufficient material");
@@ -465,7 +480,7 @@ public class Game : MonoBehaviour {
                 GameStateManager.Instance.globalLegalMoves = GetLegalMoves(gameState);
                 switch (GameStateManager.Instance.GetMateConclusion(gameState, GameStateManager.Instance.globalLegalMoves)) {
                     case GameConclusion.Checkmate: {
-                            promptText += "\nCheckmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!";
+                            promptText = prompt.text + "\n\nCheckmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!";
                             prompt.text = promptText;
                             if (currentPlayer == AIPlayer) {
                                 prompt.color = Color.green;
@@ -477,7 +492,7 @@ public class Game : MonoBehaviour {
                             break;
                         }
                     case GameConclusion.Stalemate: {
-                            promptText += "\nStalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.";
+                            promptText = prompt.text + "\n\nStalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.";
                             prompt.text = promptText;
                             prompt.color = Color.yellow;
                             UnityEngine.Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
@@ -530,8 +545,10 @@ public class Game : MonoBehaviour {
     }
 
     public void DestroyPosition() {
-        promptText = "";
-        prompt.text = promptText;
+        if (!activeTutorial) {
+            promptText = "";
+            prompt.text = promptText;
+        }
         for (int i = 0; i < currentPieces.GetLength(0); ++i) {
             for (int j = 0; j < currentPieces.GetLength(1); ++j) {
                 if (currentPieces[i, j] != null) {
