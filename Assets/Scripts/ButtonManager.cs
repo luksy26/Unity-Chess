@@ -9,7 +9,7 @@ using System;
 public class ButtonManager : MonoBehaviour {
     public InputField inputField;
     public Button generateButton, runTests, swapPerspective, getPositionEval, 
-        getStaticPositionEval, evaluateEngine, showHint, getSizeOfGameTree;
+        getStaticPositionEval, evaluateEngine, showHint, getSizeOfGameTree, startTutorial;
     public int FENskipChunk;
 
     void Start() {
@@ -21,6 +21,7 @@ public class ButtonManager : MonoBehaviour {
         evaluateEngine.onClick.AddListener(OnEvaluateEngineButtonClicked);
         getSizeOfGameTree.onClick.AddListener(OnGetSizeOfGameTreeButtonClicked);
         showHint.onClick.AddListener(OnShowHintButtonClicked);
+        startTutorial.onClick.AddListener(OnStartTutorialButtonClicked);
         Game.Instance.salvageMove = true;
     }
 
@@ -253,5 +254,14 @@ public class ButtonManager : MonoBehaviour {
     }
     void OnShowHintButtonClicked() {
         Game.Instance.ShowHint();
+    }
+    void OnStartTutorialButtonClicked() {
+        int tutorial;
+        if (inputField.text.Equals("")) {
+            tutorial = 0;
+        } else {
+            tutorial = int.Parse(inputField.text);
+        }
+        Game.Instance.StartTutorial(tutorial);
     }
 }

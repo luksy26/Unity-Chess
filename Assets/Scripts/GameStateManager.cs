@@ -53,6 +53,9 @@ public class GameStateManager : MonoBehaviour {
         globalGameState.whitePiecesPositions = new Hashtable();
         globalGameState.blackPiecesPositions = new Hashtable();
 
+        globalGameState.blackKingRow = globalGameState.blackKingColumn = -1;
+        globalGameState.whiteKingRow = globalGameState.whiteKingColumn = -1;
+
         StringBuilder inputFEN_sb = new(inputFEN);
         int index = 0;
         for (int i = 0; i < 8; i++) {
@@ -139,6 +142,9 @@ public class GameStateManager : MonoBehaviour {
     }
 
     public GameConclusion GetDrawConclusion(GameState gameState, Hashtable gameStates = null) {
+        if (gameState.whiteKingColumn == -1 || gameState.blackKingColumn == -1) {
+            return GameConclusion.NotOver;
+        }
         if (gameState.moveCounter50Move == 100) {
             return GameConclusion.DrawBy50MoveRule;
         }
@@ -204,6 +210,12 @@ public class GameStateManager : MonoBehaviour {
     }
 
     public GameConclusion GetMateConclusion(GameState gameState, List<IndexMove> moves = null) {
+        if (gameState.whiteKingColumn == -1 || gameState.blackKingColumn == -1) {
+            return GameConclusion.NotOver;
+        }
+        if (gameState.noBlackPieces == 0 || gameState.noWhitePieces == 0) {
+            return GameConclusion.NotOver;
+        }
         moves ??= GetLegalMoves(gameState);
 
         if (moves.Count == 0) {

@@ -548,6 +548,11 @@ public class Game : MonoBehaviour {
         // Destroy the notation for files and ranks
         GetComponent<SquareCoordinatesUI>().DestroyFilesAndRanks();
     }
+
+    public void StartTutorial(int tutorial) {
+        GetComponent<TutorialManager>().StartTutorial(tutorial);
+    }
+
     private string GetPieceName(char x) {
         return x switch {
             'r' => "black_rook",
