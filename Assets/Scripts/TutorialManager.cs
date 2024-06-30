@@ -4,18 +4,29 @@ using UnityEngine;
 
 public class TutorialManager : MonoBehaviour {
     public int currentTutorial, currentPromptNumber, currentMoveNumber, currentLoopNumber;
+    public int maxLoop;
     public List<int> loopTutorials;
-    public List<int> resetTutorials;
+    public List<int> multipleMovesResetTutorials;
+    public Hashtable resetTutorials;
     public List<int> oneMoveTutorials;
+    public List<int> opponentMoveTutorials;
+    public List<int> skipOpponentPromptTutorials;
     public string[] tutorialNames;
     public string[] tutorialFENs;
     public string[][] tutorialMoves;
     public string[][] tutorialPrompts;
 
     public void Start() {
+        maxLoop = 4;
         loopTutorials = new() { 0, 1, 2, 3, 4 };
-        resetTutorials = new() { 9 };
-        oneMoveTutorials = new() { 5, 6, 8, 10, 12, 13 };
+        resetTutorials = new() {
+            { 7, 2 },
+            { 9, 4 }
+        };
+        multipleMovesResetTutorials = new() { 7 };
+        oneMoveTutorials = new() { 5, 6, 8, 10, 12, 13, 17 };
+        opponentMoveTutorials = new() { 11, 14, 15, 16, 18 };
+        skipOpponentPromptTutorials = new() { 14, 15, 16, 18 };
         tutorialNames = new string[]{
             "Rook Movement",
             "Bishop Movement",
@@ -74,7 +85,7 @@ public class TutorialManager : MonoBehaviour {
             new string[1] {"b3b6"}, // stalemate capture
             new string[1] {"e5d6"}, // en-passant capture
             new string[4] {"e2e4", "a7a5", "d2d4", "h7h5"}, // develop central pawns
-            new string[4] {"g1f3", "g8h6", "b1c3", "b7a6"}, // develop knights
+            new string[4] {"g1f3", "g8h6", "b1c3", "b8a6"}, // develop knights
             new string[4] {"f1c4", "g7g6", "c1f4", "f8g7"}, // develop bishops
             new string[1] {"e1g1"}, // king to safety
             new string[4] {"f1e1", "a8a7", "a1d1", "h8h7"}, // develop rooks
@@ -136,7 +147,7 @@ public class TutorialManager : MonoBehaviour {
                         "Promoting into a queen is not always the best move!\n\nIn this situation, what can the pawn promote into to attack both the black king and queen at the same time?\n\nHint: L shape",
                         "Good choice, the knight forks the king and queen!",
                         "Now take that queen!",
-                        "Well done, you have learned to think twice before promoting to a Queen!"
+                        "Well done, you have learned when to underpromote!"
                         },
             new string[3] {
                         "Look! An undefended queen. Let's capture it!",
@@ -169,7 +180,7 @@ public class TutorialManager : MonoBehaviour {
             new string[3] {
                         "Last but not least, the rooks need to be developed as well.\n\nLet's move our recently castled kingside rook behind the center pawn on e4!",
                         "Let's bring our other rook in the center as well, behind the pawn on d4!",
-                        "Well done, the rooks nicely control the center and the pawns can be pushed in the future!"
+                        "Well done, the rooks nicely control the center and those 'e' and 'd' pawns can be pushed in the future!"
                         },
         };
     }
@@ -183,7 +194,7 @@ public class TutorialManager : MonoBehaviour {
         currentTutorial = tutorial;
         currentPromptNumber = 0;
         currentMoveNumber = 0;
-        currentLoopNumber = 0;
+        currentLoopNumber = 1;
         Game.Instance.prompt.text = "Tutorial: " + tutorialNames[tutorial] + "\n\n" + tutorialPrompts[tutorial][currentPromptNumber++];
         if (tutorialMoves[tutorial].Length > 0) {
             Game.Instance.tutorialMove = new Move(tutorialMoves[tutorial][currentMoveNumber++]);
@@ -193,9 +204,9 @@ public class TutorialManager : MonoBehaviour {
     }
     public void ContinueTutorial() {
         if (loopTutorials.Contains(currentTutorial)) {
-            if (currentLoopNumber == 0) {
+            if (currentLoopNumber == 1) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
-            } else if (currentLoopNumber > 3) {
+            } else if (currentLoopNumber > maxLoop) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber];
                 Game.Instance.activeTutorial = false;
                 return;
@@ -205,12 +216,18 @@ public class TutorialManager : MonoBehaviour {
             GameStateManager.Instance.globalGameState.whoMoves = 'w';
             Game.Instance.HandleGameState(GameStateManager.Instance.globalGameState, Game.Instance.gameStates);
         } else if (resetTutorials.Contains(currentTutorial)) {
-            if (currentLoopNumber == 0) {
+            if (currentLoopNumber == 1) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
-            } else if (currentLoopNumber > 3) {
+            } else if (currentLoopNumber >= (int)resetTutorials[currentTutorial]) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber];
                 Game.Instance.activeTutorial = false;
                 return;
+            }
+            if (multipleMovesResetTutorials.Contains(currentTutorial)) {
+                Game.Instance.tutorialMove = new Move(tutorialMoves[currentTutorial][currentMoveNumber]);
+                if (currentLoopNumber != 1) {
+                    Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
+                }
             }
             ++currentLoopNumber;
             StartCoroutine(ResetTutorialPosition(1f));
@@ -218,6 +235,18 @@ public class TutorialManager : MonoBehaviour {
             Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             Game.Instance.activeTutorial = false;
             return;
+        } else if (opponentMoveTutorials.Contains(currentTutorial)) {
+            if (!skipOpponentPromptTutorials.Contains(currentTutorial)) {
+                Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
+            }
+            if (currentMoveNumber != tutorialMoves[currentTutorial].Length) {
+                Game.Instance.tutorialMoving = true;
+                StartCoroutine(ContinueOpponentTutorial(2f));
+            } else {
+                Game.Instance.activeTutorial = false;
+                Game.Instance.currentPlayer = '-';
+                return;
+            }
         }
     }
     private IEnumerator ResetTutorialPosition(float delay) {
@@ -229,5 +258,16 @@ public class TutorialManager : MonoBehaviour {
         Game.Instance.playerPerspective = "white";
         Game.Instance.GeneratePosition();
         Game.Instance.activeTutorial = true;
+    }
+    private IEnumerator ContinueOpponentTutorial(float delay) {
+        // Wait for the delay (in seconds)
+        yield return new WaitForSeconds(delay);
+        Game.Instance.tutorialMove = new Move(tutorialMoves[currentTutorial][currentMoveNumber]);
+        Game.Instance.MovePiece(new Move(tutorialMoves[currentTutorial][currentMoveNumber++]));
+        if (currentMoveNumber < tutorialMoves[currentTutorial].Length) {
+            Game.Instance.tutorialMove = new Move(tutorialMoves[currentTutorial][currentMoveNumber++]);
+        }
+        Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
+        Game.Instance.tutorialMoving = false;
     }
 }

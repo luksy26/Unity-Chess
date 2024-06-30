@@ -58,7 +58,7 @@ public class PieceMover : MonoBehaviour {
             isDragging = false;
             bool backToStart = true;
 
-            if (!GameStateManager.Instance.IsEngineRunning && IsInBounds(mousePosition)) {
+            if (!currentGame.tutorialMoving && !GameStateManager.Instance.IsEngineRunning && IsInBounds(mousePosition)) {
                 char piece_owner = GetPieceOwner(name);
                 if (currentGame.currentPlayer.Equals(piece_owner)) {
                     PiecePlacer placer = GetComponent<PiecePlacer>();

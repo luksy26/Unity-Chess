@@ -21,6 +21,7 @@ public class Game : MonoBehaviour {
     public TMP_Text prompt;
     public string promptText = "";
     public bool activeTutorial;
+    public bool tutorialMoving;
     public Move tutorialMove;
     public Move hintMove = null;
     public char currentPlayer;
@@ -39,6 +40,7 @@ public class Game : MonoBehaviour {
         whitePieces = new();
         gameStates = new();
         promotionManager = GetComponent<PromotionManager>();
+        tutorialMoving = false;
     }
     private void Awake() {
         if (Instance == null) {
@@ -51,6 +53,7 @@ public class Game : MonoBehaviour {
 
     public async void GeneratePosition() {
         activeTutorial = false;
+        
         prompt.color = Color.white;
         GetComponent<SquareCoordinatesUI>().GenerateFilesAndRanks(playerPerspective);
         GameState globalGameState = GameStateManager.Instance.globalGameState;
@@ -108,16 +111,15 @@ public class Game : MonoBehaviour {
     }
 
     public async void MovePiece(Move move) {
+        bool localTutorialMoving = tutorialMoving;
         DestroyHintSquares();
         // not correct tutorial move
-        if (tutorialMove != null && tutorialMove.promotesInto == '-' && !move.ToString().Equals(tutorialMove.ToString())) {
+        if (activeTutorial && tutorialMove != null && tutorialMove.promotesInto == '-' && 
+            !move.ToString().Equals(tutorialMove.ToString())) {
             IndexMove indexMove2 = new(move);
             currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetFile(move.oldFile);
             currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetRank(move.oldRank);
             currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetGlobalCoords(playerPerspective);
-            return;
-        }
-        if (currentPlayer == '-') {
             return;
         }
         GameState gameState = GameStateManager.Instance.globalGameState;
@@ -248,10 +250,9 @@ public class Game : MonoBehaviour {
             MovePiece(new Move(bestMove.move));
             GameStateManager.Instance.IsEngineRunning = false;
         }
-        if (activeTutorial) {
+        if (activeTutorial && !localTutorialMoving) {
             GetComponent<TutorialManager>().ContinueTutorial();
         }
-
     }
 
     public void CancelMovePiece() {

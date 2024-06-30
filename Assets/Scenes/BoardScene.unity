@@ -360,7 +360,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 4.299, y: 3.705}
+  m_AnchoredPosition: {x: 4.523, y: 3.503}
   m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &240080212
@@ -1229,7 +1229,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 4.299, y: 3.06}
+  m_AnchoredPosition: {x: 5.326, y: 3.503}
   m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1001067020
@@ -1928,6 +1928,7 @@ MonoBehaviour:
   prompt: {fileID: 1757493057}
   promptText: 
   activeTutorial: 0
+  tutorialMoving: 0
   currentPlayer: 49
   playerPerspective: black
   AIPlayer: 46
@@ -2017,9 +2018,12 @@ MonoBehaviour:
   currentPromptNumber: 0
   currentMoveNumber: 0
   currentLoopNumber: 0
+  maxLoop: 0
   loopTutorials: 
-  resetTutorials: 
+  multipleMovesResetTutorials: 
   oneMoveTutorials: 
+  opponentMoveTutorials: 
+  skipOpponentPromptTutorials: 
   tutorialNames: []
   tutorialFENs: []
 --- !u!1 &1502214221
@@ -2528,8 +2532,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 5.56, y: 0.01}
-  m_SizeDelta: {x: 200, y: 350}
+  m_AnchoredPosition: {x: 5.56, y: -0.58}
+  m_SizeDelta: {x: 200, y: 440}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1757493057
 MonoBehaviour:
@@ -2585,7 +2589,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 1
+  m_HorizontalAlignment: 2
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
