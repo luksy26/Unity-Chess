@@ -251,7 +251,7 @@ public class TutorialManager : MonoBehaviour {
                 Game.Instance.activeTutorial = false;
                 Game.Instance.currentPlayer = '-';
                 if (currentTutorial == tutorialNames.Length - 1) {
-                    Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them from the Main Menu!";
+                    Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them in the Main Menu!";
                 }
                 return;
             }
