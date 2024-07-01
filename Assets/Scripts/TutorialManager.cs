@@ -17,6 +17,7 @@ public class TutorialManager : MonoBehaviour {
     public string[][] tutorialPrompts;
 
     public void Start() {
+        currentTutorial = -1;
         maxLoop = 4;
         loopTutorials = new() { 0, 1, 2, 3, 4 };
         resetTutorials = new() {
@@ -191,6 +192,7 @@ public class TutorialManager : MonoBehaviour {
         Game.Instance.playerPerspective = "white";
         Game.Instance.GeneratePosition();
         Game.Instance.activeTutorial = true;
+        Game.Instance.tutorialMoving = false;
         currentTutorial = tutorial;
         currentPromptNumber = 0;
         currentMoveNumber = 0;
@@ -209,6 +211,7 @@ public class TutorialManager : MonoBehaviour {
             } else if (currentLoopNumber > maxLoop) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber];
                 Game.Instance.activeTutorial = false;
+                Game.Instance.currentPlayer = '-';
                 return;
             }
             ++currentLoopNumber;
@@ -221,6 +224,7 @@ public class TutorialManager : MonoBehaviour {
             } else if (currentLoopNumber >= (int)resetTutorials[currentTutorial]) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber];
                 Game.Instance.activeTutorial = false;
+                Game.Instance.currentPlayer = '-';
                 return;
             }
             if (multipleMovesResetTutorials.Contains(currentTutorial)) {
@@ -234,40 +238,58 @@ public class TutorialManager : MonoBehaviour {
         } else if (oneMoveTutorials.Contains(currentTutorial)) {
             Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             Game.Instance.activeTutorial = false;
+            Game.Instance.currentPlayer = '-';
             return;
         } else if (opponentMoveTutorials.Contains(currentTutorial)) {
             if (!skipOpponentPromptTutorials.Contains(currentTutorial)) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             }
-            if (currentMoveNumber != tutorialMoves[currentTutorial].Length) {
+            if (currentPromptNumber != tutorialPrompts[currentTutorial].Length) {
                 Game.Instance.tutorialMoving = true;
                 StartCoroutine(ContinueOpponentTutorial(2f));
             } else {
                 Game.Instance.activeTutorial = false;
                 Game.Instance.currentPlayer = '-';
+                if (currentTutorial == tutorialNames.Length - 1) {
+                    Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them from the Main Menu!";
+                }
                 return;
             }
         }
     }
     private IEnumerator ResetTutorialPosition(float delay) {
         // Wait for the delay (in seconds)
+        int localCurrentTutorial = currentTutorial;
         yield return new WaitForSeconds(delay);
-        GameStateManager.Instance.GenerateGameState(tutorialFENs[currentTutorial]);
-        Game.Instance.CancelMovePiece();
-        Game.Instance.DestroyPosition();
-        Game.Instance.playerPerspective = "white";
-        Game.Instance.GeneratePosition();
-        Game.Instance.activeTutorial = true;
+        if (currentTutorial == localCurrentTutorial) { // still in the same tutorial
+            GameStateManager.Instance.GenerateGameState(tutorialFENs[currentTutorial]);
+            Game.Instance.CancelMovePiece();
+            Game.Instance.DestroyPosition();
+            Game.Instance.playerPerspective = "white";
+            Game.Instance.GeneratePosition();
+            Game.Instance.activeTutorial = true;
+        }
     }
     private IEnumerator ContinueOpponentTutorial(float delay) {
         // Wait for the delay (in seconds)
+        int localCurrentTutorial = currentTutorial;
         yield return new WaitForSeconds(delay);
-        Game.Instance.tutorialMove = new Move(tutorialMoves[currentTutorial][currentMoveNumber]);
-        Game.Instance.MovePiece(new Move(tutorialMoves[currentTutorial][currentMoveNumber++]));
-        if (currentMoveNumber < tutorialMoves[currentTutorial].Length) {
-            Game.Instance.tutorialMove = new Move(tutorialMoves[currentTutorial][currentMoveNumber++]);
+        if (localCurrentTutorial == currentTutorial) { // tutorial was not changed
+            Game.Instance.tutorialMove = new Move(tutorialMoves[currentTutorial][currentMoveNumber]);
+            Game.Instance.MovePiece(new Move(tutorialMoves[currentTutorial][currentMoveNumber++]));
+            if (currentMoveNumber < tutorialMoves[currentTutorial].Length) {
+                Game.Instance.tutorialMove = new Move(tutorialMoves[currentTutorial][currentMoveNumber++]);
+            }
+            Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
+            Game.Instance.tutorialMoving = false;
+            if (currentPromptNumber == tutorialPrompts[currentTutorial].Length) {
+                Game.Instance.activeTutorial = false;
+                Game.Instance.currentPlayer = '-';
+                if (currentTutorial == tutorialNames.Length - 1) {
+                    yield return new WaitForSeconds(1f);
+                    Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them from the Main Menu!";
+                }
+            }
         }
-        Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
-        Game.Instance.tutorialMoving = false;
     }
 }

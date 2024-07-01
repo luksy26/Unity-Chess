@@ -10,7 +10,7 @@ using TMPro;
 public class ButtonManager : MonoBehaviour {
     public Transform canvasTransform;
     public GameObject swapPerspectivePrefab, showHintPrefab, getSizeOfGameTreePrefab, startTutorialPrefab,
-        evaluateEnginePrefab, getStaticPositionEvalPrefab, runTestsPrefab, getPositionEvalPrefab, 
+        evaluateEnginePrefab, getStaticPositionEvalPrefab, runTestsPrefab, getPositionEvalPrefab,
         generatePositionPrefab, inputFieldPrefab, textPromptPrefab, mainMenuPrefab, soundPrefab, nextTutorialPrefab;
     public GameObject swapPerspectiveObject, showHintObject, getSizeOfGameTreeObject, startTutorialObject,
         evaluateEngineObject, getStaticPositionEvalObject, runTestsObject, getPositionEvalObject,
@@ -226,11 +226,29 @@ public class ButtonManager : MonoBehaviour {
             newRectTransform.localRotation = prefabRectTransform.localRotation;
             newRectTransform.localScale = prefabRectTransform.localScale;
         }
-        // TODO Add Listener
+        nextTutorialObject.GetComponent<Button>().onClick.AddListener(OnNextTutorialButtonClicked);
     }
 
     void OnGeneratePositionButtonClicked() {
-        string inputFEN = inputFieldObject.GetComponent<InputField>().text;
+        int tutorial = Game.Instance.GetComponent<TutorialManager>().currentTutorial;
+        if (tutorial != -1) {
+            if (!Game.Instance.tutorialMoving &&
+                (inputFieldObject == null || inputFieldObject.GetComponent<InputField>().text.Length < 20)) {
+                Game.Instance.StartTutorial(tutorial);
+                return;
+            }
+        }
+        string inputFEN;
+        if (tutorial != -1) {
+            if (inputFieldObject.GetComponent<InputField>().text.Length < 20)
+                return;
+        }
+        inputFEN = inputFieldObject.GetComponent<InputField>().text;
+        Game.Instance.GetComponent<TutorialManager>().currentTutorial = -1;
+
+        if (string.IsNullOrEmpty(inputFEN)) {
+            inputFEN = "";
+        }
         if (!GameStateManager.Instance.IsEngineRunning) {
             Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
@@ -461,10 +479,27 @@ public class ButtonManager : MonoBehaviour {
     }
     void OnStartTutorialButtonClicked() {
         int tutorial;
-        if (inputFieldObject.GetComponent<InputField>().text.Equals("")) {
+        if (inputFieldObject == null) {
+            tutorial = 0;
+        } else if (inputFieldObject.GetComponent<InputField>().text.Equals("")) {
             tutorial = 0;
         } else {
             tutorial = int.Parse(inputFieldObject.GetComponent<InputField>().text);
+        }
+        Game.Instance.StartTutorial(tutorial);
+    }
+    void OnNextTutorialButtonClicked() {
+        if (Game.Instance.activeTutorial) { // first finish current tutorial
+            return;
+        }
+        int tutorial = Game.Instance.GetComponent<TutorialManager>().currentTutorial + 1;
+        if (tutorial == 0) {
+            // there was no previous tutorial, so we're not in the tutorial phase
+            return;
+        }
+        if (tutorial >= Game.Instance.GetComponent<TutorialManager>().tutorialNames.Length) {
+            // last tutorial was finished
+            return;
         }
         Game.Instance.StartTutorial(tutorial);
     }

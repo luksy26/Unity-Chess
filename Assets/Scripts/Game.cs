@@ -45,7 +45,6 @@ public class Game : MonoBehaviour {
     private void Awake() {
         if (Instance == null) {
             Instance = this;
-            //DontDestroyOnLoad(gameObject); // Persist this object across scenes
         } else {
             Destroy(gameObject);
         }
@@ -111,6 +110,9 @@ public class Game : MonoBehaviour {
     }
 
     public async void MovePiece(Move move) {
+        if (currentPlayer == '-') { // game is over or tutorial is finished
+            return;
+        }
         bool localTutorialMoving = tutorialMoving;
         DestroyHintSquares();
         // not correct tutorial move
