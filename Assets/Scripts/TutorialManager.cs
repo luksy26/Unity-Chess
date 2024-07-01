@@ -22,7 +22,7 @@ public class TutorialManager : MonoBehaviour {
         loopTutorials = new() { 0, 1, 2, 3, 4 };
         resetTutorials = new() {
             { 7, 2 },
-            { 9, 4 }
+            { 9, 2 }
         };
         multipleMovesResetTutorials = new() { 7 };
         oneMoveTutorials = new() { 5, 6, 8, 10, 12, 13, 17 };
