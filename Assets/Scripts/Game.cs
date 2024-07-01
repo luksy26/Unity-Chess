@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using static PositionCounter;
 using static MoveGenerator;
-using static AIv3;
 using TMPro;
 
 public class Game : MonoBehaviour {
@@ -26,6 +25,7 @@ public class Game : MonoBehaviour {
     public Move hintMove = null;
     public char currentPlayer;
     public string playerPerspective;
+    public int AItoUse;
     public char AIPlayer;
     public int gameTreeMaxDepth;
     public float timeToMove;
@@ -52,8 +52,13 @@ public class Game : MonoBehaviour {
 
     public async void GeneratePosition() {
         activeTutorial = false;
-
-        prompt.color = Color.white;
+        Color betterWhite = Color.white;
+        betterWhite.a = 150f / 255f;
+        prompt.color = betterWhite;
+        if (AItoUse > 0) {
+            promptText = "You're up against AIv" + AItoUse + "!";
+            prompt.text = promptText;
+        }
         GetComponent<SquareCoordinatesUI>().GenerateFilesAndRanks(playerPerspective);
         GameState globalGameState = GameStateManager.Instance.globalGameState;
 
@@ -263,7 +268,7 @@ public class Game : MonoBehaviour {
 
     public void GetStaticPositionEval() {
         GameState gameState = GameStateManager.Instance.globalGameState;
-        float eval = PositionEvaluator(gameState, 0, GetLegalMoves(gameState));
+        float eval = AIv6.PositionEvaluator(gameState, 0, GetLegalMoves(gameState));
         UnityEngine.Debug.Log("Static position evaluation:" + eval);
         promptText = "Static position evaluation: " + eval;
         prompt.text = promptText;
@@ -317,7 +322,7 @@ public class Game : MonoBehaviour {
         GameStateManager.Instance.IsEngineRunning = true;
         hintMove = await Task.Run(() => GetHint());
         GameStateManager.Instance.IsEngineRunning = false;
-        promptText += "\ngot hint " + hintMove;
+        promptText += "\nTry moving there!";
         prompt.text = promptText;
         UnityEngine.Debug.Log("got hint " + hintMove);
 
@@ -379,7 +384,17 @@ public class Game : MonoBehaviour {
         int maxSearchDepth = 10;
         promptText = "";
         while (searchDepth <= maxSearchDepth) {
-            MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates);
+            MoveEval moveToMake = new();
+            switch (AItoUse) {
+                case 1: moveToMake = AIv2.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove); break;
+                case 2: moveToMake = AIv3.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove); break;
+                case 3: moveToMake = AIv4.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates); break;
+                case 4: moveToMake = AIv5.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates); break;
+                case 5: moveToMake = AIv6.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates); break;
+                case 6: moveToMake = AIv7.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates); break;
+                case 7: moveToMake = AIv8.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates); break;
+                default: break;
+            }
             if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
                 moveToMakeFound = moveToMake;
                 string information = "best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
@@ -474,7 +489,9 @@ public class Game : MonoBehaviour {
                     currentPlayer = '-';
                     promptText = prompt.text + "\n\nDraw by 50 move rule";
                     prompt.text = promptText;
-                    prompt.color = Color.yellow;
+                    Color betterYellow = Color.yellow;
+                    betterYellow.a = 150f / 255f;
+                    prompt.color = betterYellow;
                     UnityEngine.Debug.Log("Draw by 50 move rule");
                     break;
                 }
@@ -482,7 +499,9 @@ public class Game : MonoBehaviour {
                     currentPlayer = '-';
                     promptText = prompt.text + "\n\nDraw by 3-fold repetition";
                     prompt.text = promptText;
-                    prompt.color = Color.yellow;
+                    Color betterYellow = Color.yellow;
+                    betterYellow.a = 150f / 255f;
+                    prompt.color = betterYellow;
                     UnityEngine.Debug.Log("Draw by 3-fold repetition");
                     break;
                 }
@@ -490,7 +509,9 @@ public class Game : MonoBehaviour {
                     currentPlayer = '-';
                     promptText = prompt.text + "\n\nDraw by insufficient material";
                     prompt.text = promptText;
-                    prompt.color = Color.yellow;
+                    Color betterYellow = Color.yellow;
+                    betterYellow.a = 150f / 255f;
+                    prompt.color = betterYellow;
                     UnityEngine.Debug.Log("Draw by insufficient material");
                     break;
                 }
@@ -501,9 +522,14 @@ public class Game : MonoBehaviour {
                             promptText = prompt.text + "\n\nCheckmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!";
                             prompt.text = promptText;
                             if (currentPlayer == AIPlayer) {
-                                prompt.color = Color.green;
+                                Color betterGreen = Color.green;
+                                betterGreen.a = 150f / 255f;
+                                prompt.color = betterGreen;
                             } else {
-                                prompt.color = Color.red;
+                                Color betterRed = Color.red;
+                                betterRed.g = betterRed.b = 80f / 255f;
+                                betterRed.a = 150f / 255f;
+                                prompt.color = betterRed;
                             }
                             UnityEngine.Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
                             currentPlayer = '-';
@@ -512,7 +538,9 @@ public class Game : MonoBehaviour {
                     case GameConclusion.Stalemate: {
                             promptText = prompt.text + "\n\nStalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.";
                             prompt.text = promptText;
-                            prompt.color = Color.yellow;
+                            Color betterYellow = Color.yellow;
+                            betterYellow.a = 150f / 255f;
+                            prompt.color = betterYellow;
                             UnityEngine.Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
                             currentPlayer = '-';
                             break;

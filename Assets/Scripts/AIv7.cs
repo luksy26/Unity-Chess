@@ -9,7 +9,6 @@ using static MoveGenerator;
     evaluation based on controlled squares (+ distance from center, distance from king),
     partial search at max depth
     3fold detection
-    move ordering
 */
 public static class AIv7 {
     public const int MOVE_FIRST_ADVANTAGE = 20;
@@ -334,64 +333,9 @@ public static class AIv7 {
         };
     }
 
-    public static void OrderMoves(List<IndexMove> legalMoves, GameState gameState) {
-        List<Tuple<IndexMove, int>> movesWithScore = new();
-        foreach (IndexMove move in legalMoves) {
-            int movescore = 0;
-            int capturedPieceIndex = GetPieceIndex(gameState.boardConfiguration[move.newRow, move.newColumn]);
-            int movingPieceIndex = GetPieceIndex(gameState.boardConfiguration[move.oldRow, move.oldColumn]);
-
-            if (capturedPieceIndex != -1 && capturedPieceIndex > movingPieceIndex) {
-                // value of captured piece relative to value of moving piece
-                movescore += pieceValues[capturedPieceIndex] - pieceValues[movingPieceIndex];
-            }
-            if (movingPieceIndex > 0) { // higher value piece attacked by a pawn
-                if (gameState.whoMoves == 'w') {
-                    if (move.newRow - 1 > 0) {
-                        if (move.newColumn - 1 >= 0) {
-                            if (GetPieceIndex(gameState.boardConfiguration[move.newRow - 1, move.newColumn - 1]) == 0) {
-                                movescore -= pieceValues[movingPieceIndex];
-                            }
-                        }
-                        if (move.newColumn + 1 < 8) {
-                            if (GetPieceIndex(gameState.boardConfiguration[move.newRow - 1, move.newColumn + 1]) == 0) {
-                                movescore -= pieceValues[movingPieceIndex];
-                            }
-                        }
-                    }
-                } else {
-                    if (move.newRow + 1 < 7) {
-                        if (move.newColumn - 1 >= 0) {
-                            if (GetPieceIndex(gameState.boardConfiguration[move.newRow + 1, move.newColumn - 1]) == 0) {
-                                movescore -= pieceValues[movingPieceIndex];
-                            }
-                        }
-                        if (move.newColumn + 1 < 8) {
-                            if (GetPieceIndex(gameState.boardConfiguration[move.newRow + 1, move.newColumn + 1]) == 0) {
-                                movescore -= pieceValues[movingPieceIndex];
-                            }
-                        }
-                    }
-                }
-            }
-            if (movingPieceIndex == 0 && move.newRow == 0 || move.newRow == 7) {
-                movescore += pieceValues[4];
-            }
-            movesWithScore.Add(new Tuple<IndexMove, int>(move, movescore));
-        }
-        // sort descending by move score
-        movesWithScore.Sort((x, y) => y.Item2.CompareTo(x.Item2));
-        legalMoves.Clear();
-        // add the moves back to the original list
-        foreach (Tuple<IndexMove, int> moveWithScore in movesWithScore) {
-            legalMoves.Add(moveWithScore.Item1);
-        }
-    }
-
     public static MoveEval GetBestMove(GameState gameState, int maxLevel, MoveEval mandatoryMove = null,
         MoveEval prevBestMove = null, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
-        OrderMoves(legalMoves, gameState);
         if (prevBestMove != null) {
             int index = legalMoves.IndexOf(prevBestMove.move);
             // put the previously best move first (or second if we also have a mandatory move) to maximize pruning
@@ -446,7 +390,6 @@ public static class AIv7 {
 
     public static float MiniMax(GameState gameState, int depth, float alpha, float beta, Hashtable gameStates = null) {
         List<IndexMove> legalMoves = GetLegalMoves(gameState);
-        OrderMoves(legalMoves, gameState);
         if (depth == maximumDepth) {
             return PositionEvaluator(gameState, depth, legalMoves);
         }

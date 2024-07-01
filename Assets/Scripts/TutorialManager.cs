@@ -152,7 +152,7 @@ public class TutorialManager : MonoBehaviour {
                         },
             new string[3] {
                         "Look! An undefended queen. Let's capture it!",
-                        "But wait, look at the black king, it has no moves!\n\nThis is called Stalemate. When a player has no legal moves, but is not in check, the game ends in a draw.",
+                        "But wait, look at the black King, it has no moves!\n\nThis is called Stalemate. When a player has no legal moves, but is not in check, the game ends in a draw.",
                         "Well done, you have learned about Stalemate!"
                         },
             new string[2] {

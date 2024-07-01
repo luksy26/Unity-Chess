@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using static PositionCounter;
 using System;
 using TMPro;
@@ -18,7 +19,28 @@ public class ButtonManager : MonoBehaviour {
     public int FENskipChunk;
 
     void Start() {
+        CreateTextPrompt();
+        CreateMainMenuButton();
         CreateSwapPerspectiveButton();
+        CreateSoundButton();
+        CreateGeneratePositionButton();
+        if (SelectedOption.tutorial != -1) {
+            // loading tutorial
+            CreateNextTutorialButton();
+            Game.Instance.AItoUse = -1;
+            Game.Instance.GetComponent<TutorialManager>().StartTutorial(SelectedOption.tutorial);
+            return;
+        }
+        if (SelectedOption.AI != -1) {
+            // loading AI match
+            Game.Instance.salvageMove = true;
+            CreateShowHintButton();
+            SetupAIMatch(SelectedOption.AI, "");
+            return;
+        }
+        // in dev corner
+        Game.Instance.salvageMove = true;
+        CreateNextTutorialButton();
         CreateShowHintButton();
         CreateGetSizeOfGameTreeButton();
         CreateStartTutorialButton();
@@ -26,13 +48,7 @@ public class ButtonManager : MonoBehaviour {
         CreateGetStaticPositionEvalButton();
         CreateRunTestsButton();
         CreateGetPositionEvalButton();
-        CreateGeneratePositionButton();
         CreateInputField();
-        CreateTextPrompt();
-        CreateMainMenuButton();
-        CreateSoundButton();
-        CreateNextTutorialButton();
-        Game.Instance.salvageMove = true;
     }
 
     void CreateSwapPerspectiveButton() {
@@ -198,7 +214,7 @@ public class ButtonManager : MonoBehaviour {
             newRectTransform.localRotation = prefabRectTransform.localRotation;
             newRectTransform.localScale = prefabRectTransform.localScale;
         }
-        // TODO Add Listener
+        mainMenuObject.GetComponent<Button>().onClick.AddListener(OnMainMenuButtonClicked);
     }
 
     void CreateSoundButton() {
@@ -243,23 +259,36 @@ public class ButtonManager : MonoBehaviour {
             if (inputFieldObject.GetComponent<InputField>().text.Length < 20)
                 return;
         }
+        if (inputFieldObject == null) {
+            inputFEN = "";
+        } else {
         inputFEN = inputFieldObject.GetComponent<InputField>().text;
+        }
         Game.Instance.GetComponent<TutorialManager>().currentTutorial = -1;
 
         if (string.IsNullOrEmpty(inputFEN)) {
             inputFEN = "";
         }
         if (!GameStateManager.Instance.IsEngineRunning) {
-            Game.Instance.AIPlayer = '-';
-            Game.Instance.playerPerspective = "white";
-            Game.Instance.gameTreeMaxDepth = 5;
-            Game.Instance.timeToMove = 5f;
-            Game.Instance.timeNotExpired = true;
-            Game.Instance.CancelMovePiece();
-            GameStateManager.Instance.GenerateGameState(inputFEN);
-            Game.Instance.DestroyPosition();
-            Game.Instance.GeneratePosition();
+            SetupAIMatch(SelectedOption.AI, inputFEN);
         }
+    }
+
+    void SetupAIMatch(int AIindex, string inputFEN) {
+        if (AIindex == -1) {
+            Game.Instance.AIPlayer = '-';
+        } else {
+            Game.Instance.AIPlayer = 'b';
+        }
+        Game.Instance.AItoUse = AIindex;
+        Game.Instance.playerPerspective = "white";
+        Game.Instance.gameTreeMaxDepth = 5;
+        Game.Instance.timeToMove = 5f;
+        Game.Instance.timeNotExpired = true;
+        Game.Instance.CancelMovePiece();
+        GameStateManager.Instance.GenerateGameState(inputFEN);
+        Game.Instance.DestroyPosition();
+        Game.Instance.GeneratePosition();
     }
 
     void OnGetSizeOfGameTreeButtonClicked() {
@@ -268,7 +297,7 @@ public class ButtonManager : MonoBehaviour {
 
     async void OnEvaluateEngineButtonClicked() {
         FENskipChunk = 1;
-        for (int i = 1; i <= 7; i += 6) {
+        for (int i = 1; i <= 8; ++i) {
             await EvaluateEngine("engineEvaluation" + i + ".txt", i);
         }
     }
@@ -325,6 +354,7 @@ public class ButtonManager : MonoBehaviour {
                         case 5: await Task.Run(() => moveToMake = AIv5.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
                         case 6: await Task.Run(() => moveToMake = AIv6.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
                         case 7: await Task.Run(() => moveToMake = AIv7.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
+                        case 8: await Task.Run(() => moveToMake = AIv8.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, Game.Instance.gameStates)); break;
                         default: break;
                     }
                     if (Game.Instance.timeNotExpired || (Game.Instance.salvageMove && Math.Abs(mandatoryMove.score) != 10000)) {
@@ -502,5 +532,8 @@ public class ButtonManager : MonoBehaviour {
             return;
         }
         Game.Instance.StartTutorial(tutorial);
+    }
+    void OnMainMenuButtonClicked() {
+        SceneManager.LoadScene("MainMenuScene");
     }
 }
