@@ -7,26 +7,171 @@ using static PositionCounter;
 using System;
 
 public class ButtonManager : MonoBehaviour {
-    public InputField inputField;
-    public Button generateButton, runTests, swapPerspective, getPositionEval, 
-        getStaticPositionEval, evaluateEngine, showHint, getSizeOfGameTree, startTutorial;
+    public Transform canvasTransform;
+    public GameObject swapPerspectivePrefab, showHintPrefab, getSizeOfGameTreePrefab, startTutorialPrefab,
+        evaluateEnginePrefab, getStaticPositionEvalPrefab, runTestsPrefab, getPositionEvalPrefab, 
+        generatePositionPrefab, inputFieldPrefab;
+    public GameObject swapPerspectiveObject, showHintObject, getSizeOfGameTreeObject, startTutorialObject,
+        evaluateEngineObject, getStaticPositionEvalObject, runTestsObject, getPositionEvalObject,
+        generatePositionObject, inputFieldObject;
     public int FENskipChunk;
 
     void Start() {
-        generateButton.onClick.AddListener(OnGenerateButtonClicked);
-        runTests.onClick.AddListener(OnRunTestsButtonClicked);
-        swapPerspective.onClick.AddListener(OnSwapPerspectiveClicked);
-        getPositionEval.onClick.AddListener(OnGetPositionEvalClicked);
-        getStaticPositionEval.onClick.AddListener(OnGetStaticPositionEvalClicked);
-        evaluateEngine.onClick.AddListener(OnEvaluateEngineButtonClicked);
-        getSizeOfGameTree.onClick.AddListener(OnGetSizeOfGameTreeButtonClicked);
-        showHint.onClick.AddListener(OnShowHintButtonClicked);
-        startTutorial.onClick.AddListener(OnStartTutorialButtonClicked);
+        CreateSwapPerspectiveButton();
+        CreateShowHintButton();
+        CreateGetSizeOfGameTreeButton();
+        CreateStartTutorialButton();
+        CreateEvaluateEngineButton();
+        CreateGetStaticPositionEvalButton();
+        CreateRunTestsButton();
+        CreateGetPositionEvalButton();
+        CreateGeneratePositionButton();
+        CreateInputField();
         Game.Instance.salvageMove = true;
     }
 
-    void OnGenerateButtonClicked() {
-        string inputFEN = inputField.text;
+    void CreateSwapPerspectiveButton() {
+        swapPerspectiveObject = Instantiate(swapPerspectivePrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = swapPerspectivePrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = swapPerspectiveObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        swapPerspectiveObject.GetComponent<Button>().onClick.AddListener(OnSwapPerspectiveClicked);
+    }
+
+    void CreateShowHintButton() {
+        showHintObject = Instantiate(showHintPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = showHintPrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = showHintObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        showHintObject.GetComponent<Button>().onClick.AddListener(OnShowHintButtonClicked);
+    }
+
+    void CreateGetSizeOfGameTreeButton() {
+        getSizeOfGameTreeObject = Instantiate(getSizeOfGameTreePrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = getSizeOfGameTreePrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = getSizeOfGameTreeObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        getSizeOfGameTreeObject.GetComponent<Button>().onClick.AddListener(OnGetSizeOfGameTreeButtonClicked);
+    }
+
+    void CreateStartTutorialButton() {
+        startTutorialObject = Instantiate(startTutorialPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = startTutorialPrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = startTutorialObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        startTutorialObject.GetComponent<Button>().onClick.AddListener(OnStartTutorialButtonClicked);
+    }
+    void CreateEvaluateEngineButton() {
+        evaluateEngineObject = Instantiate(evaluateEnginePrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = evaluateEnginePrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = evaluateEngineObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        evaluateEngineObject.GetComponent<Button>().onClick.AddListener(OnEvaluateEngineButtonClicked);
+    }
+
+    void CreateGetStaticPositionEvalButton() {
+        getStaticPositionEvalObject = Instantiate(getStaticPositionEvalPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = getStaticPositionEvalPrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = getStaticPositionEvalObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        getStaticPositionEvalObject.GetComponent<Button>().onClick.AddListener(OnGetStaticPositionEvalClicked);
+    }
+
+    void CreateRunTestsButton() {
+        runTestsObject = Instantiate(runTestsPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = runTestsPrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = runTestsObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        runTestsObject.GetComponent<Button>().onClick.AddListener(OnRunTestsButtonClicked);
+    }
+
+    void CreateGetPositionEvalButton() {
+        getPositionEvalObject = Instantiate(getPositionEvalPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = getPositionEvalPrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = getPositionEvalObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        getPositionEvalObject.GetComponent<Button>().onClick.AddListener(OnGetPositionEvalClicked);
+    }
+
+    void CreateGeneratePositionButton() {
+        generatePositionObject = Instantiate(generatePositionPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = generatePositionPrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = generatePositionObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        generatePositionObject.GetComponent<Button>().onClick.AddListener(OnGeneratePositionButtonClicked);
+    }
+
+    void CreateInputField() {
+        inputFieldObject = Instantiate(inputFieldPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = inputFieldPrefab.GetComponent<RectTransform>();
+        RectTransform newButtonRectTransform = inputFieldObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newButtonRectTransform != null) {
+            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
+            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
+            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        }
+    }
+
+
+
+    void OnGeneratePositionButtonClicked() {
+        string inputFEN = inputFieldObject.GetComponent<InputField>().text;
         if (!GameStateManager.Instance.IsEngineRunning) {
             Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
@@ -257,10 +402,10 @@ public class ButtonManager : MonoBehaviour {
     }
     void OnStartTutorialButtonClicked() {
         int tutorial;
-        if (inputField.text.Equals("")) {
+        if (inputFieldObject.GetComponent<InputField>().text.Equals("")) {
             tutorial = 0;
         } else {
-            tutorial = int.Parse(inputField.text);
+            tutorial = int.Parse(inputFieldObject.GetComponent<InputField>().text);
         }
         Game.Instance.StartTutorial(tutorial);
     }
