@@ -278,6 +278,7 @@ public class ButtonManager : MonoBehaviour {
     void SetupAIMatch(int AIindex, string inputFEN) {
         if (AIindex == -1) {
             Game.Instance.AIPlayer = '-';
+            AIindex = 5;
         } else {
             Game.Instance.AIPlayer = 'b';
         }

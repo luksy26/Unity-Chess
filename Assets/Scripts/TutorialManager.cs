@@ -175,7 +175,7 @@ public class TutorialManager : MonoBehaviour {
                         "Well done, the bishops are nicely placed on c4 and f4, controlling important diagonals!"
                         },
             new string[2] {
-                        "It is important to keep our king safe.\n\nNow that we've developed our kingside pieces, let's castle short (kingside)",
+                        "It is important to keep our king safe.\n\nNow that we've developed our kingside pieces, let's castle short (kingside).",
                         "Well done, the king is now safely tucked in the corner and we can push our center pawns without fear!"
                         },
             new string[3] {

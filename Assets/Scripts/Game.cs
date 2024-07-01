@@ -270,7 +270,7 @@ public class Game : MonoBehaviour {
         GameState gameState = GameStateManager.Instance.globalGameState;
         float eval = AIv6.PositionEvaluator(gameState, 0, GetLegalMoves(gameState));
         UnityEngine.Debug.Log("Static position evaluation:" + eval);
-        promptText = "Static position evaluation: " + eval;
+        promptText = "Static position evaluation:\n" + eval;
         prompt.text = promptText;
     }
 
