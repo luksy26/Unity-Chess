@@ -53,7 +53,7 @@ public class Game : MonoBehaviour {
 
     public async void GeneratePosition() {
         activeTutorial = false;
-        
+
         prompt.color = Color.white;
         GetComponent<SquareCoordinatesUI>().GenerateFilesAndRanks(playerPerspective);
         GameState globalGameState = GameStateManager.Instance.globalGameState;
@@ -114,7 +114,7 @@ public class Game : MonoBehaviour {
         bool localTutorialMoving = tutorialMoving;
         DestroyHintSquares();
         // not correct tutorial move
-        if (activeTutorial && tutorialMove != null && tutorialMove.promotesInto == '-' && 
+        if (activeTutorial && tutorialMove != null && tutorialMove.promotesInto == '-' &&
             !move.ToString().Equals(tutorialMove.ToString())) {
             IndexMove indexMove2 = new(move);
             currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetFile(move.oldFile);
@@ -280,12 +280,16 @@ public class Game : MonoBehaviour {
             StopCoroutine(moveTimerCoroutine);
         }
         moveTimerCoroutine = StartCoroutine(MoveTimerCoroutine(timeToMove));
+        prompt.text = "Thinking...";
         await Task.Run(() => bestMove = SolvePosition());
         GameStateManager.Instance.IsEngineRunning = false;
+        prompt.text = promptText;
     }
 
     public async void GetSizeOfGameTree() {
+        prompt.text = "Exploring tree...";
         await Task.Run(() => RunPerft(GameStateManager.Instance.globalGameState));
+        prompt.text = promptText;
     }
 
     public async void ShowHint() {
@@ -371,19 +375,26 @@ public class Game : MonoBehaviour {
         MoveEval mandatoryMove = null;
         int searchDepth = 1;
         int maxSearchDepth = 10;
+        promptText = "";
         while (searchDepth <= maxSearchDepth) {
             MoveEval moveToMake = GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates);
             if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
                 moveToMakeFound = moveToMake;
-                UnityEngine.Debug.Log("best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
+                string information = "best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
                 " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
-                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score);
+                UnityEngine.Debug.Log(information);
+                promptText += information + "\n";
                 if (!timeNotExpired) {
-                    UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", but we salvaged the best move");
+                    information = "time expired while searching at depth" + searchDepth + ", but we salvaged the best move";
+                    promptText += information + "\n";
+                    UnityEngine.Debug.Log(information);
                     break;
                 }
             } else {
-                UnityEngine.Debug.Log("time expired while searching at depth" + searchDepth + ", and can't salvage the best move");
+                string information = "time expired while searching at depth" + searchDepth + ", and can't salvage the best move";
+                promptText += information + "\n";
+                UnityEngine.Debug.Log(information);
                 break;
             }
             // now search deeper
@@ -391,14 +402,18 @@ public class Game : MonoBehaviour {
         }
         stopwatch.Stop();
         if (searchDepth <= maxSearchDepth) {
-            UnityEngine.Debug.Log("best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
+            string information = "best move found in " + timeToMove + "s " + new Move(moveToMakeFound.move) +
                 " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
-                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score));
+                (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score);
+            UnityEngine.Debug.Log(information);
+            promptText += information;
         } else {
-            UnityEngine.Debug.Log("move found at depth " + maxSearchDepth + " " + new Move(moveToMakeFound.move) +
+            string information = "move found at depth " + maxSearchDepth + " " + new Move(moveToMakeFound.move) +
             " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
             (Math.Abs(Math.Abs(moveToMakeFound.score) - 1000) + Math.Abs(moveToMakeFound.score) % 2) / 2 : moveToMakeFound.score) +
-            " in " + stopwatch.ElapsedMilliseconds + "ms");
+            " in " + stopwatch.ElapsedMilliseconds + "ms";
+            UnityEngine.Debug.Log(information);
+            promptText += information;
         }
         return moveToMakeFound;
     }
@@ -423,6 +438,7 @@ public class Game : MonoBehaviour {
         GameStateManager.Instance.IsEngineRunning = true;
         string outPath = Path.Combine(Application.streamingAssetsPath, "mine.txt");
         using StreamWriter writer = File.CreateText(outPath);
+        promptText = "";
         for (int depth = 1; depth <= gameTreeMaxDepth; ++depth) {
             maxDepth = depth;
             Stopwatch stopwatch = new();
@@ -430,7 +446,6 @@ public class Game : MonoBehaviour {
             long posNumber = SearchPositions(gameState, 0, writer);
             UnityEngine.Debug.Log("Number of possible positions for " + maxDepth + " moves: " + posNumber);
             promptText += "\nNumber of possible positions for " + maxDepth + " moves: " + posNumber + hintMove;
-            prompt.text = promptText;
             stopwatch.Stop();
             UnityEngine.Debug.Log("For depth " + depth + " time is " + stopwatch.ElapsedMilliseconds + "ms");
             UnityEngine.Debug.Log(1.0f * GameStateManager.Instance.numberOfTicks1 / Stopwatch.Frequency * 1000 + "ms spent getting legal moves");

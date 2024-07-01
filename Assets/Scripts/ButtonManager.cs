@@ -5,15 +5,16 @@ using UnityEngine;
 using UnityEngine.UI;
 using static PositionCounter;
 using System;
+using TMPro;
 
 public class ButtonManager : MonoBehaviour {
     public Transform canvasTransform;
     public GameObject swapPerspectivePrefab, showHintPrefab, getSizeOfGameTreePrefab, startTutorialPrefab,
         evaluateEnginePrefab, getStaticPositionEvalPrefab, runTestsPrefab, getPositionEvalPrefab, 
-        generatePositionPrefab, inputFieldPrefab;
+        generatePositionPrefab, inputFieldPrefab, textPromptPrefab, mainMenuPrefab, soundPrefab, nextTutorialPrefab;
     public GameObject swapPerspectiveObject, showHintObject, getSizeOfGameTreeObject, startTutorialObject,
         evaluateEngineObject, getStaticPositionEvalObject, runTestsObject, getPositionEvalObject,
-        generatePositionObject, inputFieldObject;
+        generatePositionObject, inputFieldObject, textPromptObject, mainMenuObject, soundObject, nextTutorialObject;
     public int FENskipChunk;
 
     void Start() {
@@ -27,6 +28,10 @@ public class ButtonManager : MonoBehaviour {
         CreateGetPositionEvalButton();
         CreateGeneratePositionButton();
         CreateInputField();
+        CreateTextPrompt();
+        CreateMainMenuButton();
+        CreateSoundButton();
+        CreateNextTutorialButton();
         Game.Instance.salvageMove = true;
     }
 
@@ -159,23 +164,77 @@ public class ButtonManager : MonoBehaviour {
         inputFieldObject = Instantiate(inputFieldPrefab, canvasTransform);
 
         RectTransform prefabRectTransform = inputFieldPrefab.GetComponent<RectTransform>();
-        RectTransform newButtonRectTransform = inputFieldObject.GetComponent<RectTransform>();
+        RectTransform newRectTransform = inputFieldObject.GetComponent<RectTransform>();
 
-        if (prefabRectTransform != null && newButtonRectTransform != null) {
-            newButtonRectTransform.localPosition = prefabRectTransform.localPosition;
-            newButtonRectTransform.localRotation = prefabRectTransform.localRotation;
-            newButtonRectTransform.localScale = prefabRectTransform.localScale;
+        if (prefabRectTransform != null && newRectTransform != null) {
+            newRectTransform.localPosition = prefabRectTransform.localPosition;
+            newRectTransform.localRotation = prefabRectTransform.localRotation;
+            newRectTransform.localScale = prefabRectTransform.localScale;
         }
     }
 
+    void CreateTextPrompt() {
+        textPromptObject = Instantiate(textPromptPrefab, canvasTransform);
 
+        RectTransform prefabRectTransform = textPromptPrefab.GetComponent<RectTransform>();
+        RectTransform newRectTransform = textPromptObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newRectTransform != null) {
+            newRectTransform.localPosition = prefabRectTransform.localPosition;
+            newRectTransform.localRotation = prefabRectTransform.localRotation;
+            newRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        Game.Instance.prompt = textPromptObject.GetComponent<TMP_Text>();
+    }
+
+    void CreateMainMenuButton() {
+        mainMenuObject = Instantiate(mainMenuPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = mainMenuPrefab.GetComponent<RectTransform>();
+        RectTransform newRectTransform = mainMenuObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newRectTransform != null) {
+            newRectTransform.localPosition = prefabRectTransform.localPosition;
+            newRectTransform.localRotation = prefabRectTransform.localRotation;
+            newRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        // TODO Add Listener
+    }
+
+    void CreateSoundButton() {
+        soundObject = Instantiate(soundPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = soundPrefab.GetComponent<RectTransform>();
+        RectTransform newRectTransform = soundObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newRectTransform != null) {
+            newRectTransform.localPosition = prefabRectTransform.localPosition;
+            newRectTransform.localRotation = prefabRectTransform.localRotation;
+            newRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        // TODO Add Listener
+    }
+
+    void CreateNextTutorialButton() {
+        nextTutorialObject = Instantiate(nextTutorialPrefab, canvasTransform);
+
+        RectTransform prefabRectTransform = nextTutorialPrefab.GetComponent<RectTransform>();
+        RectTransform newRectTransform = nextTutorialObject.GetComponent<RectTransform>();
+
+        if (prefabRectTransform != null && newRectTransform != null) {
+            newRectTransform.localPosition = prefabRectTransform.localPosition;
+            newRectTransform.localRotation = prefabRectTransform.localRotation;
+            newRectTransform.localScale = prefabRectTransform.localScale;
+        }
+        // TODO Add Listener
+    }
 
     void OnGeneratePositionButtonClicked() {
         string inputFEN = inputFieldObject.GetComponent<InputField>().text;
         if (!GameStateManager.Instance.IsEngineRunning) {
             Game.Instance.AIPlayer = '-';
             Game.Instance.playerPerspective = "white";
-            Game.Instance.gameTreeMaxDepth = 4;
+            Game.Instance.gameTreeMaxDepth = 5;
             Game.Instance.timeToMove = 5f;
             Game.Instance.timeNotExpired = true;
             Game.Instance.CancelMovePiece();
