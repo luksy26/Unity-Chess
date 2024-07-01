@@ -40,6 +40,7 @@ public class ButtonManager : MonoBehaviour {
         }
         // in dev corner
         Game.Instance.salvageMove = true;
+        Game.Instance.AItoUse = 5;
         CreateNextTutorialButton();
         CreateShowHintButton();
         CreateGetSizeOfGameTreeButton();

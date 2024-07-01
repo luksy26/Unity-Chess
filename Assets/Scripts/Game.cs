@@ -610,6 +610,7 @@ public class Game : MonoBehaviour {
         gameStates.Clear();
         // Destroy the notation for files and ranks
         GetComponent<SquareCoordinatesUI>().DestroyFilesAndRanks();
+        DestroyHintSquares();
     }
 
     public void StartTutorial(int tutorial) {
