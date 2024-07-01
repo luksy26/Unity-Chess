@@ -131,7 +131,7 @@ public class TutorialManager : MonoBehaviour {
                         "Well done, you have learned how to castle your King!"
                         },
             new string[2] {
-                        "If a king is attacked by a piece, it is called a Check!\n\nThe king has to move to a safe spot if checked, or the attacking piece needs to be captured.\n\nTry checking the enemy king with your queen, in a way that your queen won't get captured by the black pawn.",
+                        "If a king is attacked by a piece, it is called a Check!\n\nThe king has to move to a safe spot if checked, or the attacking piece needs to be captured.\n\nTry checking the enemy king with your queen in one move. Be careful about the black pawn!.",
                         "Well done, you have learned how to check a King!"
                         },
             new string[3] {
@@ -287,7 +287,7 @@ public class TutorialManager : MonoBehaviour {
                 Game.Instance.currentPlayer = '-';
                 if (currentTutorial == tutorialNames.Length - 1) {
                     yield return new WaitForSeconds(1f);
-                    Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them from the Main Menu!";
+                    Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them in the Main Menu!";
                 }
             }
         }

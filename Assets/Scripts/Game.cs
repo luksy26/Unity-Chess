@@ -121,8 +121,9 @@ public class Game : MonoBehaviour {
         bool localTutorialMoving = tutorialMoving;
         DestroyHintSquares();
         // not correct tutorial move
-        if (activeTutorial && tutorialMove != null && tutorialMove.promotesInto == '-' &&
-            !move.ToString().Equals(tutorialMove.ToString())) {
+        UnityEngine.Debug.Log("tutorial move is " + tutorialMove + " trying to move " + move);
+        if (activeTutorial && tutorialMove != null && 
+            ((tutorialMove.promotesInto == '-' && !move.ToString().Equals(tutorialMove.ToString())) || !shallowCompareMoves(tutorialMove, move))) {
             IndexMove indexMove2 = new(move);
             currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetFile(move.oldFile);
             currentPieces[indexMove2.oldRow, indexMove2.oldColumn].GetComponent<PiecePlacer>().SetRank(move.oldRank);
@@ -395,7 +396,7 @@ public class Game : MonoBehaviour {
                 case 7: moveToMake = AIv8.GetBestMove(GameStateManager.Instance.globalGameState, searchDepth, mandatoryMove, moveToMakeFound, gameStates); break;
                 default: break;
             }
-            if (timeNotExpired || (salvageMove && Math.Abs(moveToMake.score) != 10000)) {
+            if (timeNotExpired || salvageMove && Math.Abs(moveToMake.score) != 10000) {
                 moveToMakeFound = moveToMake;
                 string information = "best move at depth " + searchDepth + " " + new Move(moveToMakeFound.move) +
                 " score: " + (Math.Abs(moveToMakeFound.score) > 950 ? "Mate in " +
@@ -521,7 +522,7 @@ public class Game : MonoBehaviour {
                     case GameConclusion.Checkmate: {
                             promptText = prompt.text + "\n\nCheckmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!";
                             prompt.text = promptText;
-                            if (currentPlayer == AIPlayer) {
+                            if (currentPlayer == AIPlayer || AIPlayer == '-') {
                                 Color betterGreen = Color.green;
                                 betterGreen.a = 150f / 255f;
                                 prompt.color = betterGreen;
@@ -679,5 +680,20 @@ public class Game : MonoBehaviour {
             return true;
         }
         return false;
+    }
+    public bool shallowCompareMoves(Move move1, Move move2) {
+        if (move1.oldFile != move2.oldFile) {
+            return false;
+        }
+        if (move1.oldRank != move2.oldRank) {
+            return false;
+        }
+        if (move1.newFile != move2.newFile) {
+            return false;
+        }
+        if (move1.newRank != move2.newRank) {
+            return false;
+        }
+        return true;
     }
 }

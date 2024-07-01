@@ -28,6 +28,7 @@ public class ButtonManager : MonoBehaviour {
             // loading tutorial
             CreateNextTutorialButton();
             Game.Instance.AItoUse = -1;
+            Game.Instance.AIPlayer = '-';
             Game.Instance.GetComponent<TutorialManager>().StartTutorial(SelectedOption.tutorial);
             return;
         }
