@@ -23,6 +23,7 @@ public class Game : MonoBehaviour {
     public bool tutorialMoving;
     public Move tutorialMove;
     public Move hintMove = null;
+    public bool soundActive;
     public char currentPlayer;
     public string playerPerspective;
     public int AItoUse;
@@ -41,6 +42,7 @@ public class Game : MonoBehaviour {
         gameStates = new();
         promotionManager = GetComponent<PromotionManager>();
         tutorialMoving = false;
+        soundActive = true;
     }
     private void Awake() {
         if (Instance == null) {
@@ -119,6 +121,8 @@ public class Game : MonoBehaviour {
             return;
         }
         bool localTutorialMoving = tutorialMoving;
+        bool isCapture, isPromoting, isCastling;
+        isCapture = isPromoting = isCastling = false;
         DestroyHintSquares();
         // not correct tutorial move
         UnityEngine.Debug.Log("tutorial move is " + tutorialMove + " trying to move " + move);
@@ -132,18 +136,18 @@ public class Game : MonoBehaviour {
         }
         GameState gameState = GameStateManager.Instance.globalGameState;
         IndexMove indexMove = new(move);
-        bool promoting = false;
         string movedPieceName = currentPieces[indexMove.oldRow, indexMove.oldColumn].name;
         // check if a pawn moved
         if (movedPieceName.Contains("pawn")) {
             // check if the pawn reached the last rank
             if (indexMove.newRow == 0 || indexMove.newRow == 7) {
-                promoting = true;
+                isPromoting = true;
             } else {
                 char enPassantFile = gameState.enPassantFile;
                 int enPassantRank = gameState.enPassantRank;
                 // pawn captured the en-passant target
                 if (move.newFile == enPassantFile && move.newRank == enPassantRank) {
+                    isCapture = true;
                     if (currentPlayer == 'w') {
                         blackPieces.Remove(currentPieces[indexMove.newRow + 1, indexMove.newColumn]);
                         Destroy(currentPieces[indexMove.newRow + 1, indexMove.newColumn]);
@@ -160,6 +164,7 @@ public class Game : MonoBehaviour {
             PiecePlacer rookPlacer;
             // short castle
             if (indexMove.newColumn > indexMove.oldColumn) {
+                isCastling = true;
                 currentPieces[indexMove.newRow, 7].GetComponent<PieceMover>().isDragging = false;
                 rookPlacer = currentPieces[indexMove.newRow, 7].GetComponent<PiecePlacer>();
                 rookPlacer.SetFile((char)(move.newFile - 1));
@@ -167,6 +172,7 @@ public class Game : MonoBehaviour {
                 currentPieces[indexMove.newRow, 5] = currentPieces[indexMove.newRow, 7];
                 currentPieces[indexMove.newRow, 7] = null;
             } else { // long castle
+                isCastling = true;
                 currentPieces[indexMove.newRow, 0].GetComponent<PieceMover>().isDragging = false;
                 rookPlacer = currentPieces[indexMove.newRow, 0].GetComponent<PiecePlacer>();
                 rookPlacer.SetFile((char)(move.newFile + 1));
@@ -176,7 +182,7 @@ public class Game : MonoBehaviour {
             }
         }
 
-        if (promoting) {
+        if (isPromoting) {
             string new_name;
             if (move.promotesInto == '-') {
                 // make the promoted pawn temporarily invisible
@@ -218,7 +224,11 @@ public class Game : MonoBehaviour {
         }
 
         // Destroy old piece (if the square was occupied), update internal GameObject array, and reposition the moved piece
-        DestroyPieceAt(indexMove.newRow, indexMove.newColumn);
+        if (!isCapture) {
+            isCapture = DestroyPieceAt(indexMove.newRow, indexMove.newColumn);
+        } else {
+            DestroyPieceAt(indexMove.newRow, indexMove.newColumn);
+        }
         currentPieces[indexMove.newRow, indexMove.newColumn] = currentPieces[indexMove.oldRow, indexMove.oldColumn];
         currentPieces[indexMove.oldRow, indexMove.oldColumn] = null;
         PiecePlacer placer = currentPieces[indexMove.newRow, indexMove.newColumn].GetComponent<PiecePlacer>();
@@ -245,6 +255,20 @@ public class Game : MonoBehaviour {
         }
 
         HandleGameState(gameState, gameStates);
+
+        if (currentPlayer != '-') {
+            if (GameStateManager.Instance.IsKingInCheck(gameState)) {
+                GetComponent<AudioManager>().PlaySound("check");
+            } else if (isPromoting) {
+                GetComponent<AudioManager>().PlaySound("promote");
+            } else if (isCastling) {
+                GetComponent<AudioManager>().PlaySound("castle");
+            } else if (isCapture) {
+                GetComponent<AudioManager>().PlaySound("capture");
+            } else {
+                GetComponent<AudioManager>().PlaySound("move");
+            }
+        }
 
         await Task.Yield();
 
@@ -441,7 +465,7 @@ public class Game : MonoBehaviour {
         timeNotExpired = false;
     }
 
-    public void DestroyPieceAt(int row, int column) {
+    public bool DestroyPieceAt(int row, int column) {
         if (currentPieces[row, column] != null) {
             if (currentPlayer == 'w') {
                 blackPieces.Remove(currentPieces[row, column]);
@@ -449,7 +473,9 @@ public class Game : MonoBehaviour {
                 whitePieces.Remove(currentPieces[row, column]);
             }
             Destroy(currentPieces[row, column]);
+            return true;
         }
+        return false;
     }
 
     public void RunPerft(GameState gameState) {
@@ -494,6 +520,7 @@ public class Game : MonoBehaviour {
                     betterYellow.a = 150f / 255f;
                     prompt.color = betterYellow;
                     UnityEngine.Debug.Log("Draw by 50 move rule");
+                    GetComponent<AudioManager>().PlaySound("end");
                     break;
                 }
             case GameConclusion.DrawByRepetition: {
@@ -504,6 +531,7 @@ public class Game : MonoBehaviour {
                     betterYellow.a = 150f / 255f;
                     prompt.color = betterYellow;
                     UnityEngine.Debug.Log("Draw by 3-fold repetition");
+                    GetComponent<AudioManager>().PlaySound("end");
                     break;
                 }
             case GameConclusion.DrawByInsufficientMaterial: {
@@ -514,6 +542,7 @@ public class Game : MonoBehaviour {
                     betterYellow.a = 150f / 255f;
                     prompt.color = betterYellow;
                     UnityEngine.Debug.Log("Draw by insufficient material");
+                    GetComponent<AudioManager>().PlaySound("end");
                     break;
                 }
             default:
@@ -534,6 +563,7 @@ public class Game : MonoBehaviour {
                             }
                             UnityEngine.Debug.Log("Checkmate! " + (currentPlayer == 'b' ? "White" : "Black") + " wins!");
                             currentPlayer = '-';
+                            GetComponent<AudioManager>().PlaySound("end");
                             break;
                         }
                     case GameConclusion.Stalemate: {
@@ -544,6 +574,7 @@ public class Game : MonoBehaviour {
                             prompt.color = betterYellow;
                             UnityEngine.Debug.Log("Stalemate! Game is a draw since " + (currentPlayer == 'b' ? "Black" : "White") + " has no moves.");
                             currentPlayer = '-';
+                            GetComponent<AudioManager>().PlaySound("end");
                             break;
                         }
                 }

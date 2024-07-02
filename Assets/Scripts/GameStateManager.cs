@@ -228,4 +228,13 @@ public class GameStateManager : MonoBehaviour {
         }
         return GameConclusion.NotOver;
     }
+
+    public bool IsKingInCheck(GameState gameState) {
+        int kingRow = gameState.whoMoves == 'w' ? gameState.whiteKingRow : gameState.blackKingRow;
+            int kingColumn = gameState.whoMoves == 'w' ? gameState.whiteKingColumn : gameState.blackKingColumn;
+            if (IsKingSafeAt(kingRow, kingColumn, gameState, null)) {
+                return false;
+            }
+            return true;
+    }
 }

@@ -206,6 +206,7 @@ public class TutorialManager : MonoBehaviour {
     }
     public void ContinueTutorial() {
         if (loopTutorials.Contains(currentTutorial)) {
+            Game.Instance.GetComponent<AudioManager>().PlaySound("correct");
             if (currentLoopNumber == 1) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             } else if (currentLoopNumber > maxLoop) {
@@ -219,6 +220,7 @@ public class TutorialManager : MonoBehaviour {
             GameStateManager.Instance.globalGameState.whoMoves = 'w';
             Game.Instance.HandleGameState(GameStateManager.Instance.globalGameState, Game.Instance.gameStates);
         } else if (resetTutorials.Contains(currentTutorial)) {
+            Game.Instance.GetComponent<AudioManager>().PlaySound("correct");
             if (currentLoopNumber == 1) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             } else if (currentLoopNumber >= (int)resetTutorials[currentTutorial]) {
@@ -236,11 +238,15 @@ public class TutorialManager : MonoBehaviour {
             ++currentLoopNumber;
             StartCoroutine(ResetTutorialPosition(1f));
         } else if (oneMoveTutorials.Contains(currentTutorial)) {
+            Game.Instance.GetComponent<AudioManager>().PlaySound("correct");
             Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             Game.Instance.activeTutorial = false;
             Game.Instance.currentPlayer = '-';
             return;
         } else if (opponentMoveTutorials.Contains(currentTutorial)) {
+            if (currentMoveNumber % 2 == 1) {
+                Game.Instance.GetComponent<AudioManager>().PlaySound("correct");
+            }
             if (!skipOpponentPromptTutorials.Contains(currentTutorial)) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             }

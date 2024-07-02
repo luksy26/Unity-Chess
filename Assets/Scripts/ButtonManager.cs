@@ -230,7 +230,9 @@ public class ButtonManager : MonoBehaviour {
             newRectTransform.localRotation = prefabRectTransform.localRotation;
             newRectTransform.localScale = prefabRectTransform.localScale;
         }
-        // TODO Add Listener
+        soundObject.GetComponent<Button>().onClick.AddListener(OnSoundButtonClicked);
+        GetComponent<ToggleColorForSoundButton>().button = soundObject.GetComponent<Button>();
+        GetComponent<ToggleColorForSoundButton>().AddToggleListener();
     }
 
     void CreateNextTutorialButton() {
@@ -292,6 +294,7 @@ public class ButtonManager : MonoBehaviour {
         GameStateManager.Instance.GenerateGameState(inputFEN);
         Game.Instance.DestroyPosition();
         Game.Instance.GeneratePosition();
+        Game.Instance.GetComponent<AudioManager>().PlaySound("start");
     }
 
     void OnGetSizeOfGameTreeButtonClicked() {
@@ -538,5 +541,8 @@ public class ButtonManager : MonoBehaviour {
     }
     void OnMainMenuButtonClicked() {
         SceneManager.LoadScene("MainMenuScene");
+    }
+    void OnSoundButtonClicked() {
+        Game.Instance.soundActive = !Game.Instance.soundActive;
     }
 }
