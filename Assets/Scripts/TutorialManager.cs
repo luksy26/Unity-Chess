@@ -211,8 +211,7 @@ public class TutorialManager : MonoBehaviour {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             } else if (currentLoopNumber > maxLoop) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber];
-                Game.Instance.activeTutorial = false;
-                Game.Instance.currentPlayer = '-';
+                FinishedTutorial();
                 return;
             }
             ++currentLoopNumber;
@@ -225,8 +224,7 @@ public class TutorialManager : MonoBehaviour {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             } else if (currentLoopNumber >= (int)resetTutorials[currentTutorial]) {
                 Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber];
-                Game.Instance.activeTutorial = false;
-                Game.Instance.currentPlayer = '-';
+                FinishedTutorial();
                 return;
             }
             if (multipleMovesResetTutorials.Contains(currentTutorial)) {
@@ -240,8 +238,7 @@ public class TutorialManager : MonoBehaviour {
         } else if (oneMoveTutorials.Contains(currentTutorial)) {
             Game.Instance.GetComponent<AudioManager>().PlaySound("correct");
             Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
-            Game.Instance.activeTutorial = false;
-            Game.Instance.currentPlayer = '-';
+            FinishedTutorial();
             return;
         } else if (opponentMoveTutorials.Contains(currentTutorial)) {
             if (currentMoveNumber % 2 == 1) {
@@ -254,8 +251,7 @@ public class TutorialManager : MonoBehaviour {
                 Game.Instance.tutorialMoving = true;
                 StartCoroutine(ContinueOpponentTutorial(2f));
             } else {
-                Game.Instance.activeTutorial = false;
-                Game.Instance.currentPlayer = '-';
+                FinishedTutorial();
                 if (currentTutorial == tutorialNames.Length - 1) {
                     Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them in the Main Menu!";
                 }
@@ -289,13 +285,20 @@ public class TutorialManager : MonoBehaviour {
             Game.Instance.prompt.text += "\n\n" + tutorialPrompts[currentTutorial][currentPromptNumber++];
             Game.Instance.tutorialMoving = false;
             if (currentPromptNumber == tutorialPrompts[currentTutorial].Length) {
-                Game.Instance.activeTutorial = false;
-                Game.Instance.currentPlayer = '-';
+                FinishedTutorial();
                 if (currentTutorial == tutorialNames.Length - 1) {
                     yield return new WaitForSeconds(1f);
                     Game.Instance.prompt.text += "\n\nYou have completed all tutorials and are now ready to take on the AI opponents!\nFind them in the Main Menu!";
                 }
             }
         }
+    }
+
+    private void FinishedTutorial() {
+        Color betterGreen = Color.green;
+        betterGreen.a = 150f / 255f;
+        Game.Instance.prompt.color = betterGreen;
+        Game.Instance.activeTutorial = false;
+        Game.Instance.currentPlayer = '-';
     }
 }

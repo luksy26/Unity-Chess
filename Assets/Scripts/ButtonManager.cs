@@ -24,6 +24,9 @@ public class ButtonManager : MonoBehaviour {
         CreateSwapPerspectiveButton();
         CreateSoundButton();
         CreateGeneratePositionButton();
+        inputFieldObject = showHintObject = nextTutorialObject = getSizeOfGameTreeObject = startTutorialObject = 
+        evaluateEngineObject = getStaticPositionEvalObject = runTestsObject = getPositionEvalObject = null;
+        UnityEngine.Debug.Log(inputFieldObject == null?0:"not null");
         if (SelectedOption.tutorial != -1) {
             // loading tutorial
             CreateNextTutorialButton();
@@ -260,8 +263,9 @@ public class ButtonManager : MonoBehaviour {
         }
         string inputFEN;
         if (tutorial != -1) {
-            if (inputFieldObject.GetComponent<InputField>().text.Length < 20)
+            if (inputFieldObject == null || inputFieldObject.GetComponent<InputField>().text.Length < 20) {
                 return;
+            }
         }
         if (inputFieldObject == null) {
             inputFEN = "";

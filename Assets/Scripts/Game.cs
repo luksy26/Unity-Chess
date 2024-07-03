@@ -125,7 +125,6 @@ public class Game : MonoBehaviour {
         isCapture = isPromoting = isCastling = false;
         DestroyHintSquares();
         // not correct tutorial move
-        UnityEngine.Debug.Log("tutorial move is " + tutorialMove + " trying to move " + move);
         if (activeTutorial && tutorialMove != null && 
             ((tutorialMove.promotesInto == '-' && !move.ToString().Equals(tutorialMove.ToString())) || !shallowCompareMoves(tutorialMove, move))) {
             IndexMove indexMove2 = new(move);
