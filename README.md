@@ -7,7 +7,7 @@ This project is a chess learning app that contains tutorials and AI opponents. I
 ### Option 1 (harder)
 Choose this option if you want to look at the code or are a developer yourself and wish to play around.
 - clone the entire repo and import into a new Unity Project
-- play directly in the editor or build the project
+- play directly in the editor or build the project via Unity
 
 ### Option 2 (simpler)
 Choose this option if you simply wish to play the game.
