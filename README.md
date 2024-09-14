@@ -13,6 +13,7 @@ Choose this option if you want to look at the code or are a developer yourself a
 Choose this option if you simply wish to play the game. I only tested on windows.
 - download `UnityChess.zip` and extract
 - run `Unity Chess.exe`
+  
 You might see a *scary-looking* message from Windows saying: **"Windows protected your PC."**
 Don't panic! 😱 Windows is just being its overprotective self. I'm *definitely* not trying to turn your PC into a toaster or unleash a swarm of digital hamsters into your system. 🐹
 Just click on **"More info"** and then **"Run anyway"**. Trust me, we're all friends here! 😇
