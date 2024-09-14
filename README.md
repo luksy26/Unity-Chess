@@ -5,15 +5,15 @@ This project is a chess learning app that contains tutorials and AI opponents. I
 ## Installation
 
 ### Option 1 (harder)
-- Clone the entire repo and import into a new Unity Project.
-- Play directly in the editor or build the project
-- Choose this option if you want to look at the code or are a developer yourself and wish to play around
+Choose this option if you want to look at the code or are a developer yourself and wish to play around.
+- clone the entire repo and import into a new Unity Project
+- play directly in the editor or build the project
 
 ### Option 2 (simpler)
-- Download `UnityChess.zip` and extract
-- Run `Unity Chess.exe`
-- Choose this if you simply wish to play the game
+Choose this option if you simply wish to play the game.
+- download `UnityChess.zip` and extract
+- run `Unity Chess.exe`
+  
 
 ## Documentation
-- Please see `Diploma Paper.pdf`
-  
+Please see `Diploma Paper.pdf`.
